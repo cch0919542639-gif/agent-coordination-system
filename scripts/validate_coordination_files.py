@@ -13,6 +13,17 @@ TEMPLATES_DIR = COORDINATION_DIR / "templates"
 TASK_BOARD_DIR = COORDINATION_DIR / "task-board"
 
 TASK_BOARD_STATES = {"ready", "in_progress", "review", "done", "blocked"}
+VALID_TASK_STATUSES = {
+    "READY",
+    "IN_PROGRESS",
+    "REVIEW",
+    "DONE",
+    "BLOCKED",
+    "NEEDS_FIX",
+    "REASSIGNED",
+    "CANCELLED",
+}
+VALID_REVIEW_DECISIONS = {"accepted", "needs_fix", "reassign", "rejected"}
 TASK_REQUIRED_KEYS = {
     "task_id",
     "phase",
@@ -163,6 +174,15 @@ def validate_task_file(path: Path) -> list[ValidationError]:
                 )
             )
 
+    status_value = str(front_matter.get("status", "")).strip()
+    if status_value and status_value not in VALID_TASK_STATUSES:
+        errors.append(
+            ValidationError(
+                path,
+                f"invalid front matter status `{status_value}`; must be one of {sorted(VALID_TASK_STATUSES)}",
+            )
+        )
+
     for list_key in ("dependencies", "allowed_scope", "forbidden_scope", "acceptance", "expected_artifacts"):
         if list_key in front_matter and not isinstance(front_matter[list_key], list):
             errors.append(ValidationError(path, f"`{list_key}` must be a list"))
@@ -185,8 +205,24 @@ def validate_incident_file(path: Path) -> list[ValidationError]:
 
 
 def validate_review_file(path: Path) -> list[ValidationError]:
+    errors: list[ValidationError] = []
     text = read_text(path)
-    return [ValidationError(path, f"missing label `{label}`") for label in has_all_labels(text, REVIEW_REQUIRED_LABELS)]
+    errors.extend(
+        ValidationError(path, f"missing label `{label}`") for label in has_all_labels(text, REVIEW_REQUIRED_LABELS)
+    )
+
+    decision_match = re.search(r"^- Decision:\s*(.+)$", text, re.MULTILINE)
+    if decision_match:
+        decision_value = decision_match.group(1).strip()
+        if decision_value.lower() not in VALID_REVIEW_DECISIONS:
+            errors.append(
+                ValidationError(
+                    path,
+                    f"invalid decision value `{decision_value}`; must be one of {sorted(VALID_REVIEW_DECISIONS)}",
+                )
+            )
+
+    return errors
 
 
 def iter_markdown_files(path: Path) -> list[Path]:

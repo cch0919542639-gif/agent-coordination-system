@@ -1,7 +1,7 @@
 ---
 task_id: phase1-live-01
 phase: phase1-live-pilot
-status: READY
+status: DONE
 owner: external-agent-docs-01
 reviewer: ORCHESTRATOR
 priority: high

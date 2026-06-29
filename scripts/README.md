@@ -12,6 +12,8 @@ Checks:
 - incident report labels
 - review report labels
 - task card status versus task-board folder state
+- valid task status values (READY, IN_PROGRESS, REVIEW, DONE, BLOCKED, NEEDS_FIX, REASSIGNED, CANCELLED)
+- valid review decision values (accepted, needs_fix, reassign, rejected)
 
 Usage:
 
