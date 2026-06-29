@@ -71,6 +71,17 @@ INCIDENT_REQUIRED_LABELS = {
     "## Scope / Risk Impact",
     "## Recommended Next Action",
 }
+DELIVERY_DIR = COORDINATION_DIR / "delivery"
+DELIVERY_REQUIRED_LABELS = {
+    "- Task ID:",
+    "- Agent:",
+    "- Phase:",
+    "- Status:",
+    "## Changed Files",
+    "## Validation Steps Performed",
+    "## Known Residual Risks",
+    "## Acceptance Criteria Coverage",
+}
 REVIEW_REQUIRED_LABELS = {
     "- Review ID:",
     "- Reviewer:",
@@ -204,6 +215,11 @@ def validate_incident_file(path: Path) -> list[ValidationError]:
     return [ValidationError(path, f"missing label `{label}`") for label in has_all_labels(text, INCIDENT_REQUIRED_LABELS)]
 
 
+def validate_delivery_file(path: Path) -> list[ValidationError]:
+    text = read_text(path)
+    return [ValidationError(path, f"missing label `{label}`") for label in has_all_labels(text, DELIVERY_REQUIRED_LABELS)]
+
+
 def validate_review_file(path: Path) -> list[ValidationError]:
     errors: list[ValidationError] = []
     text = read_text(path)
@@ -236,6 +252,7 @@ def validate_templates() -> list[ValidationError]:
         TEMPLATES_DIR / "progress-report.md": validate_progress_file,
         TEMPLATES_DIR / "incident-report.md": validate_incident_file,
         TEMPLATES_DIR / "review-report.md": validate_review_file,
+        TEMPLATES_DIR / "delivery-report.md": validate_delivery_file,
     }
 
     for path, validator in template_map.items():
@@ -266,6 +283,32 @@ def validate_repo_files() -> list[ValidationError]:
     reviews_dir = COORDINATION_DIR / "reviews"
     for path in iter_markdown_files(reviews_dir):
         errors.extend(validate_review_file(path))
+
+    delivery_dir = COORDINATION_DIR / "delivery"
+    for path in iter_markdown_files(delivery_dir):
+        errors.extend(validate_delivery_file(path))
+
+    for path in iter_markdown_files(TASK_BOARD_DIR):
+        if path.name == "README.md" or path.parent.name not in ("review", "done"):
+            continue
+        text = read_text(path)
+        front_matter = parse_front_matter(text)
+        if front_matter is None:
+            continue
+        artifacts = front_matter.get("expected_artifacts")
+        if not isinstance(artifacts, list) or "delivery_report" not in artifacts:
+            continue
+        task_id = str(front_matter.get("task_id", ""))
+        if not task_id:
+            continue
+        expected_delivery_file = delivery_dir / f"{task_id}-delivery-report.md"
+        if not expected_delivery_file.exists():
+            errors.append(
+                ValidationError(
+                    path,
+                    f"task lists `delivery_report` in expected_artifacts but no matching delivery report found at `{expected_delivery_file.relative_to(ROOT)}`",
+                )
+            )
 
     return errors
 

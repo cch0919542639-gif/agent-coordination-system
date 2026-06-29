@@ -14,6 +14,8 @@ Checks:
 - task card status versus task-board folder state
 - valid task status values (READY, IN_PROGRESS, REVIEW, DONE, BLOCKED, NEEDS_FIX, REASSIGNED, CANCELLED)
 - valid review decision values (accepted, needs_fix, reassign, rejected)
+- delivery report labels
+- delivery report existence when task packet lists `delivery_report` in expected_artifacts
 
 Usage:
 
