@@ -8,6 +8,7 @@ Available subcommands:
 
 - `validate`
 - `summary`
+- `next`
 - `assigned`
 - `claim`
 - `submit`
@@ -21,6 +22,7 @@ Usage:
 
 ```bash
 python scripts/orchestrate.py summary
+python scripts/orchestrate.py next
 python scripts/orchestrate.py validate --templates-only
 python scripts/orchestrate.py assigned --owner external-agent-docs-01
 python scripts/orchestrate.py dispatch --task-id phase2-03 --owner external-agent-docs-04
@@ -192,4 +194,25 @@ Highlight specific owners:
 
 ```bash
 python scripts/daily_orchestration_summary.py --owners external-agent-tools-02 external-agent-docs-04
+```
+
+## `orchestrate.py next`
+
+Recommends the next orchestrator action using a simple priority rule:
+
+1. `review`
+2. `blocked`
+3. `ready`
+4. `idle`
+
+Usage:
+
+```bash
+python scripts/orchestrate.py next
+```
+
+Optional owner hint:
+
+```bash
+python scripts/orchestrate.py next --owner external-agent-docs-04
 ```

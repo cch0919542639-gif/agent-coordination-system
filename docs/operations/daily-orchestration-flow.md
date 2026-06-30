@@ -25,6 +25,12 @@ Instead, each day should follow the same rhythm:
 5. review submitted work
 6. close accepted tasks
 
+If you want a single recommendation for the current highest-priority action, run:
+
+```bash
+python scripts/orchestrate.py next
+```
+
 ## Script Set
 
 ### Agent-side scripts
@@ -95,6 +101,12 @@ python scripts/orchestrate.py validate
 ```
 
 If validation fails, fix the coordination state before dispatching new work.
+
+Then optionally ask for the recommended next action:
+
+```bash
+python scripts/orchestrate.py next
+```
 
 ## 2. Dispatch Ready Work
 
@@ -233,6 +245,7 @@ For a normal day, use this exact order:
 ```bash
 python scripts/daily_orchestration_summary.py
 python scripts/validate_coordination_files.py
+python scripts/orchestrate.py next
 python scripts/list_review_queue.py
 python scripts/dispatch_task.py --task-id <next-task> --owner <agent>
 ```

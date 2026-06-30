@@ -12,6 +12,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 COMMAND_MAP = {
     "validate": "validate_coordination_files.py",
     "summary": "daily_orchestration_summary.py",
+    "next": None,
     "assigned": "list_assigned_tasks.py",
     "claim": "claim_task.py",
     "submit": "submit_task.py",
@@ -31,14 +32,79 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     for name in COMMAND_MAP:
+        if name == "next":
+            next_parser = subparsers.add_parser(name, help="Recommend the next orchestrator action based on repo state.")
+            next_parser.add_argument(
+                "--owner",
+                help="Optional owner name to prioritize when suggesting ready work.",
+            )
+            continue
         subparsers.add_parser(name, help=f"Run `{COMMAND_MAP[name]}`")
 
     return parser
 
 
+def run_next(owner: str | None) -> int:
+    from coordination_common import list_tasks
+
+    review_tasks = list_tasks(("review",))
+    if review_tasks:
+        path, front_matter = review_tasks[0]
+        print("Next action: review")
+        print(f"Reason: there are {len(review_tasks)} task(s) waiting in review, which should be handled before new dispatch.")
+        print(
+            f"Suggested command: python scripts/orchestrate.py review --task-id {front_matter.get('task_id')} "
+            f"--reviewer orchestrator --decision accepted --summary \"<summary>\""
+        )
+        print(f"Top review task: {front_matter.get('task_id')} | owner={front_matter.get('owner')} | file={path}")
+        return 0
+
+    blocked_tasks = list_tasks(("blocked",))
+    if blocked_tasks:
+        path, front_matter = blocked_tasks[0]
+        print("Next action: unblock")
+        print(f"Reason: there are {len(blocked_tasks)} blocked task(s), which have higher priority than dispatching new work.")
+        print(
+            f"Suggested command: inspect incident(s), then use python scripts/orchestrate.py dispatch --task-id "
+            f"{front_matter.get('task_id')} --owner {front_matter.get('owner')}"
+        )
+        print(f"Top blocked task: {front_matter.get('task_id')} | owner={front_matter.get('owner')} | file={path}")
+        return 0
+
+    ready_tasks = list_tasks(("ready",))
+    if ready_tasks:
+        selected = None
+        if owner:
+            for path, front_matter in ready_tasks:
+                if str(front_matter.get("owner", "")).strip() in (owner, "UNASSIGNED", ""):
+                    selected = (path, front_matter)
+                    break
+        if selected is None:
+            selected = ready_tasks[0]
+        path, front_matter = selected
+        current_owner = str(front_matter.get("owner", "")).strip()
+        suggested_owner = owner or (current_owner if current_owner not in ("", "UNASSIGNED") else "<agent>")
+        print("Next action: dispatch")
+        print(f"Reason: no review or blocked work is pending, and there are {len(ready_tasks)} task(s) in ready.")
+        print(
+            f"Suggested command: python scripts/orchestrate.py dispatch --task-id {front_matter.get('task_id')} "
+            f"--owner {suggested_owner}"
+        )
+        print(f"Top ready task: {front_matter.get('task_id')} | owner={front_matter.get('owner')} | file={path}")
+        return 0
+
+    print("Next action: idle")
+    print("Reason: there are no tasks in review, blocked, or ready.")
+    print("Suggested command: prepare a new phase packet or add new ready tasks.")
+    return 0
+
+
 def main() -> int:
     parser = build_parser()
     known_args, passthrough = parser.parse_known_args()
+
+    if known_args.command == "next":
+        return run_next(getattr(known_args, "owner", None))
 
     script_name = COMMAND_MAP[known_args.command]
     script_path = SCRIPT_DIR / script_name
@@ -49,4 +115,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
