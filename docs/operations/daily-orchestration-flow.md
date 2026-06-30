@@ -6,6 +6,12 @@ This document defines the day-to-day operating rhythm for the orchestrator using
 
 The goal is to reduce manual message relaying by turning the current scripts into a repeatable daily loop.
 
+You can run the flow either through the individual scripts or through the unified entrypoint:
+
+```bash
+python scripts/orchestrate.py <subcommand> ...
+```
+
 ## Core Idea
 
 The orchestrator should no longer ask, "What should I do next?"
@@ -40,6 +46,12 @@ Instead, each day should follow the same rhythm:
 
 - `python scripts/validate_coordination_files.py`
 
+### Unified entrypoint
+
+- `python scripts/orchestrate.py summary`
+- `python scripts/orchestrate.py dispatch --task-id <task> --owner <agent>`
+- `python scripts/orchestrate.py review --task-id <task> --reviewer <name> --decision <decision> --summary "<text>"`
+
 ## Daily Rhythm
 
 ## 1. Start Of Day: Inspect Current State
@@ -48,6 +60,12 @@ Run:
 
 ```bash
 python scripts/daily_orchestration_summary.py
+```
+
+Equivalent:
+
+```bash
+python scripts/orchestrate.py summary
 ```
 
 This gives you:
@@ -70,6 +88,12 @@ Then run:
 python scripts/validate_coordination_files.py
 ```
 
+Equivalent:
+
+```bash
+python scripts/orchestrate.py validate
+```
+
 If validation fails, fix the coordination state before dispatching new work.
 
 ## 2. Dispatch Ready Work
@@ -80,6 +104,12 @@ Assign or reassign with:
 
 ```bash
 python scripts/dispatch_task.py --task-id phase3-billing-01 --owner external-agent-backend-01
+```
+
+Equivalent:
+
+```bash
+python scripts/orchestrate.py dispatch --task-id phase3-billing-01 --owner external-agent-backend-01
 ```
 
 If needed, also set the reviewer:
@@ -104,6 +134,14 @@ python scripts/list_assigned_tasks.py --owner external-agent-backend-01
 python scripts/claim_task.py --task-id phase3-billing-01 --agent external-agent-backend-01
 ```
 
+Equivalent:
+
+```bash
+git pull
+python scripts/orchestrate.py assigned --owner external-agent-backend-01
+python scripts/orchestrate.py claim --task-id phase3-billing-01 --agent external-agent-backend-01
+```
+
 Then the agent executes within scope and updates repo artifacts as needed.
 
 ## 4. Handle Blocked Work
@@ -112,6 +150,12 @@ If an agent is blocked, they should open an incident:
 
 ```bash
 python scripts/open_incident.py --task-id phase3-billing-01 --agent external-agent-backend-01 --category scope_conflict --summary "Required schema file is outside allowed scope."
+```
+
+Equivalent:
+
+```bash
+python scripts/orchestrate.py incident --task-id phase3-billing-01 --agent external-agent-backend-01 --category scope_conflict --summary "Required schema file is outside allowed scope."
 ```
 
 As orchestrator, blocked work should trigger one of four responses:
@@ -131,6 +175,12 @@ Inspect the review queue:
 python scripts/list_review_queue.py
 ```
 
+Equivalent:
+
+```bash
+python scripts/orchestrate.py review-queue
+```
+
 For each task in review:
 
 1. read the task card
@@ -145,6 +195,12 @@ Write the review report and apply the decision:
 python scripts/review_task.py --task-id phase3-billing-01 --reviewer orchestrator --decision accepted --summary "Task meets acceptance criteria."
 ```
 
+Equivalent:
+
+```bash
+python scripts/orchestrate.py review --task-id phase3-billing-01 --reviewer orchestrator --decision accepted --summary "Task meets acceptance criteria."
+```
+
 Example with findings:
 
 ```bash
@@ -157,6 +213,12 @@ If you want a separate explicit close step after review:
 
 ```bash
 python scripts/complete_task.py --task-id phase3-billing-01
+```
+
+Equivalent:
+
+```bash
+python scripts/orchestrate.py complete --task-id phase3-billing-01
 ```
 
 Use this when:
@@ -216,4 +278,3 @@ Once this daily flow becomes routine, the next automation step is:
 - command wrappers or batch scripts for common sequences
 - CI validation on pull request or push
 - eventual API-backed coordination instead of repo-only orchestration
-

@@ -1,5 +1,32 @@
 # Scripts
 
+## `orchestrate.py`
+
+Single entrypoint that wraps the most common coordination scripts as subcommands.
+
+Available subcommands:
+
+- `validate`
+- `summary`
+- `assigned`
+- `claim`
+- `submit`
+- `incident`
+- `review-queue`
+- `dispatch`
+- `review`
+- `complete`
+
+Usage:
+
+```bash
+python scripts/orchestrate.py summary
+python scripts/orchestrate.py validate --templates-only
+python scripts/orchestrate.py assigned --owner external-agent-docs-01
+python scripts/orchestrate.py dispatch --task-id phase2-03 --owner external-agent-docs-04
+python scripts/orchestrate.py review --task-id phase2-03 --reviewer orchestrator --decision accepted --summary "Task meets acceptance criteria."
+```
+
 ## `validate_coordination_files.py`
 
 Validates the repo-backed coordination markdown files.
