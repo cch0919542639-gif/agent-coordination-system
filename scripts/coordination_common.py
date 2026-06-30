@@ -11,6 +11,7 @@ COORDINATION_DIR = ROOT / "coordination"
 TASK_BOARD_DIR = COORDINATION_DIR / "task-board"
 PROGRESS_DIR = COORDINATION_DIR / "progress"
 DELIVERY_DIR = COORDINATION_DIR / "delivery"
+REVIEWS_DIR = COORDINATION_DIR / "reviews"
 
 ACTIVE_STATES = ("ready", "in_progress", "review", "blocked")
 
@@ -151,3 +152,7 @@ def delivery_file_for(task_id: str) -> Path:
 def sanitize_slug(value: str) -> str:
     slug = re.sub(r"[^a-zA-Z0-9]+", "-", value.strip()).strip("-").lower()
     return slug or "incident"
+
+
+def review_file_for(task_id: str) -> Path:
+    return REVIEWS_DIR / f"review-{task_id}.md"

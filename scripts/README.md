@@ -118,3 +118,35 @@ Usage:
 ```bash
 python scripts/open_incident.py --task-id phase2-03 --agent external-agent-docs-04 --category scope_conflict --summary "Required file is outside allowed scope."
 ```
+
+## `dispatch_task.py`
+
+Assigns or reassigns a task owner by updating the task card in place.
+
+Usage:
+
+```bash
+python scripts/dispatch_task.py --task-id phase2-03 --owner external-agent-docs-04
+```
+
+Optional reviewer override:
+
+```bash
+python scripts/dispatch_task.py --task-id phase2-03 --owner external-agent-docs-04 --reviewer ORCHESTRATOR
+```
+
+## `review_task.py`
+
+Writes a review report and applies a review decision. By default, `accepted` moves the task to `done/`; other decisions keep it in `review/` and update the task status.
+
+Usage:
+
+```bash
+python scripts/review_task.py --task-id phase2-03 --reviewer orchestrator --decision accepted --summary "Task meets acceptance criteria."
+```
+
+Add findings and artifacts:
+
+```bash
+python scripts/review_task.py --task-id phase2-03 --reviewer orchestrator --decision needs_fix --summary "Delivery report is missing." --finding "Expected delivery report was not present." --required-change "Add the missing delivery report." --artifact coordination/task-board/review/2026-06-29_phase2-03_real-project-intake-packet.md
+```
