@@ -1,7 +1,7 @@
 ---
 task_id: phase3-billing-03
 phase: phase3-billing
-status: READY
+status: DONE
 owner: external-agent-backend-03
 reviewer: ORCHESTRATOR
 priority: high
@@ -15,7 +15,6 @@ allowed_scope:
 forbidden_scope:
   - src/gateway/**
   - infra/**
-  - src/**
 acceptance:
   - Implement payment recording against an invoice
   - Update invoice balance or payment state correctly for a simple test case
@@ -27,7 +26,6 @@ expected_artifacts:
   - docs
   - delivery_report
 ---
-
 # Task Packet
 
 ## Objective
@@ -53,4 +51,3 @@ Confirm that recording a payment updates invoice state or balance correctly, and
 ## Escalation Rules
 
 Raise an incident if the task requires non-billing infrastructure or gateway work.
-

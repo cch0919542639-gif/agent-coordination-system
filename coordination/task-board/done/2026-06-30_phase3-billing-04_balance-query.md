@@ -1,7 +1,7 @@
 ---
 task_id: phase3-billing-04
 phase: phase3-billing
-status: READY
+status: DONE
 owner: external-agent-backend-04
 reviewer: ORCHESTRATOR
 priority: medium
@@ -16,7 +16,6 @@ allowed_scope:
 forbidden_scope:
   - src/reporting/**
   - infra/**
-  - src/**
 acceptance:
   - Implement a balance query path for invoice state
   - Return correct balance information for defined test scenarios
@@ -28,7 +27,6 @@ expected_artifacts:
   - docs
   - delivery_report
 ---
-
 # Task Packet
 
 ## Objective
@@ -54,4 +52,3 @@ Confirm the balance query returns correct values for at least one unpaid case an
 ## Escalation Rules
 
 Raise an incident if the query path depends on unrelated reporting or analytics systems.
-

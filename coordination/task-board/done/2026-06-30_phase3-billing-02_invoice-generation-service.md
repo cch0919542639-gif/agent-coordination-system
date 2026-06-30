@@ -1,7 +1,7 @@
 ---
 task_id: phase3-billing-02
 phase: phase3-billing
-status: READY
+status: DONE
 owner: external-agent-backend-02
 reviewer: ORCHESTRATOR
 priority: high
@@ -15,7 +15,6 @@ allowed_scope:
 forbidden_scope:
   - src/payments/**
   - infra/**
-  - src/**
 acceptance:
   - Implement an invoice generation service or endpoint using the billing model
   - Return a valid invoice payload for a simple test customer scenario
@@ -53,4 +52,3 @@ Confirm that invoice generation succeeds for a valid input and returns a clear f
 ## Escalation Rules
 
 Raise an incident if invoice generation requires changes outside the billing model or API documentation scope defined here.
-

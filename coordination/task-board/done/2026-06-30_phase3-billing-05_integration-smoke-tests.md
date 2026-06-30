@@ -1,7 +1,7 @@
 ---
 task_id: phase3-billing-05
 phase: phase3-billing
-status: READY
+status: DONE
 owner: external-agent-test-01
 reviewer: ORCHESTRATOR
 priority: medium
@@ -28,7 +28,6 @@ expected_artifacts:
   - docs
   - delivery_report
 ---
-
 # Task Packet
 
 ## Objective
@@ -54,4 +53,3 @@ Confirm the smoke path covers invoice generation, payment recording, and balance
 ## Escalation Rules
 
 Raise an incident if the smoke path cannot be assembled because upstream billing tasks lack required interfaces or test hooks.
-
