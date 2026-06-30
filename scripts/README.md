@@ -150,3 +150,19 @@ Add findings and artifacts:
 ```bash
 python scripts/review_task.py --task-id phase2-03 --reviewer orchestrator --decision needs_fix --summary "Delivery report is missing." --finding "Expected delivery report was not present." --required-change "Add the missing delivery report." --artifact coordination/task-board/review/2026-06-29_phase2-03_real-project-intake-packet.md
 ```
+
+## `daily_orchestration_summary.py`
+
+Prints a daily snapshot of the coordination queues and current owner load.
+
+Usage:
+
+```bash
+python scripts/daily_orchestration_summary.py
+```
+
+Highlight specific owners:
+
+```bash
+python scripts/daily_orchestration_summary.py --owners external-agent-tools-02 external-agent-docs-04
+```
