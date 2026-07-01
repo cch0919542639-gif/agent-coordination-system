@@ -22,3 +22,6 @@ env/
 tmp/
 temp/
 
+# Local runtime data
+coordination.db
+*.db
