@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import List
 
 from src.billing.models import Invoice, InvoiceLineItem
-from src.billing.persistence import InvoiceStore
+from src.billing.persistence import InvoiceStoreProtocol
 
 
 class InvoiceGenerationError(Exception):
@@ -19,7 +19,7 @@ class InvoiceGenerationRequest:
 
 
 class InvoiceGenerator:
-    def __init__(self, store: InvoiceStore) -> None:
+    def __init__(self, store: InvoiceStoreProtocol) -> None:
         self._store = store
 
     def generate(self, request: InvoiceGenerationRequest) -> Invoice:

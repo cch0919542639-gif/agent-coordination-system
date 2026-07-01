@@ -42,7 +42,23 @@ DRAFT -> ISSUED -> PAID
 
 ## Invoice Persistence
 
-The `InvoiceStore` class provides in-memory persistence for invoices.
+### Store Contract (InvoiceStoreProtocol)
+
+All billing services depend on the `InvoiceStoreProtocol`, a structural protocol that defines the five methods any invoice store must provide:
+
+| Method | Signature | Description |
+|---|---|---|
+| `save` | `(invoice: Invoice) -> None` | Store an invoice (insert or update) |
+| `load` | `(invoice_id: str) -> Optional[Invoice]` | Load an invoice by ID |
+| `delete` | `(invoice_id: str) -> None` | Remove an invoice from the store |
+| `list_by_customer` | `(customer_id: str) -> list[Invoice]` | List all invoices for a customer |
+| `count` | `() -> int` | Total number of stored invoices |
+
+Services accept `InvoiceStoreProtocol` rather than a concrete store class, so they work transparently with any implementation that provides these methods. The protocol is `@runtime_checkable`, so `isinstance` checks work at runtime.
+
+### In-Memory Store
+
+The `InvoiceStore` class provides in-memory persistence for invoices. It satisfies `InvoiceStoreProtocol`.
 
 ### Methods
 
@@ -53,6 +69,22 @@ The `InvoiceStore` class provides in-memory persistence for invoices.
 | `delete` | `(invoice_id: str) -> None` | Remove an invoice from the store |
 | `list_by_customer` | `(customer_id: str) -> list[Invoice]` | List all invoices for a customer |
 | `count` | `() -> int` | Total number of stored invoices |
+
+### SQLite-Backed Store
+
+The `SqliteInvoiceStore` class provides durable SQLite-backed persistence with the same interface as `InvoiceStore`.
+
+Constructor: `SqliteInvoiceStore(db_path: str)` — accepts a filesystem path for the SQLite database file. Pass `":memory:"` for an in-memory SQLite database (useful for testing).
+
+| Method | Signature | Description |
+|---|---|---|
+| `save` | `(invoice: Invoice) -> None` | Store an invoice (insert or update) |
+| `load` | `(invoice_id: str) -> Optional[Invoice]` | Load an invoice by ID |
+| `delete` | `(invoice_id: str) -> None` | Remove an invoice from the store |
+| `list_by_customer` | `(customer_id: str) -> list[Invoice]` | List all invoices for a customer |
+| `count` | `() -> int` | Total number of stored invoices |
+
+The SQLite store serializes `Decimal` values as strings (preserving precision), `datetime` as ISO-8601 text, and line items as JSON. Data persisted to disk survives process restarts and store re-initialization.
 
 ## Invoice Generation Service
 
@@ -226,9 +258,31 @@ python -m pytest tests/billing/test_smoke.py -v
 
 Expected output: 2 passed, confirming the three services interact correctly through the shared `InvoiceStore`.
 
-### Known Residual Gaps
+The same smoke paths are also validated against the durable `SqliteInvoiceStore` in `tests/billing/test_durable_store_services.py`, confirming that `InvoiceGenerator`, `PaymentRecorder`, and `BalanceQuery` work identically with both store implementations via the `InvoiceStoreProtocol`.
 
-- InvoiceStore is in-memory only — no database persistence is tested
-- No concurrent payment scenarios are validated
-- No multi-customer isolation tests
+## Durable Multi-Customer Smoke Test
+
+The `tests/billing/test_durable_smoke.py` module extends coverage to multi-customer and multi-invoice scenarios under durable storage.
+
+### Customer Isolation
+
+Invoices for different customers are stored and queried independently via `SqliteInvoiceStore.list_by_customer()`. After recording payments, each customer's balance and status are unaffected by other customers' activity. This isolation survives store close and reopen.
+
+### Multi-Invoice Listing
+
+A single customer with multiple invoices is correctly enumerated by `list_by_customer()` and `count()` before and after store re-initialization. Individual invoice balances are preserved across reopen.
+
+### Validation Notes
+
+```text
+python -m pytest tests/billing/test_durable_smoke.py -v
+```
+
+Expected output: 2 passed, confirming customer isolation and multi-invoice durability.
+
+### Known Remaining Limits
+
+- `SqliteInvoiceStore` uses the built-in `sqlite3` module and serializes via JSON — no migration mechanism exists yet for schema evolution
+- Concurrency is local-only — no distributed locking or multi-process write safety is tested
+- Customer isolation relies on `list_by_customer()` filtering by `customer_id` string — no ownership or access-control layer exists
 - No third-party gateway integration (out of scope per phase intake)

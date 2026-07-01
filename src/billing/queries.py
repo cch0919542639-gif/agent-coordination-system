@@ -5,7 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from src.billing.models import InvoiceStatus
-from src.billing.persistence import InvoiceStore
+from src.billing.persistence import InvoiceStoreProtocol
 
 
 class BalanceQueryError(Exception):
@@ -24,7 +24,7 @@ class BalanceResult:
 
 
 class BalanceQuery:
-    def __init__(self, store: InvoiceStore) -> None:
+    def __init__(self, store: InvoiceStoreProtocol) -> None:
         self._store = store
 
     def query(self, invoice_id: str) -> BalanceResult:

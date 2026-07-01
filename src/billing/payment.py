@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from src.billing.models import Invoice
-from src.billing.persistence import InvoiceStore
+from src.billing.persistence import InvoiceStoreProtocol
 
 
 class PaymentRecordError(Exception):
@@ -11,7 +11,7 @@ class PaymentRecordError(Exception):
 
 
 class PaymentRecorder:
-    def __init__(self, store: InvoiceStore) -> None:
+    def __init__(self, store: InvoiceStoreProtocol) -> None:
         self._store = store
 
     def record_payment(self, invoice_id: str, amount: Decimal) -> Invoice:
