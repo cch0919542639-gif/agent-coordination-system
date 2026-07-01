@@ -84,6 +84,11 @@ Constructor: `SqliteInvoiceStore(db_path: str)` — accepts a filesystem path fo
 | `list_by_customer` | `(customer_id: str) -> list[Invoice]` | List all invoices for a customer |
 | `count` | `() -> int` | Total number of stored invoices |
 
+| `schema_version` | `() -> int` | Current schema version of the database |
+| `concurrency_model` | `() -> str` | Description of the supported concurrency model |
+
+The `SCHEMA_VERSION` module constant (`sqlite_store.SCHEMA_VERSION`) defines the latest schema version. The store also exports `SchemaVersionError` for migration-related failures and `WriteContentionError` for write-lock timeouts.
+
 The SQLite store serializes `Decimal` values as strings (preserving precision), `datetime` as ISO-8601 text, and line items as JSON. Data persisted to disk survives process restarts and store re-initialization.
 
 ## Invoice Generation Service
@@ -280,9 +285,113 @@ python -m pytest tests/billing/test_durable_smoke.py -v
 
 Expected output: 2 passed, confirming customer isolation and multi-invoice durability.
 
+### Schema Versioning & Migration
+
+`SqliteInvoiceStore` includes a built-in schema versioning and migration baseline. On every store initialization, it checks the version stored in the `_schema_version` system table and runs any pending migrations to bring the database up to `SCHEMA_VERSION` (`=1` as of this writing).
+
+- **Fresh databases** — all migrations are applied in order, establishing the initial schema.
+- **Existing databases** — only new migrations (versions > current) are applied; already-applied migrations are skipped.
+- **Migration v1** — creates the `invoices` table (idempotent via `CREATE TABLE IF NOT EXISTS`), so existing databases created before schema versioning was introduced are automatically upgraded without data loss.
+
+```python
+from src.billing.sqlite_store import SqliteInvoiceStore, SCHEMA_VERSION
+
+store = SqliteInvoiceStore("/path/to/billing.db")
+print(store.schema_version)  # 1
+print(SCHEMA_VERSION)        # 1
+```
+
+To add a new migration, implement `_migration_v<N>()` on `SqliteInvoiceStore`, bump `SCHEMA_VERSION`, and the store will apply it automatically on next initialization.
+
+### Local Concurrency Guardrails
+
+`SqliteInvoiceStore` uses a **single-process, serialized-writes** concurrency model.
+
+#### Supported Behavior
+
+- Multiple reads (`load`, `list_by_customer`, `count`) can proceed concurrently from any number of threads within the same process — no lock is required for read operations.
+- Write operations (`save`, `delete`) are serialized by a per-instance `threading.Lock`. Concurrent writes from different threads on the same store instance are queued automatically.
+- Each SQLite connection sets `PRAGMA busy_timeout = 3000`, so if another process holds a write lock on the database file, the connection waits up to 3 seconds before failing.
+- `WriteContentionError` is raised if a write operation cannot acquire the in-process lock within `WRITE_LOCK_TIMEOUT` seconds (default: 10.0).
+
+#### Unsupported Scenarios
+
+- Multi-process writes to the same database file are not actively coordinated beyond SQLite's built-in file-level locking. Each process has its own in-process lock, so no cross-process serialization is guaranteed.
+- Distributed or cluster-wide write coordination is out of scope.
+- Read-after-write consistency across separate store instances pointing at the same file is best-effort (SQLite file locking applies).
+
+```python
+from src.billing.sqlite_store import SqliteInvoiceStore, WriteContentionError
+
+store = SqliteInvoiceStore("/path/to/billing.db")
+print(store.concurrency_model)  # "single-process, serialized-writes"
+```
+
+### Customer Access Boundary
+
+The billing module provides an explicit access-boundary contract through `CustomerAccess` and `CustomerBoundary`. This boundary makes customer-scoped reads deliberate and auditable, without implementing authentication or authorization.
+
+#### CustomerAccess
+
+`CustomerAccess` is a frozen value object that represents "the caller has been verified to have access to this customer's data." It carries only a `customer_id` and is immutable.
+
+```python
+from src.billing.access import CustomerAccess
+
+access = CustomerAccess("cust-001")
+print(access.customer_id)  # "cust-001"
+```
+
+The billing layer **does not verify** that the caller is authorized to act as that customer. It trusts the `CustomerAccess` it receives. Outer layers (API gateways, auth middleware) are responsible for creating `CustomerAccess` after authenticating the caller and verifying authorization.
+
+#### CustomerBoundary
+
+`CustomerBoundary` wraps a store and a `CustomerAccess`, providing customer-scoped read methods that automatically filter by the customer ID.
+
+| Method | Signature | Description |
+|---|---|---|
+| `list_invoices` | `() -> list[Invoice]` | List invoices for the boundary's customer |
+| `load_invoice` | `(invoice_id: str) -> Optional[Invoice]` | Load invoice only if it belongs to this customer |
+| `query_balance` | `(invoice_id: str) -> BalanceResult` | Query balance only if invoice belongs to this customer |
+
+`load_invoice` returns `None` if the invoice does not exist or belongs to a different customer. `query_balance` raises `BalanceQueryError` if the invoice is not accessible.
+
+```python
+from src.billing.access import CustomerAccess, CustomerBoundary
+from src.billing.persistence import InvoiceStore
+
+store = InvoiceStore()
+# ... save invoices ...
+
+alice = CustomerBoundary(store, CustomerAccess("alice"))
+for inv in alice.list_invoices():
+    print(inv.invoice_id, inv.total)
+```
+
+#### Store Factory Method
+
+Both `InvoiceStore` and `SqliteInvoiceStore` provide a `for_customer()` factory method that returns a `CustomerBoundary`:
+
+```python
+from src.billing.sqlite_store import SqliteInvoiceStore
+
+store = SqliteInvoiceStore("/path/to/billing.db")
+boundary = store.for_customer("alice")
+print(boundary.customer_id)   # "alice"
+print(boundary.list_invoices())
+```
+
+This method is part of `InvoiceStoreProtocol`, so all conforming stores support it.
+
+#### Boundary Responsibility
+
+| Layer | Responsibility |
+|---|---|
+| Billing (`CustomerBoundary`) | Enforces data-scoping — returns only invoices matching the `CustomerAccess.customer_id` |
+| Outer layers (API, auth) | Enforces identity and authorization — creates `CustomerAccess` only after verifying the caller |
+
+The billing module documents this split clearly: `CustomerBoundary` prevents accidental cross-customer data leaks within billing code, but it is not a security boundary. A caller that can construct an arbitrary `CustomerAccess("any-id")` can read any customer's data.
+
 ### Known Remaining Limits
 
-- `SqliteInvoiceStore` uses the built-in `sqlite3` module and serializes via JSON — no migration mechanism exists yet for schema evolution
-- Concurrency is local-only — no distributed locking or multi-process write safety is tested
-- Customer isolation relies on `list_by_customer()` filtering by `customer_id` string — no ownership or access-control layer exists
 - No third-party gateway integration (out of scope per phase intake)

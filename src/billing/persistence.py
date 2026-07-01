@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Dict, List, Optional, Protocol, runtime_checkable
 
 from src.billing.models import Invoice
+
+if TYPE_CHECKING:
+    from src.billing.access import CustomerAccess, CustomerBoundary
 
 
 @runtime_checkable
@@ -19,6 +22,7 @@ class InvoiceStoreProtocol(Protocol):
     def delete(self, invoice_id: str) -> None: ...
     def list_by_customer(self, customer_id: str) -> List[Invoice]: ...
     def count(self) -> int: ...
+    def for_customer(self, customer_id: str) -> CustomerBoundary: ...
 
 
 class InvoiceStore:
@@ -39,3 +43,8 @@ class InvoiceStore:
 
     def count(self) -> int:
         return len(self._invoices)
+
+    def for_customer(self, customer_id: str) -> CustomerBoundary:
+        from src.billing.access import CustomerAccess, CustomerBoundary
+
+        return CustomerBoundary(self, CustomerAccess(customer_id))
