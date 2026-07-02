@@ -34,15 +34,43 @@ This API should mirror the repo-first workflow already established in markdown f
 
 ## Authentication
 
-MVP recommendation:
+API key authentication is provided via a middleware layer on all endpoints (including `/health`).
 
-- API key per agent
-- API key per orchestrator or reviewer client
+### Configuration
 
-Each request should identify:
+Set `COORDINATION_API_KEYS` environment variable to a comma-separated list of accepted keys:
 
-- `actor_type`
-- `actor_id`
+```bash
+set COORDINATION_API_KEYS=sk-agent-1,sk-agent-2,sk-orchestrator
+```
+
+When `COORDINATION_API_KEYS` is empty or unset, **auth is disabled** and all requests pass through without key validation.
+
+### Request Format
+
+Clients send the API key via the `X-API-Key` header:
+
+```text
+X-API-Key: sk-agent-1
+```
+
+### Response
+
+Invalid or missing key returns `401` with:
+
+```json
+{"detail": "Invalid or missing API key"}
+```
+
+### Agent CLI
+
+The agent client (`clients/coordination_agent/`) reads `COORDINATION_API_KEY` (singular) and sends it as the `X-API-Key` header on every request. This key must match one of the server's `COORDINATION_API_KEYS` when auth is enabled.
+
+### Design Notes
+
+- Auth is stateless: no sessions, tokens, or cookies.
+- The middleware returns a `JSONResponse` directly rather than raising `HTTPException` to avoid the default error middleware converting 401s to 500s.
+- Future iterations may add per-route granularity or actor-role mapping.
 
 ## Status Enums
 

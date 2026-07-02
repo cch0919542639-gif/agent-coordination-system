@@ -13,6 +13,7 @@ COMMAND_MAP = {
     "validate": "validate_coordination_files.py",
     "summary": "daily_orchestration_summary.py",
     "next": None,
+    "intake": "intake_phase.py",
     "assigned": "list_assigned_tasks.py",
     "claim": "claim_task.py",
     "submit": "submit_task.py",
@@ -21,6 +22,7 @@ COMMAND_MAP = {
     "dispatch": "dispatch_task.py",
     "review": "review_task.py",
     "complete": "complete_task.py",
+    "repo-sync": "repo_sync.py",
 }
 
 
@@ -37,6 +39,15 @@ def build_parser() -> argparse.ArgumentParser:
             next_parser.add_argument(
                 "--owner",
                 help="Optional owner name to prioritize when suggesting ready work.",
+            )
+            continue
+        if name == "intake":
+            subparsers.add_parser(name, help="Generate a draft phase-intake markdown file from CLI input.")
+            continue
+        if name == "dispatch":
+            subparsers.add_parser(
+                name,
+                help="Dispatch a task: assign owner/reviewer and print a ready-to-send dispatch message.",
             )
             continue
         subparsers.add_parser(name, help=f"Run `{COMMAND_MAP[name]}`")

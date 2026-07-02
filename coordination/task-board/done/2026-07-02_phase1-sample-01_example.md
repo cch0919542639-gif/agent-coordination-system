@@ -1,8 +1,8 @@
 ---
 task_id: phase1-sample-01
 phase: phase1-foundation
-status: READY
-owner: UNASSIGNED
+status: DONE
+owner: external-agent-live-02
 reviewer: ORCHESTRATOR
 priority: medium
 dependencies: []
@@ -20,7 +20,6 @@ expected_artifacts:
   - task_card
   - delivery_report
 ---
-
 # Task Packet
 
 ## Objective

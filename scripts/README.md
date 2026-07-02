@@ -9,6 +9,7 @@ Available subcommands:
 - `validate`
 - `summary`
 - `next`
+- `intake`
 - `assigned`
 - `claim`
 - `submit`
@@ -23,6 +24,7 @@ Usage:
 ```bash
 python scripts/orchestrate.py summary
 python scripts/orchestrate.py next
+python scripts/orchestrate.py intake --phase-id phase7-example --objective "..." --in-scope "src/**"
 python scripts/orchestrate.py validate --templates-only
 python scripts/orchestrate.py assigned --owner external-agent-docs-01
 python scripts/orchestrate.py dispatch --task-id phase2-03 --owner external-agent-docs-04
@@ -148,9 +150,21 @@ Usage:
 python scripts/open_incident.py --task-id phase2-03 --agent external-agent-docs-04 --category scope_conflict --summary "Required file is outside allowed scope."
 ```
 
+## `intake_phase.py`
+
+Generates a draft phase-intake markdown file from CLI input.
+
+Usage:
+
+```bash
+python scripts/orchestrate.py intake --phase-id phase7-example --objective "Implement feature X"
+```
+
+See `docs/operations/intake-command-usage.md` for the full reference with all flags and task JSON format.
+
 ## `dispatch_task.py`
 
-Assigns or reassigns a task owner by updating the task card in place.
+Assigns or reassigns a task owner by updating the task card in place and generates a ready-to-send dispatch message.
 
 Usage:
 
@@ -162,6 +176,24 @@ Optional reviewer override:
 
 ```bash
 python scripts/dispatch_task.py --task-id phase2-03 --owner external-agent-docs-04 --reviewer ORCHESTRATOR
+```
+
+Pipe the raw dispatch message without decoration:
+
+```bash
+python scripts/dispatch_task.py --task-id phase2-03 --owner external-agent-docs-04 --output -
+```
+
+Write the dispatch message to a file:
+
+```bash
+python scripts/dispatch_task.py --task-id phase2-03 --owner external-agent-docs-04 --output dispatch-msg.md
+```
+
+Preview the message without modifying the task card:
+
+```bash
+python scripts/dispatch_task.py --task-id phase2-03 --owner external-agent-docs-04 --message-only
 ```
 
 ## `review_task.py`

@@ -6,7 +6,9 @@ from datetime import datetime, timezone
 from typing import Iterator, Optional
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+
+LEASE_DURATION_SECONDS = 300
 
 
 class MigrationError(Exception):
@@ -59,7 +61,7 @@ def run_migrations(db_path: Optional[str] = None) -> None:
 
 
 def _get_migration(version: int):
-    migrations = {1: _migration_v1}
+    migrations = {1: _migration_v1, 2: _migration_v2}
     fn = migrations.get(version)
     if fn is None:
         raise MigrationError(f"Unknown migration version {version}")
@@ -173,3 +175,11 @@ def _migration_v1(conn: sqlite3.Connection) -> None:
         );
         """
     )
+
+
+def _migration_v2(conn: sqlite3.Connection) -> None:
+    cursor = conn.execute("PRAGMA table_info(assignments)")
+    columns = {row[1] for row in cursor.fetchall()}
+    if "lease_expires_at" not in columns:
+        conn.execute("ALTER TABLE assignments ADD COLUMN lease_expires_at TEXT")
+        conn.commit()

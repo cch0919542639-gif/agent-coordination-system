@@ -6,6 +6,8 @@ These message templates are intended for assigning repo-first work to external a
 
 Use them as short, repeatable dispatch messages. The task card remains the source of truth. The message should only direct the agent to the right repo state and expected workflow.
 
+> **Automated alternative:** The `dispatch_task.py` script (via `python scripts/orchestrate.py dispatch`) generates dispatch messages automatically from the task card. It produces the same structure as Template 1 below, including the task ID, packet path, protocol references, and start/blocked/finish instructions. Use `--output -` to pipe the raw message body into a chat message or notification.
+
 ## General Rules
 
 - Keep the dispatch message short.

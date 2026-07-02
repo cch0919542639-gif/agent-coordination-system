@@ -21,6 +21,7 @@ Before doing anything else:
 1. pull the latest repo state
 2. read the assigned task packet
 3. read `docs/operations/agent-task-execution-protocol.md`
+4. (if provided) read the dispatch message from the orchestrator
 
 Minimum required command:
 

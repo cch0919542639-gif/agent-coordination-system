@@ -15,6 +15,12 @@ class Settings:
         default_factory=lambda: os.environ.get("LOG_LEVEL", "info")
     )
     api_keys: List[str] = field(default_factory=lambda: _parse_api_keys())
+    db_path: str = field(
+        default_factory=lambda: os.environ.get("COORDINATION_DB_PATH", "coordination.db")
+    )
+    base_url: str = field(
+        default_factory=lambda: os.environ.get("COORDINATION_BASE_URL", f"http://127.0.0.1:8000")
+    )
 
     @property
     def is_api_key_required(self) -> bool:

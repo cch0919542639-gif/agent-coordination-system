@@ -55,8 +55,22 @@ python scripts/orchestrate.py next
 ### Unified entrypoint
 
 - `python scripts/orchestrate.py summary`
-- `python scripts/orchestrate.py dispatch --task-id <task> --owner <agent>`
+- `python scripts/orchestrate.py intake --phase-id <phase> --objective "<text>" --in-scope "<pattern>" --task '<json>'`
+- `python scripts/orchestrate.py dispatch --task-id <task> --owner <agent> [--reviewer <name>] [--output -]`
 - `python scripts/orchestrate.py review --task-id <task> --reviewer <name> --decision <decision> --summary "<text>"`
+
+### Lead-agent loop (intake → dispatch → review)
+
+For lead-agent operation, the standard loop is:
+
+1. **Intake** — generate a draft phase intake with `python scripts/orchestrate.py intake`
+2. **Decompose** — refine the draft and create individual task packet files in `coordination/task-board/ready/`
+3. **Dispatch** — assign each task with `python scripts/orchestrate.py dispatch`; the command prints a ready-to-send message that can be piped to the worker (`--output -`)
+4. **Monitor** — track progress, handle blockers, check the review queue
+5. **Review** — evaluate completed tasks with `python scripts/orchestrate.py review`
+6. **Close** — finalize accepted tasks
+
+See [Lead Agent Orchestration Protocol](lead-agent-orchestration-protocol.md) and [Intake Command Usage](intake-command-usage.md) for details.
 
 ## Daily Rhythm
 
@@ -112,6 +126,8 @@ python scripts/orchestrate.py next
 
 Choose one or more tasks from `ready/`.
 
+When choosing an owner, refer to the [Worker Assignment Policy](worker-assignment-policy.md) — it defines which agent type fits which task shape, when tasks may run in parallel, and when review should be separated from implementation.
+
 Assign or reassign with:
 
 ```bash
@@ -129,6 +145,14 @@ If needed, also set the reviewer:
 ```bash
 python scripts/dispatch_task.py --task-id phase3-billing-01 --owner external-agent-backend-01 --reviewer ORCHESTRATOR
 ```
+
+The command prints a ready-to-send dispatch message. Use `--output -` to pipe the raw message body (no decoration):
+
+```bash
+python scripts/orchestrate.py dispatch --task-id phase3-billing-01 --owner external-agent-backend-01 --output -
+```
+
+Use `--message-only` to preview the message without updating the task card.
 
 Then send the agent only the minimum message:
 
@@ -240,14 +264,23 @@ Use this when:
 
 ## Recommended Daily Sequence
 
-For a normal day, use this exact order:
+### Starting a New Phase (Lead Agent)
+
+```bash
+python scripts/orchestrate.py intake --phase-id <phase> --objective "<objective>" --in-scope "<pattern>" --task '<json>'
+# Review and refine the generated draft at coordination/completed/<phase>-intake-draft.md
+# Create individual task packet files in coordination/task-board/ready/
+python scripts/orchestrate.py validate
+```
+
+### Normal Operator Day
 
 ```bash
 python scripts/daily_orchestration_summary.py
 python scripts/validate_coordination_files.py
 python scripts/orchestrate.py next
 python scripts/list_review_queue.py
-python scripts/dispatch_task.py --task-id <next-task> --owner <agent>
+python scripts/orchestrate.py dispatch --task-id <next-task> --owner <agent> [--reviewer <reviewer>]
 ```
 
 Then later in the same day:

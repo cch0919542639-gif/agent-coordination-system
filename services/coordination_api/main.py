@@ -15,7 +15,9 @@ app.include_router(router)
 
 @app.middleware("http")
 async def api_key_middleware(request: Request, call_next):
-    await verify_api_key(request, settings)
+    response = await verify_api_key(request, settings)
+    if response is not None:
+        return response
     return await call_next(request)
 
 
@@ -27,7 +29,7 @@ async def health():
 def main() -> None:
     import uvicorn
 
-    run_migrations()
+    run_migrations(settings.db_path)
     uvicorn.run(
         "services.coordination_api.main:app",
         host=settings.host,
