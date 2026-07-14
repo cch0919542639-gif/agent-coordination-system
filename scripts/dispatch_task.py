@@ -5,13 +5,11 @@ import argparse
 import sys
 from pathlib import Path
 
-import yaml
-
 from coordination_common import find_task, save_task
+from profile_resolver import load_profile, ProfileError
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
-PROFILES_DIR = ROOT / "profiles"
 PROTOCOL_DOC = "docs/operations/agent-task-execution-protocol.md"
 EXECUTION_DOC = "docs/operations/lead-agent-orchestration-protocol.md"
 ASSIGNMENT_DOC = "docs/operations/worker-assignment-policy.md"
@@ -22,37 +20,6 @@ def normalize_optional(value: str | None) -> str | None:
         return None
     normalized = value.strip()
     return normalized or None
-
-
-def load_profile(profile_ref: str) -> dict | None:
-    """Load a profile by name or file path.
-
-    Returns parsed YAML front matter dict, or None if not found.
-    """
-    candidate = Path(profile_ref)
-    if candidate.is_file():
-        text = candidate.read_text(encoding="utf-8")
-    else:
-        # Try as profile_name: look for profiles/<name>-profile.md
-        by_name = PROFILES_DIR / f"{profile_ref}-profile.md"
-        if by_name.is_file():
-            text = by_name.read_text(encoding="utf-8")
-        else:
-            return None
-
-    if not text.startswith("---\n"):
-        return None
-    end = text.find("\n---\n", 4)
-    if end == -1:
-        return None
-    block = text[4:end]
-    try:
-        data = yaml.safe_load(block)
-    except yaml.YAMLError:
-        return None
-    if not isinstance(data, dict):
-        return None
-    return data
 
 
 def build_profile_context_block(profile_data: dict) -> list[str]:
@@ -298,13 +265,11 @@ def main() -> int:
     # Load profile if specified
     profile_data = None
     if args.profile:
-        profile_data = load_profile(args.profile)
-        if profile_data is None:
-            print(
-                f"Profile `{args.profile}` not found. Checked: {PROFILES_DIR / (args.profile + '-profile.md')}",
-                file=sys.stderr,
-            )
+        result = load_profile(args.profile)
+        if isinstance(result, ProfileError):
+            print(result.message, file=sys.stderr)
             return 1
+        profile_data = result.data
 
     # Update owner/reviewer unless --message-only
     if not args.message_only:
