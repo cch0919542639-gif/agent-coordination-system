@@ -2,7 +2,7 @@
 task_id: phase6-lead-agent-02
 phase: phase6-lead-agent-automation
 status: DONE
-owner: external-agent-platform-15
+owner: test-agent
 reviewer: ORCHESTRATOR
 priority: high
 dependencies:

@@ -28,6 +28,7 @@ python scripts/orchestrate.py intake --phase-id phase7-example --objective "..."
 python scripts/orchestrate.py validate --templates-only
 python scripts/orchestrate.py assigned --owner external-agent-docs-01
 python scripts/orchestrate.py dispatch --task-id phase2-03 --owner external-agent-docs-04
+python scripts/orchestrate.py dispatch --task-id phase2-03 --owner external-agent-docs-04 --profile rental-rebuild
 python scripts/orchestrate.py review --task-id phase2-03 --reviewer orchestrator --decision accepted --summary "Task meets acceptance criteria."
 ```
 
@@ -39,14 +40,29 @@ Checks:
 
 - task packet front matter keys
 - required markdown sections
+- optional worktree provenance keys (`execution_mode`, `branch`, `worktree_path`, `machine_id`)
 - progress report labels
 - incident report labels
 - review report labels
 - task card status versus task-board folder state
 - valid task status values (READY, IN_PROGRESS, REVIEW, DONE, BLOCKED, NEEDS_FIX, REASSIGNED, CANCELLED)
 - valid review decision values (accepted, needs_fix, reassign, rejected)
+- valid execution mode values (`REPO_FIRST`, `WORKTREE`)
+- required `branch` and `worktree_path` when `execution_mode: WORKTREE`
 - delivery report labels
 - delivery report existence when task packet lists `delivery_report` in expected_artifacts
+
+Profile checks:
+
+- profile file discovery under `profiles/` (excludes README.md and schema-profile-v1.md)
+- required top-level keys (`profile_name`, `schema_version`, `description`)
+- `profile_name` must be non-empty and unique across all profiles
+- `schema_version` must be `"1.0"`
+- `description` must be non-empty
+- `extends` must be null in schema v1
+- `allowed_statuses` must be a subset of the engine's valid statuses
+- `allowed_execution_modes` must be a subset of the engine's valid execution modes
+- `artifact_mapping.coordination_structure` paths must not escape the repo root (no `../` or absolute paths)
 
 Usage:
 
@@ -178,6 +194,20 @@ Optional reviewer override:
 python scripts/dispatch_task.py --task-id phase2-03 --owner external-agent-docs-04 --reviewer ORCHESTRATOR
 ```
 
+Worktree-aware dispatch:
+
+```bash
+python scripts/dispatch_task.py --task-id phase7-worktree-02 --owner external-agent-platform-16 --execution-mode WORKTREE --branch agent/external-agent-platform-16-phase7-worktree-02-r1 --worktree-path worktrees/external-agent-platform-16/phase7-worktree-02 --machine-id workstation-a
+```
+
+Profile-aware dispatch:
+
+```bash
+python scripts/dispatch_task.py --task-id phase2-03 --owner external-agent-docs-04 --profile rental-rebuild
+```
+
+The `--profile` flag accepts a profile name (e.g. `rental-rebuild`) or a path to a profile file. When provided, the dispatch message includes a profile context section showing the profile's declared defaults, role naming conventions, artifact paths, and worktree policy. It also explicitly states what is script-supported versus what requires manual operator follow-up. Path remapping and artifact placement are NOT automated — the profile context is informational.
+
 Pipe the raw dispatch message without decoration:
 
 ```bash
@@ -247,4 +277,34 @@ Optional owner hint:
 
 ```bash
 python scripts/orchestrate.py next --owner external-agent-docs-04
+```
+
+## PowerShell wrappers
+
+For Windows environments where `python` or `py` is not reliably available in `PATH`, use these wrappers:
+
+### `run_python.ps1`
+
+Runs a repository Python script using the fixed local runtime path documented in `docs/operations/local-python-runtime.md`.
+
+Usage:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\run_python.ps1 scripts\orchestrate.py validate
+```
+
+Pass extra arguments through to the target Python script:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\run_python.ps1 scripts\orchestrate.py next --owner external-agent-docs-04
+```
+
+### `validate.ps1`
+
+Runs the coordination validator through the fixed Python runtime wrapper.
+
+Usage:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\validate.ps1
 ```

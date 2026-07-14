@@ -34,6 +34,7 @@ def _run_dispatch(task_id: str, extra_args: list[str] | None = None) -> subproce
         "--task-id", task_id,
         "--owner", "test-agent",
         "--message-only",
+        "--allow-terminal",
     ]
     if extra_args:
         cmd.extend(extra_args)
@@ -90,6 +91,35 @@ class TestDispatchMessageGeneration:
         assert result.returncode == 0
         assert "Reviewer: ORCHESTRATOR" in result.stdout
 
+    def test_repo_first_dispatch_message_omits_worktree_fields(self, dispatch_script: str) -> None:
+        result = _run_dispatch(MSG_TASK_ID, ["--execution-mode", "REPO_FIRST"])
+        assert result.returncode == 0
+        assert "Execution mode:" in result.stdout
+        assert "- REPO_FIRST" in result.stdout
+        assert "branch:" not in result.stdout
+        assert "worktree_path:" not in result.stdout
+
+    def test_worktree_dispatch_message_includes_provenance(self, dispatch_script: str) -> None:
+        result = _run_dispatch(
+            MSG_TASK_ID,
+            [
+                "--execution-mode", "WORKTREE",
+                "--branch", "agent/test-branch",
+                "--worktree-path", "worktrees/test-agent/task-01",
+                "--machine-id", "workstation-a",
+            ],
+        )
+        assert result.returncode == 0
+        assert "- WORKTREE" in result.stdout
+        assert "branch: agent/test-branch" in result.stdout
+        assert "worktree_path: worktrees/test-agent/task-01" in result.stdout
+        assert "machine_id: workstation-a" in result.stdout
+
+    def test_worktree_dispatch_requires_branch_and_path(self, dispatch_script: str) -> None:
+        result = _run_dispatch(MSG_TASK_ID, ["--execution-mode", "WORKTREE", "--branch", "agent/test-branch"])
+        assert result.returncode != 0
+        assert "requires both --branch and --worktree-path" in result.stderr
+
     def test_no_message_flag(self, dispatch_script: str) -> None:
         result = _run_dispatch(MSG_TASK_ID, ["--no-message"])
         assert result.returncode == 0
@@ -103,6 +133,7 @@ class TestDispatchMessageGeneration:
                 "--task-id", MSG_TASK_ID,
                 "--owner", "test-agent",
                 "--message-only",
+                "--allow-terminal",
                 "--output", str(out_file),
             ],
             capture_output=True, text=True, cwd=str(ROOT),
@@ -121,6 +152,7 @@ class TestDispatchMessageGeneration:
                 "--task-id", MSG_TASK_ID,
                 "--owner", "test-agent",
                 "--message-only",
+                "--allow-terminal",
                 "--output", "-",
             ],
             capture_output=True, text=True, cwd=str(ROOT),
@@ -180,3 +212,34 @@ class TestDispatchFullFlow:
         orig_fm["owner"] = orig_fm.get("owner", "UNASSIGNED")
         orig_fm["reviewer"] = orig_fm.get("reviewer", "ORCHESTRATOR")
         save_task(FLOW_TASK_FILE, orig_fm, _)
+
+    def test_dispatch_updates_worktree_metadata(self, dispatch_script: str) -> None:
+        """Full dispatch should persist worktree provenance on the task card."""
+        if not FLOW_TASK_FILE.exists():
+            pytest.skip("test task card not in ready/")
+
+        from coordination_common import load_task, save_task
+
+        orig_fm, body = load_task(FLOW_TASK_FILE)
+
+        result = subprocess.run(
+            [
+                sys.executable, str(SCRIPT),
+                "--task-id", FLOW_TASK_ID,
+                "--owner", "test-agent-worktree",
+                "--execution-mode", "WORKTREE",
+                "--branch", "agent/test-agent-worktree-phase7-02",
+                "--worktree-path", "worktrees/test-agent-worktree/phase7-02",
+                "--machine-id", "lab-machine",
+            ],
+            capture_output=True, text=True, cwd=str(ROOT),
+        )
+        assert result.returncode == 0
+
+        updated_fm, _ = load_task(FLOW_TASK_FILE)
+        assert updated_fm["execution_mode"] == "WORKTREE"
+        assert updated_fm["branch"] == "agent/test-agent-worktree-phase7-02"
+        assert updated_fm["worktree_path"] == "worktrees/test-agent-worktree/phase7-02"
+        assert updated_fm["machine_id"] == "lab-machine"
+
+        save_task(FLOW_TASK_FILE, orig_fm, body)

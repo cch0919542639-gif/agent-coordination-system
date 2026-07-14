@@ -200,10 +200,16 @@ Flags:
 - `--task-id` (required) — task to dispatch
 - `--owner` (required) — agent to assign
 - `--reviewer` — optional reviewer override
+- `--execution-mode` — optional execution contract (`REPO_FIRST` or `WORKTREE`)
+- `--branch` — branch provenance for worktree-aware dispatch
+- `--worktree-path` — worktree path provenance for worktree-aware dispatch
+- `--machine-id` — optional machine provenance for distributed runs
 - `--no-message` — suppress the dispatch message output
 - `--output FILE` — write the dispatch message to FILE (`-` for stdout-only, supresses decorated block)
 - `--message-only` — print the message without updating owner/reviewer
 - `--allow-terminal` — allow dispatching tasks in terminal states
+
+When `--execution-mode WORKTREE` is used, dispatch must include a branch and worktree path, either from the command flags or already-present task metadata. The command does not create the git worktree for the worker. It only records the provenance and includes it in the dispatch message so the assigned agent can verify it before implementation.
 
 ### Owner Selection and Reviewer Routing
 
@@ -222,6 +228,18 @@ python scripts/orchestrate.py dispatch \
   --task-id phase6-lead-agent-02 \
   --owner external-agent-platform-15 \
   --reviewer ORCHESTRATOR
+```
+
+Worktree-aware example:
+
+```bash
+python scripts/orchestrate.py dispatch \
+  --task-id phase7-worktree-02 \
+  --owner external-agent-platform-16 \
+  --execution-mode WORKTREE \
+  --branch agent/external-agent-platform-16-phase7-worktree-02-r1 \
+  --worktree-path worktrees/external-agent-platform-16/phase7-worktree-02 \
+  --machine-id workstation-a
 ```
 
 The command prints the updated task info followed by a `--- Dispatch Message ---` block that the lead agent can paste directly to the assigned worker. Use `--output -` to pipe the raw message body into another tool (e.g. `... --output - | pbcopy`).

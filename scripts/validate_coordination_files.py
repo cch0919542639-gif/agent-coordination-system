@@ -6,11 +6,14 @@ import re
 import sys
 from pathlib import Path
 
+import yaml
+
 
 ROOT = Path(__file__).resolve().parents[1]
 COORDINATION_DIR = ROOT / "coordination"
 TEMPLATES_DIR = COORDINATION_DIR / "templates"
 TASK_BOARD_DIR = COORDINATION_DIR / "task-board"
+PROFILES_DIR = ROOT / "profiles"
 
 TASK_BOARD_STATES = {"ready", "in_progress", "review", "done", "blocked"}
 VALID_TASK_STATUSES = {
@@ -24,6 +27,7 @@ VALID_TASK_STATUSES = {
     "CANCELLED",
 }
 VALID_REVIEW_DECISIONS = {"accepted", "needs_fix", "reassign", "rejected"}
+VALID_EXECUTION_MODES = {"REPO_FIRST", "WORKTREE"}
 TASK_REQUIRED_KEYS = {
     "task_id",
     "phase",
@@ -36,6 +40,12 @@ TASK_REQUIRED_KEYS = {
     "forbidden_scope",
     "acceptance",
     "expected_artifacts",
+}
+TASK_OPTIONAL_KEYS = {
+    "execution_mode",
+    "branch",
+    "worktree_path",
+    "machine_id",
 }
 TASK_REQUIRED_SECTIONS = {
     "## Objective",
@@ -172,6 +182,13 @@ def validate_task_file(path: Path) -> list[ValidationError]:
     for key in missing_keys:
         errors.append(ValidationError(path, f"missing front matter key `{key}`"))
 
+    unknown_keys = sorted(set(front_matter) - TASK_REQUIRED_KEYS - TASK_OPTIONAL_KEYS)
+    for key in unknown_keys:
+        if key.startswith("_"):
+            continue
+        # Extra front matter keys are allowed; no error needed.
+        break
+
     status = str(front_matter.get("status", "")).lower()
     parent_state = path.parent.name.lower()
     if parent_state in TASK_BOARD_STATES and status:
@@ -197,6 +214,39 @@ def validate_task_file(path: Path) -> list[ValidationError]:
     for list_key in ("dependencies", "allowed_scope", "forbidden_scope", "acceptance", "expected_artifacts"):
         if list_key in front_matter and not isinstance(front_matter[list_key], list):
             errors.append(ValidationError(path, f"`{list_key}` must be a list"))
+
+    for scalar_key in ("execution_mode", "branch", "worktree_path", "machine_id"):
+        if scalar_key in front_matter and isinstance(front_matter[scalar_key], list):
+            errors.append(ValidationError(path, f"`{scalar_key}` must be a scalar value, not a list"))
+
+    execution_mode = str(front_matter.get("execution_mode", "")).strip()
+    if execution_mode:
+        if execution_mode not in VALID_EXECUTION_MODES:
+            errors.append(
+                ValidationError(
+                    path,
+                    f"invalid execution_mode `{execution_mode}`; must be one of {sorted(VALID_EXECUTION_MODES)}",
+                )
+            )
+        if execution_mode == "WORKTREE":
+            for required_key in ("branch", "worktree_path"):
+                value = str(front_matter.get(required_key, "")).strip()
+                if not value:
+                    errors.append(
+                        ValidationError(
+                            path,
+                            f"`{required_key}` is required when execution_mode is `WORKTREE`",
+                        )
+                    )
+
+    has_worktree_provenance = any(str(front_matter.get(key, "")).strip() for key in ("branch", "worktree_path", "machine_id"))
+    if has_worktree_provenance and not execution_mode:
+        errors.append(
+            ValidationError(
+                path,
+                "worktree provenance fields are present but `execution_mode` is missing",
+            )
+        )
 
     for section in sorted(TASK_REQUIRED_SECTIONS):
         if section not in text:
@@ -241,6 +291,131 @@ def validate_review_file(path: Path) -> list[ValidationError]:
     return errors
 
 
+PROFILE_REQUIRED_KEYS = {
+    "profile_name",
+    "schema_version",
+    "description",
+}
+PROFILE_SCHEMA_VERSION = "1.0"
+
+CORE_STATUSES = VALID_TASK_STATUSES
+CORE_EXECUTION_MODES = VALID_EXECUTION_MODES
+
+
+def parse_profile_front_matter(text: str) -> dict | None:
+    if not text.startswith("---\n"):
+        return None
+    end = text.find("\n---\n", 4)
+    if end == -1:
+        return None
+    block = text[4:end]
+    try:
+        data = yaml.safe_load(block)
+    except yaml.YAMLError:
+        return None
+    if not isinstance(data, dict):
+        return None
+    return data
+
+
+def validate_profile_file(path: Path) -> list[ValidationError]:
+    errors: list[ValidationError] = []
+    text = read_text(path)
+    front_matter = parse_profile_front_matter(text)
+
+    if front_matter is None:
+        return [ValidationError(path, "missing or invalid front matter block")]
+
+    missing_keys = sorted(PROFILE_REQUIRED_KEYS - set(front_matter))
+    for key in missing_keys:
+        errors.append(ValidationError(path, f"missing front matter key `{key}`"))
+
+    profile_name = str(front_matter.get("profile_name", "")).strip()
+    if not profile_name:
+        errors.append(ValidationError(path, "`profile_name` must be non-empty"))
+
+    schema_version = str(front_matter.get("schema_version", "")).strip()
+    if schema_version and schema_version != PROFILE_SCHEMA_VERSION:
+        errors.append(
+            ValidationError(
+                path,
+                f"`schema_version` must be `{PROFILE_SCHEMA_VERSION}`, got `{schema_version}`",
+            )
+        )
+
+    description = str(front_matter.get("description", "")).strip()
+    if not description:
+        errors.append(ValidationError(path, "`description` must be non-empty"))
+
+    extends = front_matter.get("extends")
+    if extends is not None and str(extends).strip() != "null":
+        errors.append(
+            ValidationError(
+                path,
+                f"`extends` must be null in schema v1, got `{extends}`",
+            )
+        )
+
+    task_format = front_matter.get("task_format")
+    if isinstance(task_format, dict):
+        allowed_statuses = task_format.get("allowed_statuses")
+        if allowed_statuses is not None:
+            if not isinstance(allowed_statuses, list):
+                errors.append(
+                    ValidationError(path, "`allowed_statuses` must be a list, not a scalar")
+                )
+            else:
+                for status_val in allowed_statuses:
+                    status_str = str(status_val).strip()
+                    if status_str and status_str not in CORE_STATUSES:
+                        errors.append(
+                            ValidationError(
+                                path,
+                                f"`allowed_statuses` contains unrecognized value `{status_str}`; "
+                                f"must be a subset of {sorted(CORE_STATUSES)}",
+                            )
+                        )
+        allowed_modes = task_format.get("allowed_execution_modes")
+        if allowed_modes is not None:
+            if not isinstance(allowed_modes, list):
+                errors.append(
+                    ValidationError(path, "`allowed_execution_modes` must be a list, not a scalar")
+                )
+            else:
+                for mode_val in allowed_modes:
+                    mode_str = str(mode_val).strip()
+                    if mode_str and mode_str not in CORE_EXECUTION_MODES:
+                        errors.append(
+                            ValidationError(
+                                path,
+                                f"`allowed_execution_modes` contains unrecognized value `{mode_str}`; "
+                                f"must be a subset of {sorted(CORE_EXECUTION_MODES)}",
+                            )
+                        )
+
+    artifact_mapping = front_matter.get("artifact_mapping")
+    if isinstance(artifact_mapping, dict):
+        coord_structure = artifact_mapping.get("coordination_structure")
+        if isinstance(coord_structure, dict):
+            for key, val in coord_structure.items():
+                path_str = str(val).strip()
+                is_absolute = (
+                    path_str.startswith("/")
+                    or path_str.startswith("\\")
+                    or re.match(r"^[A-Za-z]:[\\\/]", path_str) is not None
+                    or path_str.startswith("//")
+                )
+                if ".." in path_str or is_absolute:
+                    errors.append(
+                        ValidationError(
+                            path,
+                            f"`artifact_mapping.coordination_structure.{key}` contains unsafe path `{path_str}`",
+                        )
+                    )
+
+    return errors
+
+
 def iter_markdown_files(path: Path) -> list[Path]:
     return sorted(p for p in path.rglob("*.md") if p.is_file())
 
@@ -266,6 +441,27 @@ def validate_templates() -> list[ValidationError]:
 
 def validate_repo_files() -> list[ValidationError]:
     errors: list[ValidationError] = []
+
+    profile_names: dict[str, Path] = {}
+    profile_files = [
+        p for p in iter_markdown_files(PROFILES_DIR)
+        if p.name not in ("README.md", "schema-profile-v1.md")
+    ]
+    for path in profile_files:
+        errors.extend(validate_profile_file(path))
+        front_matter = parse_profile_front_matter(read_text(path))
+        if front_matter:
+            pname = str(front_matter.get("profile_name", "")).strip()
+            if pname:
+                if pname in profile_names:
+                    errors.append(
+                        ValidationError(
+                            path,
+                            f"duplicate `profile_name` `{pname}`; first defined in {profile_names[pname].relative_to(ROOT)}",
+                        )
+                    )
+                else:
+                    profile_names[pname] = path
 
     for path in iter_markdown_files(TASK_BOARD_DIR):
         if path.name == "README.md":
@@ -338,4 +534,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

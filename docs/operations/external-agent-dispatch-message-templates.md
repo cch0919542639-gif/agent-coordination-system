@@ -49,6 +49,38 @@ Please confirm you have:
 - written your current progress in coordination/progress/{AGENT_NAME}.md
 ```
 
+## Template 2A: Worktree-Aware Assignment
+
+```text
+You are assigned task {TASK_ID}.
+
+Please pull the latest repo state, then read:
+- {TASK_FILE}
+- docs/operations/agent-task-execution-protocol.md
+
+Execution mode:
+- WORKTREE
+- branch: {BRANCH}
+- worktree_path: {WORKTREE_PATH}
+- machine_id: {MACHINE_ID}
+
+Before implementation:
+- confirm the assigned branch and worktree are the ones you are using
+- if the worktree is missing locally, stop and report it instead of improvising another checkout
+
+When you start:
+- move the task card to coordination/task-board/in_progress/
+- update coordination/progress/{AGENT_NAME}.md
+
+If blocked:
+- create an incident in coordination/incidents/
+- do not continue by guessing outside the task scope
+
+When finished:
+- move the task card to coordination/task-board/review/
+- include repo-based delivery evidence and validation notes
+```
+
 ## Template 3: Blocker Response
 
 ```text
@@ -91,4 +123,3 @@ If blocked, write an incident in coordination/incidents/ and stop rather than gu
 
 When finished, move the task to coordination/task-board/review/ and include repo-based delivery evidence and validation notes.
 ```
-
