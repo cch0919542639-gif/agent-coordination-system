@@ -8,6 +8,8 @@ from pathlib import Path
 
 import yaml
 
+from profile_resolver import load_profile, ProfileError
+
 
 ROOT = Path(__file__).resolve().parents[1]
 COORDINATION_DIR = ROOT / "coordination"
@@ -46,6 +48,7 @@ TASK_OPTIONAL_KEYS = {
     "branch",
     "worktree_path",
     "machine_id",
+    "profile",
 }
 TASK_REQUIRED_SECTIONS = {
     "## Objective",
@@ -251,6 +254,60 @@ def validate_task_file(path: Path) -> list[ValidationError]:
     for section in sorted(TASK_REQUIRED_SECTIONS):
         if section not in text:
             errors.append(ValidationError(path, f"missing section `{section}`"))
+
+    # --- Profile-aware additive enforcement ---
+    profile_ref = str(front_matter.get("profile", "")).strip()
+    if profile_ref:
+        result = load_profile(profile_ref)
+        if isinstance(result, ProfileError):
+            errors.append(ValidationError(path, f"profile `{profile_ref}`: {result.message}"))
+        else:
+            profile_data = result.data
+            task_format = profile_data.get("task_format")
+            if isinstance(task_format, dict):
+                allowed_statuses = task_format.get("allowed_statuses")
+                if isinstance(allowed_statuses, list) and status_value:
+                    if status_value not in allowed_statuses:
+                        errors.append(
+                            ValidationError(
+                                path,
+                                f"status `{status_value}` is not in profile `{profile_ref}` allowed_statuses: {allowed_statuses}",
+                            )
+                        )
+
+                allowed_modes = task_format.get("allowed_execution_modes")
+                if isinstance(allowed_modes, list) and execution_mode:
+                    if execution_mode not in allowed_modes:
+                        errors.append(
+                            ValidationError(
+                                path,
+                                f"execution_mode `{execution_mode}` is not in profile `{profile_ref}` allowed_execution_modes: {allowed_modes}",
+                            )
+                        )
+
+                extra_required_fm = task_format.get("required_front_matter")
+                if isinstance(extra_required_fm, list):
+                    core_required = TASK_REQUIRED_KEYS
+                    for field in extra_required_fm:
+                        if field not in core_required and field not in front_matter:
+                            errors.append(
+                                ValidationError(
+                                    path,
+                                    f"profile `{profile_ref}` requires additional front matter field `{field}`",
+                                )
+                            )
+
+                extra_required_sections = task_format.get("required_sections")
+                if isinstance(extra_required_sections, list):
+                    core_sections = TASK_REQUIRED_SECTIONS
+                    for section in extra_required_sections:
+                        if section not in core_sections and section not in text:
+                            errors.append(
+                                ValidationError(
+                                    path,
+                                    f"profile `{profile_ref}` requires additional section `{section}`",
+                                )
+                            )
 
     return errors
 
