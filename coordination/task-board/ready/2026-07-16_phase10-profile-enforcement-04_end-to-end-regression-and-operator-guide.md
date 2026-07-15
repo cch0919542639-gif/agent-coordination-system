@@ -2,7 +2,7 @@
 task_id: phase10-profile-enforcement-04
 phase: phase10-profile-task-enforcement
 status: READY
-owner: UNASSIGNED
+owner: external-agent-quality-01
 reviewer: ORCHESTRATOR
 priority: medium
 dependencies:
@@ -34,7 +34,6 @@ expected_artifacts:
   - docs
   - delivery_report
 ---
-
 # Task Packet
 
 ## Objective
