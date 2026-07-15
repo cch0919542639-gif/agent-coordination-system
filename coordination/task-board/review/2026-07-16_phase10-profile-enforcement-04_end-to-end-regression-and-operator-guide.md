@@ -1,7 +1,7 @@
 ---
 task_id: phase10-profile-enforcement-04
 phase: phase10-profile-task-enforcement
-status: READY
+status: REVIEW
 owner: external-agent-quality-01
 reviewer: ORCHESTRATOR
 priority: medium
