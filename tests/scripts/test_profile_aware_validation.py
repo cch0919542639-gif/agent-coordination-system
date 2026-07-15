@@ -379,7 +379,7 @@ class TestProfileScalarTypeValidation:
     """profile field must be a scalar, not a YAML list."""
 
     def test_profile_as_list_fails(self, tmp_path: Path) -> None:
-        """A task card with profile as a YAML list should fail with a type error."""
+        """A task card with profile as a YAML list should fail with a type error only."""
         state_dir = TASK_BOARD_DIR / "ready"
         state_dir.mkdir(parents=True, exist_ok=True)
         fm = """---
@@ -432,6 +432,9 @@ Test escalation."""
             result = _run_validator()
             assert result.returncode != 0
             assert "`profile` must be a scalar value, not a list" in result.stdout
+            # Must NOT produce a misleading "not found" or list-to-string reference
+            assert "not found" not in result.stdout.lower()
+            assert "['rental-rebuild']" not in result.stdout
         finally:
             card.unlink(missing_ok=True)
 
