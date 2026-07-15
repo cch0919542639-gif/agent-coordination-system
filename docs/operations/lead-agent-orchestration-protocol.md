@@ -190,6 +190,57 @@ Current baseline commands:
 - `python scripts/orchestrate.py dispatch`
 - `python scripts/orchestrate.py review`
 - `python scripts/orchestrate.py repo-sync`
+- `python scripts/orchestrate.py doctor` (see Doctor Command Details below)
+
+### Doctor Command Details
+
+The `doctor` subcommand runs read-only preflight diagnostics before any dispatch
+or lifecycle operation.
+
+**Checks performed:**
+
+1. **Repository root** — verifies `coordination/`, `scripts/`, `docs/`, and
+   `profiles/` exist in the current working directory.
+2. **Git availability** — checks Git is installed, the directory is a Git
+   repository, and remote `origin` is configured.
+3. **Python runtime** — reports the Python version and executable path.
+4. **Coordination directories** — verifies `task-board/{ready,in_progress,
+   review,blocked,done}` exist, warns about optional subdirectories.
+5. **Optional `--task-id`** — validates the referenced task card exists in any
+   task-board state directory.
+6. **Optional `--profile`** — validates the named profile or profile path is
+   resolvable (reuses `profile_resolver.py`).
+
+**Exit behavior:**
+
+- Exit code `0`: all required checks passed.
+- Exit code `1`: one or more required checks failed. Output shows which checks
+  failed and a recommended recovery action for each.
+
+**Usage examples:**
+
+```bash
+# Basic diagnostic from the repository root
+python scripts/orchestrate.py doctor
+
+# Validate a specific task reference
+python scripts/orchestrate.py doctor --task-id phase11-runtime-safety-01
+
+# Validate a specific profile reference
+python scripts/orchestrate.py doctor --profile rental-rebuild
+
+# Validate both
+python scripts/orchestrate.py doctor --task-id phase11-runtime-safety-01 --profile rental-rebuild
+```
+
+**Key constraints:**
+
+- The command is diagnostic only. It never writes, moves, claims, dispatches,
+  commits, pushes, creates worktrees, or changes task-card fields.
+- It does not require network access for the default diagnostic path.
+- It reuses existing runtime and profile-resolution helpers instead of
+  duplicating profile parsing.
+- It keeps default-mode repositories fully compatible.
 
 ### Dispatch Command Details
 

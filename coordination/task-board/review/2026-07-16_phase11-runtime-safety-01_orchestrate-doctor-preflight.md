@@ -1,7 +1,7 @@
 ---
 task_id: phase11-runtime-safety-01
 phase: phase11-orchestration-runtime-safety
-status: READY
+status: WAITING_FOR_REVIEW
 owner: external-agent-platform-21
 reviewer: ORCHESTRATOR
 priority: high
