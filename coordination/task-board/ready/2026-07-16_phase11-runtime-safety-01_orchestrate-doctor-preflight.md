@@ -28,7 +28,6 @@ expected_artifacts:
   - operator_docs
   - delivery_report
 ---
-
 # Task Packet
 
 ## Objective
