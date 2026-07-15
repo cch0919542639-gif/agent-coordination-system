@@ -251,6 +251,11 @@ class TestDispatchProfileRecording:
 
     PROFILE_TASK_ID = "phase10-profile-enforcement-03"
 
+    IMMUTABLE_KEYS = (
+        "owner", "reviewer", "execution_mode",
+        "branch", "worktree_path", "machine_id", "profile",
+    )
+
     def _find_profile_task(self) -> tuple[Path, dict, str]:
         from coordination_common import find_task
         return find_task(self.PROFILE_TASK_ID)
@@ -268,6 +273,15 @@ class TestDispatchProfileRecording:
             encoding="utf-8", errors="replace",
             cwd=str(ROOT),
         )
+
+    def _assert_immutable(self, before: dict, after: dict) -> None:
+        """Assert every immutable field stayed exactly the same."""
+        for key in self.IMMUTABLE_KEYS:
+            assert after.get(key) == before.get(key), (
+                f"field `{key}` changed from {before.get(key)!r} to {after.get(key)!r}"
+            )
+
+    # ── positive cases ────────────────────────────────────────────────
 
     def test_profile_name_dispatch_persists_canonical_name(self) -> None:
         """Mutating dispatch with --profile writes canonical profile_name to task card."""
@@ -318,9 +332,30 @@ class TestDispatchProfileRecording:
         assert "Profile context: rental-rebuild" in result.stdout
 
         updated_fm, _ = load_task(path)
-        assert updated_fm.get("profile") == orig_fm.get("profile")
+        self._assert_immutable(orig_fm, updated_fm)
 
-    def test_invalid_profile_fails_before_mutation(self) -> None:
+    def test_no_profile_retains_existing_profile(self) -> None:
+        """Dispatch without --profile does not overwrite existing profile field."""
+        path, orig_fm, body = self._find_profile_task()
+        from coordination_common import save_task, load_task
+
+        orig_fm["profile"] = "rental-rebuild"
+        save_task(path, orig_fm, body)
+
+        try:
+            result = self._run_dispatch([])
+            assert result.returncode == 0
+
+            updated_fm, _ = load_task(path)
+            # Owner/reviewer may change (successful dispatch), but profile must be untouched
+            assert updated_fm.get("profile") == "rental-rebuild"
+        finally:
+            orig_fm.pop("profile", None)
+            save_task(path, orig_fm, body)
+
+    # ── preflight failure: unknown profile ─────────────────────────────
+
+    def test_unknown_profile_fails_before_mutation(self) -> None:
         """Unknown profile fails with error and no task card mutation."""
         path, orig_fm, body = self._find_profile_task()
         from coordination_common import load_task
@@ -330,23 +365,63 @@ class TestDispatchProfileRecording:
         assert "not found" in result.stderr.lower()
 
         updated_fm, _ = load_task(path)
-        assert updated_fm.get("profile") == orig_fm.get("profile")
+        self._assert_immutable(orig_fm, updated_fm)
 
-    def test_no_profile_retains_existing_profile(self) -> None:
-        """Dispatch without --profile does not overwrite existing profile field."""
+    # ── preflight failure: malformed profile ───────────────────────────
+
+    def test_malformed_profile_fails_before_mutation(self, tmp_path: Path) -> None:
+        """A profile file found by resolver but with malformed YAML front matter
+        must fail the dispatch and leave the task card completely unchanged."""
         path, orig_fm, body = self._find_profile_task()
-        from coordination_common import save_task, load_task
+        from coordination_common import load_task
 
-        # Set a profile first
-        orig_fm["profile"] = "rental-rebuild"
-        save_task(path, orig_fm, body)
-
+        # Create a malformed profile that resolve_profile_path can find
+        bad_profile = PROFILES_DIR / "malformed-preflight-test-profile.md"
+        bad_profile.write_text(
+            "---\nnot: valid: yaml: [[[\n---\n# body\n",
+            encoding="utf-8",
+        )
         try:
-            result = self._run_dispatch([])
-            assert result.returncode == 0
+            result = self._run_dispatch(["--profile", "malformed-preflight-test"])
+            assert result.returncode != 0
+            stderr = result.stderr.lower()
+            assert "malformed" in stderr or "missing" in stderr or "error" in stderr
 
             updated_fm, _ = load_task(path)
-            assert updated_fm["profile"] == "rental-rebuild"
+            self._assert_immutable(orig_fm, updated_fm)
         finally:
-            orig_fm.pop("profile", None)
-            save_task(path, orig_fm, body)
+            if bad_profile.exists():
+                bad_profile.unlink()
+
+    # ── preflight failure: schema-invalid profile ──────────────────────
+
+    def test_schema_invalid_profile_fails_before_mutation(self, tmp_path: Path) -> None:
+        """A profile that parses but violates the profile schema (e.g. bad
+        schema_version, allowed_statuses as scalar) must fail the dispatch
+        and leave the task card completely unchanged."""
+        path, orig_fm, body = self._find_profile_task()
+        from coordination_common import load_task
+
+        bad_profile = PROFILES_DIR / "schema-invalid-preflight-test-profile.md"
+        bad_profile.write_text(
+            "---\n"
+            "profile_name: schema-invalid-preflight-test\n"
+            "schema_version: \"9.9\"\n"
+            "description: \"Schema-invalid test profile\"\n"
+            "task_format:\n"
+            "  allowed_statuses: READY\n"
+            "---\n"
+            "# body\n",
+            encoding="utf-8",
+        )
+        try:
+            result = self._run_dispatch(["--profile", "schema-invalid-preflight-test"])
+            assert result.returncode != 0
+            stderr = result.stderr.lower()
+            assert "schema_version" in stderr or "allowed_statuses" in stderr or "validation" in stderr
+
+            updated_fm, _ = load_task(path)
+            self._assert_immutable(orig_fm, updated_fm)
+        finally:
+            if bad_profile.exists():
+                bad_profile.unlink()
