@@ -3,33 +3,23 @@
 - Agent: external-agent-platform-21
 - Active Task: phase11-runtime-safety-01
 - Phase: phase11-orchestration-runtime-safety
-- Status: WAITING_FOR_REVIEW
-- Last Updated: 2026-07-16
+- Status: NEEDS_FIX
+- Last Updated: 2026-07-16 02:26
 
 ## Current Step
 
-Claimed task. Moving to implementation: add `orchestrate doctor` subcommand.
+Review returned `needs_fix`. Await next action.
 
 ## Changes So Far
 
-- Moved task card from ready/ to in_progress/
-- Created progress file
-- Created scripts/doctor.py with read-only preflight diagnostics
-- Updated scripts/orchestrate.py to register doctor subcommand
-- Created tests/scripts/test_doctor.py (18 focused tests)
-- Updated docs/operations/lead-agent-orchestration-protocol.md with Doctor Command Details
+- review\2026-07-16_phase11-runtime-safety-01_orchestrate-doctor-preflight.md
 
-## Validation
-
-- 18/18 doctor tests pass
-- 84/84 full script test suite pass (2 skipped for integration-only)
-- `powershell -ExecutionPolicy Bypass -File scripts\validate.ps1` passes
-- All test fixtures verified: no task cards, profiles, or branches mutated
+- reviews\review-phase11-runtime-safety-01.md
 
 ## Blocker Status
 
-none — all acceptance criteria met
+Doctor functionality is covered, but the submitted coordination evidence fails the repository validator and blocks acceptance.
 
 ## Next Step
 
-No further action required. Submitted for review.
+Follow reviewer feedback or await reassignment.
