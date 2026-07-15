@@ -218,7 +218,7 @@ def validate_task_file(path: Path) -> list[ValidationError]:
         if list_key in front_matter and not isinstance(front_matter[list_key], list):
             errors.append(ValidationError(path, f"`{list_key}` must be a list"))
 
-    for scalar_key in ("execution_mode", "branch", "worktree_path", "machine_id"):
+    for scalar_key in ("execution_mode", "branch", "worktree_path", "machine_id", "profile"):
         if scalar_key in front_matter and isinstance(front_matter[scalar_key], list):
             errors.append(ValidationError(path, f"`{scalar_key}` must be a scalar value, not a list"))
 

@@ -375,6 +375,67 @@ class TestProfileDoesNotAutoSelect:
             card.unlink(missing_ok=True)
 
 
+class TestProfileScalarTypeValidation:
+    """profile field must be a scalar, not a YAML list."""
+
+    def test_profile_as_list_fails(self, tmp_path: Path) -> None:
+        """A task card with profile as a YAML list should fail with a type error."""
+        state_dir = TASK_BOARD_DIR / "ready"
+        state_dir.mkdir(parents=True, exist_ok=True)
+        fm = """---
+task_id: test-profile-list-01
+phase: test-phase
+status: READY
+owner: test-agent
+reviewer: ORCHESTRATOR
+priority: medium
+dependencies: []
+allowed_scope:
+  - scripts/**
+forbidden_scope:
+  - src/**
+acceptance:
+  - test acceptance
+expected_artifacts:
+  - code_changes
+profile:
+  - rental-rebuild
+---"""
+        sections = """# Task Packet
+
+## Objective
+
+Test objective.
+
+## Context
+
+Test context.
+
+## Constraints
+
+Test constraints.
+
+## Implementation Notes
+
+Test notes.
+
+## Validation Steps
+
+Test validation.
+
+## Escalation Rules
+
+Test escalation."""
+        card = state_dir / "2026-07-15_test-profile-list-01_test.md"
+        card.write_text(fm + "\n" + sections, encoding="utf-8")
+        try:
+            result = _run_validator()
+            assert result.returncode != 0
+            assert "`profile` must be a scalar value, not a list" in result.stdout
+        finally:
+            card.unlink(missing_ok=True)
+
+
 class TestExistingValidatorStillPasses:
     """Full coordination validator must still pass after changes."""
 
