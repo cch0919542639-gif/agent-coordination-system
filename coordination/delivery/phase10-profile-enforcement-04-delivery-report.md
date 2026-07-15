@@ -19,6 +19,15 @@
 
 None. No runtime scripts were modified. All claims in the operator guide are verified by the regression matrix.
 
+## Artifact Paths
+
+- `tests/scripts/test_profile_e2e_regression.py` — 17 end-to-end regression tests (default mode, named profile, profile path, rule enforcement including required_sections, preflight failure, message-only, full validator)
+- `docs/operations/phase10-profile-enforcement-operator-guide.md` — operator guide with current-capabilities and deferred-capabilities tables
+
+## Recommended Handoff
+
+Phase 10 acceptance means profile resolution, validation, and dispatch recording are stable. The recommended next step is **Phase 11 runtime safety** — hardening preflight boundaries, adding profile-aware incident reporting, and stress-testing edge cases in multi-agent dispatch. Do **not** proceed directly to path remapping, automatic worktree creation, or profile inheritance; those are deferred capabilities that require their own migration phase after runtime safety is validated.
+
 ## Acceptance Criteria Coverage
 
 - Default-mode task without profile passes dispatch and validator ✅

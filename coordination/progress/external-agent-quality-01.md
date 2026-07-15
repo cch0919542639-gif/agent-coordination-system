@@ -12,8 +12,14 @@ Implementation complete, submitted for review.
 
 ## Changes So Far
 
-- `tests/scripts/test_profile_e2e_regression.py`: 16 end-to-end regression tests covering the full Phase 10 matrix (default mode, named profile, profile path, rule enforcement, preflight failure, message-only, validator)
-- `docs/operations/phase10-profile-enforcement-operator-guide.md`: Operator guide with current-capabilities and deferred-capabilities tables
+Round 1 (d6fe479):
+- `tests/scripts/test_profile_e2e_regression.py`: 16 end-to-end regression tests
+- `docs/operations/phase10-profile-enforcement-operator-guide.md`: operator guide
+
+Round 2 — needs_fix:
+- Added `assert result.returncode == 0` to `test_validator_passes_without_profile`
+- Added `test_missing_required_section_fails` covering profile `required_sections` enforcement
+- Updated delivery report with `## Artifact Paths` and `## Recommended Handoff` sections
 
 ## Blocker Status
 

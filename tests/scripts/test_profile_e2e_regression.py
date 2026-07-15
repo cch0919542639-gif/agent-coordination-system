@@ -142,6 +142,7 @@ class TestDefaultModeNoProfile:
         card = _write_task_card("e2e-default-02")
         try:
             result = _run_validator()
+            assert result.returncode == 0
             assert "e2e-default-02" not in result.stdout
         finally:
             card.unlink(missing_ok=True)
@@ -302,8 +303,35 @@ class TestProfileRuleEnforcement:
             card.unlink(missing_ok=True)
             extra.unlink(missing_ok=True)
 
-
-# ─── 5. Preflight failure: no task-card mutation ───────────────────────
+    def test_missing_required_section_fails(self) -> None:
+        """Profile requiring '## Risk Assessment' section, task missing it."""
+        extra = PROFILES_DIR / "e2e-extrasec-profile.md"
+        extra.write_text(
+            "---\n"
+            "profile_name: e2e-extrasec\n"
+            'schema_version: "1.0"\n'
+            "description: E2E extra section profile.\n"
+            "task_format:\n"
+            "  required_sections:\n"
+            '    - "## Objective"\n'
+            '    - "## Context"\n'
+            '    - "## Constraints"\n'
+            '    - "## Implementation Notes"\n'
+            '    - "## Validation Steps"\n'
+            '    - "## Escalation Rules"\n'
+            '    - "## Risk Assessment"\n'
+            "---\n",
+            encoding="utf-8",
+        )
+        card = _write_task_card("e2e-rule-04", profile="e2e-extrasec")
+        try:
+            result = _run_validator()
+            assert result.returncode != 0
+            assert "Risk Assessment" in result.stdout
+            assert "requires additional section" in result.stdout.lower()
+        finally:
+            card.unlink(missing_ok=True)
+            extra.unlink(missing_ok=True)
 
 
 class TestPreflightFailureNoMutation:
