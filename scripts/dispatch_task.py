@@ -7,6 +7,7 @@ from pathlib import Path
 
 from coordination_common import find_task, save_task
 from profile_resolver import load_profile, ProfileError
+from validate_coordination_files import validate_profile_file, ValidationError
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
@@ -269,6 +270,12 @@ def main() -> int:
         if isinstance(result, ProfileError):
             print(result.message, file=sys.stderr)
             return 1
+        # Schema preflight: reject structurally invalid profiles
+        profile_errors = validate_profile_file(result.path)
+        if profile_errors:
+            for err in profile_errors:
+                print(str(err), file=sys.stderr)
+            return 1
         profile_data = result.data
 
     # Update owner/reviewer unless --message-only
@@ -290,6 +297,10 @@ def main() -> int:
             front_matter["machine_id"] = machine_id
         else:
             front_matter.pop("machine_id", None)
+        if profile_data:
+            pname = str(profile_data.get("profile_name", "")).strip()
+            if pname:
+                front_matter["profile"] = pname
         save_task(path, front_matter, body)
         print(f"Dispatched task `{args.task_id}`.")
         print(f"  file: {path}")

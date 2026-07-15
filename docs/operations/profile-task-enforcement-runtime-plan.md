@@ -40,6 +40,19 @@ own migration and compatibility phase after task-level enforcement is stable.
 
 Tasks 2 through 4 must wait for the shared resolver contract from task 1.
 
+## Dispatch Profile Recording
+
+When `--profile` is supplied for a mutating dispatch (not `--message-only`):
+
+1. The profile is loaded via `profile_resolver.load_profile()`.
+2. The loaded profile is validated against the profile schema via `validate_profile_file()`.
+3. If preflight fails, no task card fields are mutated — owner, reviewer, execution metadata, and task profile remain unchanged.
+4. If preflight succeeds, the canonical `profile_name` is recorded as the task card's scalar `profile` field.
+
+`--message-only` never mutates task-card content, including `profile`. Without `--profile`, existing task `profile` fields are never overwritten.
+
+Profile selection does NOT automatically populate execution mode, owner, reviewer, branch, worktree, artifact paths, or lifecycle state.
+
 ## Acceptance Gate
 
 Phase 10 is complete only when an operator can intentionally select a profile,

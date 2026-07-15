@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = ROOT / "scripts"
 SCRIPT = SCRIPTS_DIR / "dispatch_task.py"
 READY_DIR = ROOT / "coordination" / "task-board" / "ready"
+PROFILES_DIR = ROOT / "profiles"
 
 # Add scripts/ to path for coordination_common imports
 sys.path.insert(0, str(SCRIPTS_DIR))
@@ -243,3 +244,109 @@ class TestDispatchFullFlow:
         assert updated_fm["machine_id"] == "lab-machine"
 
         save_task(FLOW_TASK_FILE, orig_fm, body)
+
+
+class TestDispatchProfileRecording:
+    """Integration tests for --profile dispatch recording to task cards."""
+
+    PROFILE_TASK_ID = "phase10-profile-enforcement-03"
+
+    def _find_profile_task(self) -> tuple[Path, dict, str]:
+        from coordination_common import find_task
+        return find_task(self.PROFILE_TASK_ID)
+
+    def _run_dispatch(self, extra_args: list[str]) -> subprocess.CompletedProcess[str]:
+        cmd = [
+            sys.executable, str(SCRIPT),
+            "--task-id", self.PROFILE_TASK_ID,
+            "--owner", "test-agent",
+            "--allow-terminal",
+        ]
+        cmd.extend(extra_args)
+        return subprocess.run(
+            cmd, capture_output=True, text=True,
+            encoding="utf-8", errors="replace",
+            cwd=str(ROOT),
+        )
+
+    def test_profile_name_dispatch_persists_canonical_name(self) -> None:
+        """Mutating dispatch with --profile writes canonical profile_name to task card."""
+        path, orig_fm, body = self._find_profile_task()
+        orig_profile = orig_fm.get("profile")
+        try:
+            result = self._run_dispatch(["--profile", "rental-rebuild"])
+            assert result.returncode == 0
+            assert "profile: rental-rebuild" in result.stdout
+
+            from coordination_common import load_task
+            updated_fm, _ = load_task(path)
+            assert updated_fm["profile"] == "rental-rebuild"
+        finally:
+            from coordination_common import save_task
+            if orig_profile:
+                orig_fm["profile"] = orig_profile
+            else:
+                orig_fm.pop("profile", None)
+            save_task(path, orig_fm, body)
+
+    def test_profile_path_persists_canonical_name(self) -> None:
+        """Mutating dispatch with --profile <path> writes canonical profile_name."""
+        from coordination_common import load_task, save_task
+        path, orig_fm, body = self._find_profile_task()
+        orig_profile = orig_fm.get("profile")
+        profile_file = str(PROFILES_DIR / "rental-rebuild-profile.md")
+        try:
+            result = self._run_dispatch(["--profile", profile_file])
+            assert result.returncode == 0
+
+            updated_fm, _ = load_task(path)
+            assert updated_fm["profile"] == "rental-rebuild"
+        finally:
+            if orig_profile:
+                orig_fm["profile"] = orig_profile
+            else:
+                orig_fm.pop("profile", None)
+            save_task(path, orig_fm, body)
+
+    def test_message_only_profile_does_not_write_metadata(self) -> None:
+        """--message-only --profile must not write profile to task card."""
+        path, orig_fm, body = self._find_profile_task()
+        from coordination_common import load_task
+
+        result = self._run_dispatch(["--message-only", "--profile", "rental-rebuild"])
+        assert result.returncode == 0
+        assert "Profile context: rental-rebuild" in result.stdout
+
+        updated_fm, _ = load_task(path)
+        assert updated_fm.get("profile") == orig_fm.get("profile")
+
+    def test_invalid_profile_fails_before_mutation(self) -> None:
+        """Unknown profile fails with error and no task card mutation."""
+        path, orig_fm, body = self._find_profile_task()
+        from coordination_common import load_task
+
+        result = self._run_dispatch(["--profile", "nonexistent-profile-xyz"])
+        assert result.returncode != 0
+        assert "not found" in result.stderr.lower()
+
+        updated_fm, _ = load_task(path)
+        assert updated_fm.get("profile") == orig_fm.get("profile")
+
+    def test_no_profile_retains_existing_profile(self) -> None:
+        """Dispatch without --profile does not overwrite existing profile field."""
+        path, orig_fm, body = self._find_profile_task()
+        from coordination_common import save_task, load_task
+
+        # Set a profile first
+        orig_fm["profile"] = "rental-rebuild"
+        save_task(path, orig_fm, body)
+
+        try:
+            result = self._run_dispatch([])
+            assert result.returncode == 0
+
+            updated_fm, _ = load_task(path)
+            assert updated_fm["profile"] == "rental-rebuild"
+        finally:
+            orig_fm.pop("profile", None)
+            save_task(path, orig_fm, body)

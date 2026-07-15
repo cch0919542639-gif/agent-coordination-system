@@ -62,3 +62,13 @@ Rules:
 - existing repo-first tasks may omit these fields entirely
 - `WORKTREE` tasks should set `branch` and `worktree_path`
 - `machine_id` is optional unless the project or task explicitly requires machine pinning
+
+## Optional Profile
+
+- `profile`: canonical profile name recorded by dispatch when `--profile` is supplied; never auto-populated
+
+Rules:
+
+- only set by `dispatch_task.py` when the operator supplies `--profile` and the profile passes schema preflight
+- never inferred from `active: true`, repo name, or working directory
+- `--message-only` never writes `profile` to the task card
