@@ -1,7 +1,7 @@
 ---
 task_id: phase10-profile-enforcement-04
 phase: phase10-profile-task-enforcement
-status: REVIEW
+status: DONE
 owner: external-agent-quality-01
 reviewer: ORCHESTRATOR
 priority: medium
@@ -79,7 +79,7 @@ Read before changing files:
 Add or extend tests to cover this matrix:
 
 | Flow | Required evidence |
-|---|---|
+|------|------------------|
 | Default mode | dispatch and validator work without a `profile` field |
 | Named profile | mutating dispatch stores canonical `profile_name`; validator enforces it |
 | Profile file path | dispatch stores the same canonical name, not machine-specific path |
