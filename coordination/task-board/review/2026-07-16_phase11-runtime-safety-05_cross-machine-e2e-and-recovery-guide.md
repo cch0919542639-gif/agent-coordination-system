@@ -1,7 +1,7 @@
 ---
 task_id: phase11-runtime-safety-05
 phase: phase11-orchestration-runtime-safety
-status: READY
+status: REVIEW
 owner: external-agent-quality-02
 reviewer: ORCHESTRATOR
 priority: medium
