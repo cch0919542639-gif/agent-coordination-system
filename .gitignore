@@ -25,3 +25,9 @@ temp/
 # Local runtime data
 coordination.db
 *.db
+
+# Manifests (runtime artifacts, not checked in)
+coordination/manifests/
+
+# Test worktrees
+test-*/

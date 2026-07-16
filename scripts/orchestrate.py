@@ -22,6 +22,7 @@ COMMAND_MAP = {
     "doctor": "doctor.py",
     "waves": "wave_planner.py",
     "manifest": "manifest.py",
+    "worktree": "worktree_provision.py",
     "dispatch": "dispatch_task.py",
     "review": "review_task.py",
     "complete": "complete_task.py",
@@ -63,6 +64,12 @@ def build_parser() -> argparse.ArgumentParser:
             subparsers.add_parser(
                 name,
                 help="Write an immutable run manifest for an operator-approved execution wave.",
+            )
+            continue
+        if name == "worktree":
+            subparsers.add_parser(
+                name,
+                help="Preflight and provision a local Git worktree from an immutable manifest.",
             )
             continue
         if name == "dispatch":
