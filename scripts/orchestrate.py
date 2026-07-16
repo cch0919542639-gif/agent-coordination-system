@@ -21,6 +21,7 @@ COMMAND_MAP = {
     "review-queue": "list_review_queue.py",
     "doctor": "doctor.py",
     "waves": "wave_planner.py",
+    "manifest": "manifest.py",
     "dispatch": "dispatch_task.py",
     "review": "review_task.py",
     "complete": "complete_task.py",
@@ -56,6 +57,12 @@ def build_parser() -> argparse.ArgumentParser:
             subparsers.add_parser(
                 name,
                 help="Propose dependency-aware execution waves without lifecycle mutation.",
+            )
+            continue
+        if name == "manifest":
+            subparsers.add_parser(
+                name,
+                help="Write an immutable run manifest for an operator-approved execution wave.",
             )
             continue
         if name == "dispatch":
