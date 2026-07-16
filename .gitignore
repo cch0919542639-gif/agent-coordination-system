@@ -29,5 +29,8 @@ coordination.db
 # Manifests (runtime artifacts, not checked in)
 coordination/manifests/
 
+# Monitor state (runtime artifacts, not checked in)
+coordination/monitor/
+
 # Test worktrees
 test-*/

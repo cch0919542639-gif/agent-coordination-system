@@ -1,7 +1,7 @@
 ---
 task_id: phase12-events-01
 phase: phase12-event-driven-orchestration
-status: READY
+status: REVIEW
 owner: external-agent-platform-26
 reviewer: ORCHESTRATOR
 priority: high

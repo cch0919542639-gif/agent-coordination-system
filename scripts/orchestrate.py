@@ -23,6 +23,7 @@ COMMAND_MAP = {
     "waves": "wave_planner.py",
     "manifest": "manifest.py",
     "worktree": "worktree_provision.py",
+    "monitor": "remote_ref_monitor.py",
     "dispatch": "dispatch_task.py",
     "review": "review_task.py",
     "complete": "complete_task.py",
@@ -70,6 +71,12 @@ def build_parser() -> argparse.ArgumentParser:
             subparsers.add_parser(
                 name,
                 help="Preflight and provision a local Git worktree from an immutable manifest.",
+            )
+            continue
+        if name == "monitor":
+            subparsers.add_parser(
+                name,
+                help="Monitor remote Git refs for task-card evidence across registered projects.",
             )
             continue
         if name == "dispatch":
