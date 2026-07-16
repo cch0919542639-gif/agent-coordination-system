@@ -20,6 +20,7 @@ COMMAND_MAP = {
     "incident": "open_incident.py",
     "review-queue": "list_review_queue.py",
     "doctor": "doctor.py",
+    "waves": "wave_planner.py",
     "dispatch": "dispatch_task.py",
     "review": "review_task.py",
     "complete": "complete_task.py",
@@ -49,6 +50,12 @@ def build_parser() -> argparse.ArgumentParser:
             subparsers.add_parser(
                 name,
                 help="Run read-only preflight diagnostics for the orchestration environment.",
+            )
+            continue
+        if name == "waves":
+            subparsers.add_parser(
+                name,
+                help="Propose dependency-aware execution waves without lifecycle mutation.",
             )
             continue
         if name == "dispatch":
