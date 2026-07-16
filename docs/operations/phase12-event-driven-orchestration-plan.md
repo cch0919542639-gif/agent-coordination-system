@@ -27,12 +27,13 @@ human decision only for acceptance, reassign, scope, or safety escalation
 
 ## Runtime Contract
 
-1. GitHub branches and repository task cards are the authoritative input; chat
-   text is never an event source.
+1. GitHub branches and task cards in each registered project repository are the
+   authoritative input; chat text is never an event source.
 2. The monitor uses `git fetch` and local Git object inspection, not repeated
    API polling or LLM calls. Default cadence is 10 minutes with jitter.
-3. Every event has a deterministic ID based on repository, branch/ref, commit,
-   task ID, and event type. Repeated polls emit no duplicate wake-up.
+3. Every event has a deterministic ID based on project identifier, repository,
+   branch/ref, commit, task ID, and event type. Repeated polls emit no duplicate
+   wake-up.
 4. The monitor writes only its ignored runtime state/ledger. It never moves a
    task card, accepts a review, creates a branch, or pushes changes.
 5. A wake-up adapter can request Codex heartbeat/automation for this thread,

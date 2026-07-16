@@ -17,7 +17,7 @@ forbidden_scope:
   - database/**
   - cloud/infra/**
 acceptance:
-  - Add a bounded remote-ref monitor that uses local Git transport/object inspection to find review-submitted, ready-assigned, and incident-opened task-card evidence on configured remote branches.
+  - Add a bounded multi-project remote-ref monitor that uses local Git transport/object inspection to find review-submitted, ready-assigned, and incident-opened task-card evidence on configured project remote branches.
   - Add an ignored, atomic, idempotent event ledger with deterministic IDs containing repository, ref, commit, task ID, event type, detection time, and delivery state.
   - Default to a single poll operation; expose an explicit interval option with a safe minimum and jitter support without a busy loop.
   - Emit structured human and JSON output; report retryable fetch/parse health failures without changing task cards, branches, assignments, or reviews.
@@ -42,6 +42,7 @@ wake agents, accept reviews, or modify lifecycle state.
 Read:
 
 - `docs/operations/phase12-event-driven-orchestration-plan.md`
+- `docs/operations/project-repository-boundary.md`
 - `coordination/completed/2026-07-17_phase12-event-driven-orchestration-intake.md`
 - `docs/operations/phase11-operator-runbook.md`
 - `docs/operations/lead-agent-orchestration-protocol.md`
@@ -61,6 +62,8 @@ no LLM/API calls.
 - Do not mutate task cards, create commits, write review reports, or trigger a
   process/automation. Event delivery is a later task.
 - Preserve default repo-first behavior when no monitor configuration exists.
+- Use an explicit local-only project registry; do not assume engine task cards
+  represent product-project task state.
 
 ## Implementation Notes
 
