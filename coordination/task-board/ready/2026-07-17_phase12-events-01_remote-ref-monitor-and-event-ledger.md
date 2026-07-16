@@ -62,6 +62,14 @@ no LLM/API calls.
   process/automation. Event delivery is a later task.
 - Preserve default repo-first behavior when no monitor configuration exists.
 
+## Implementation Notes
+
+Follow the existing delegated-subcommand pattern in `scripts/orchestrate.py`.
+Keep Git collection, task-card parsing, event identity, and atomic ledger I/O
+separate so every part can be tested with isolated temporary remotes. The
+monitor should inspect remote refs directly after a bounded fetch rather than
+checking out worker branches or relying on GitHub API calls.
+
 ## Validation Steps
 
 1. Build temporary isolated repositories/remotes in tests; do not contact the
