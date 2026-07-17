@@ -24,6 +24,7 @@ COMMAND_MAP = {
     "manifest": "manifest.py",
     "worktree": "worktree_provision.py",
     "monitor": "remote_ref_monitor.py",
+    "route-events": None,
     "dispatch": "dispatch_task.py",
     "review": "review_task.py",
     "complete": "complete_task.py",
@@ -75,9 +76,20 @@ def build_parser() -> argparse.ArgumentParser:
             )
             continue
         if name == "monitor":
-            subparsers.add_parser(
+            monitor_parser = subparsers.add_parser(
                 name,
                 help="Monitor remote Git refs for task-card evidence across registered projects.",
+            )
+            monitor_parser.add_argument(
+                "--route",
+                action="store_true",
+                help="After monitoring, route pending events to delivery records.",
+            )
+            continue
+        if name == "route-events":
+            subparsers.add_parser(
+                name,
+                help="Route pending monitor events to delivery records without fetching.",
             )
             continue
         if name == "dispatch":
@@ -158,6 +170,21 @@ def main() -> int:
 
     if known_args.command == "next":
         return run_next(getattr(known_args, "owner", None))
+
+    if known_args.command == "route-events":
+        from routing_runner import route_pending_events
+        output_json = "--json" in passthrough
+        return route_pending_events(output_json=output_json)
+
+    if known_args.command == "monitor":
+        from remote_ref_monitor import monitor_once
+        output_json = "--json" in passthrough
+        rc = monitor_once(output_json=output_json)
+        if rc == 0 and getattr(known_args, "route", False):
+            from routing_runner import route_pending_events
+            route_rc = route_pending_events(output_json=output_json)
+            return route_rc
+        return rc
 
     script_name = COMMAND_MAP[known_args.command]
     script_path = SCRIPT_DIR / script_name
