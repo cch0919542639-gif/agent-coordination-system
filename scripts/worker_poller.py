@@ -262,6 +262,130 @@ def acknowledge_delivery(payload_id: str) -> int:
         return 1
 
 
+# ---------------------------------------------------------------------------
+# Activation — Phase 14 same-machine worker handoff
+# ---------------------------------------------------------------------------
+
+def activate_worker(worker_id: str, output_json: bool = False) -> int:
+    """Emit one safe action payload for the first owner-matching pending delivery.
+
+    Acknowledgement happens only after the payload is durably printed.
+    Returns 0 on success, 1 on any failure (fail-closed).
+
+    Constraints honoured:
+    - No subprocess, HTTP, webhook, agent launch, or Codex/MiMo invocation.
+    - No task-card claim, move, review, merge, commit, or push.
+    - Empty or mismatched owner fails closed.
+    """
+    worker = get_worker(worker_id)
+    if worker is None:
+        print(f"Worker `{worker_id}` not registered.", file=sys.stderr)
+        return 1
+    if not worker.enabled:
+        print(f"Worker `{worker_id}` is disabled.", file=sys.stderr)
+        return 1
+
+    records = _load_delivery_records()
+
+    # Strict owner-strict filtering: only pending ready_assigned for this worker
+    eligible = [
+        r for r in records
+        if r.get("project_id") == worker.project_id
+        and r.get("event_type") == "ready_assigned"
+        and r.get("destination") == "registered_worker"
+        and r.get("status") == "pending"
+        and r.get("owner", "") == worker.worker_id
+    ]
+
+    if not eligible:
+        if output_json:
+            print(json.dumps({"worker_id": worker_id, "activated": False, "reason": "no eligible delivery"}))
+        else:
+            print("No eligible delivery for activation.")
+        return 0
+
+    rec = eligible[0]
+    payload_id = rec.get("payload_id", "")
+
+    # Fail-closed: reject non-pending states
+    status = rec.get("status", "")
+    if status != "pending":
+        reason = f"delivery status is '{status}', expected 'pending'"
+        if output_json:
+            print(json.dumps({"worker_id": worker_id, "activated": False, "reason": reason}))
+        else:
+            print(f"Activation rejected: {reason}", file=sys.stderr)
+        return 1
+
+    # Build the safe action payload for the local agent heartbeat
+    action_payload = _build_activation_payload(rec)
+
+    # Emit the payload durably (to stdout — the agent session reads it)
+    if output_json:
+        output = {"activated": True, **action_payload}
+        print(json.dumps(output, indent=2, ensure_ascii=False))
+    else:
+        _render_activation(action_payload)
+
+    # Acknowledge only after the payload is durably available
+    from event_routing import acknowledge
+    acknowledge(payload_id)
+
+    return 0
+
+
+def _build_activation_payload(rec: dict) -> dict:
+    """Build a safe, compact action payload from a delivery record.
+
+    Never includes raw task body, prompt text, source code, or absolute paths.
+    """
+    task_id = rec.get("task_id", "")
+    project_id = rec.get("project_id", "")
+    return {
+        "action": "ready_task_available",
+        "worker_id": rec.get("owner", ""),
+        "project_id": project_id,
+        "task_id": task_id,
+        "event_type": rec.get("event_type", ""),
+        "ref": rec.get("ref", ""),
+        "commit": rec.get("commit", ""),
+        "reviewer": rec.get("reviewer", ""),
+        "payload_id": rec.get("payload_id", ""),
+        "task_card_path": f"coordination/task-board/ready/{task_id}.md",
+        "protocol_path": PROTOCOL_DOC,
+        "instructions": [
+            "Pull the latest repo.",
+            f"Read {PROTOCOL_DOC}.",
+            f"Read coordination/task-board/ready/{task_id}.md",
+            "Claim the task by moving the card to in_progress/.",
+            "Execute within allowed scope.",
+            "Submit for review when done.",
+        ],
+    }
+
+
+def _render_activation(payload: dict) -> None:
+    """Render a human-readable activation message."""
+    print("=" * 60)
+    print("  WORKER ACTIVATION — Phase 14 Local Handoff")
+    print("=" * 60)
+    print(f"  Worker:  {payload.get('worker_id', '')}")
+    print(f"  Task:    {payload.get('task_id', '')}")
+    print(f"  Project: {payload.get('project_id', '')}")
+    print(f"  Ref:     {payload.get('ref', '')}")
+    print(f"  Commit:  {payload.get('commit', '')[:12] if payload.get('commit') else ''}")
+    print(f"  Reviewer:{payload.get('reviewer', '')}")
+    print()
+    print("  Next steps:")
+    for i, step in enumerate(payload.get("instructions", []), 1):
+        print(f"    {i}. {step}")
+    print()
+    print(f"  Card:    {payload.get('task_card_path', '')}")
+    print(f"  Protocol:{payload.get('protocol_path', '')}")
+    print(f"  Payload: {payload.get('payload_id', '')}")
+    print("=" * 60)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Opt-in worker-side polling for registered worker notifications.",
@@ -297,6 +421,14 @@ def build_parser() -> argparse.ArgumentParser:
     # acknowledge
     ack_parser = subparsers.add_parser("acknowledge", help="Acknowledge a delivery notification.")
     ack_parser.add_argument("payload_id", help="Payload ID to acknowledge.")
+
+    # activate
+    act_parser = subparsers.add_parser(
+        "activate",
+        help="Activate one owner-matching pending delivery for a worker.",
+    )
+    act_parser.add_argument("worker_id", help="Registered worker identifier.")
+    act_parser.add_argument("--json", action="store_true", help="Output action payload as JSON.")
 
     return parser
 
@@ -335,6 +467,9 @@ def main() -> int:
 
     if args.command == "acknowledge":
         return acknowledge_delivery(args.payload_id)
+
+    if args.command == "activate":
+        return activate_worker(args.worker_id, output_json=args.json)
 
     return 0
 
