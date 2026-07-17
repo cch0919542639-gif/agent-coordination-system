@@ -122,6 +122,11 @@ class DeliveryRecord:
     task_id: str
     event_type: str
     destination: str
+    ref: str = ""
+    commit: str = ""
+    owner: str = ""
+    reviewer: str = ""
+    artifact_paths: list[str] = field(default_factory=list)
     status: str = "pending"
     attempts: int = 0
     last_attempt_at: str = ""
@@ -328,6 +333,11 @@ def route_event(
             task_id=task_id,
             event_type=event_type,
             destination=route.destination,
+            ref=ref,
+            commit=commit,
+            owner=owner,
+            reviewer=reviewer,
+            artifact_paths=artifact_paths or [],
             status="pending",
         )
         results.append((payload, record))
