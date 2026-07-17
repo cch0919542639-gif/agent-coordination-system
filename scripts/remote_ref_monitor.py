@@ -192,6 +192,8 @@ def _scan_project(
             task_id=task_id,
             event_type=event_type,
             detected_at=now_iso(),
+            owner=str(fm.get("owner", "")).strip(),
+            reviewer=str(fm.get("reviewer", "")).strip(),
         )
         events.append(event)
 

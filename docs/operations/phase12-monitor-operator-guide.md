@@ -10,17 +10,47 @@ branches, or lifecycle state.
 ## Quick Start
 
 ```bash
-# 1. Register a project
-python scripts/orchestrate.py monitor --add-project \
-  --project-id my-project \
-  --local-path /path/to/clone \
-  --default-branch main
+# 1. Register a project (edit the registry file directly)
+# coordination/monitor/projects.json (Git-ignored)
+```
 
-# 2. Run a single poll
+```json
+[
+  {
+    "project_id": "my-project",
+    "local_path": "/path/to/local/clone",
+    "remote_name": "origin",
+    "default_branch": "main"
+  }
+]
+```
+
+```bash
+# 2. Configure routing policy
+# coordination/monitor/routing_policy.json (Git-ignored)
+```
+
+```json
+[
+  {
+    "project_id": "my-project",
+    "routes": [
+      {"event_type": "review_submitted", "destination": "orchestrator"},
+      {"event_type": "ready_assigned", "destination": "registered_worker"},
+      {"event_type": "incident_opened", "destination": "orchestrator"}
+    ],
+    "enabled": true
+  }
+]
+```
+
+```bash
+# 3. Run monitor + route in one pass
+python scripts/orchestrate.py monitor --route
+
+# 4. Or run separately
 python scripts/orchestrate.py monitor --once
-
-# 3. Run with JSON output
-python scripts/orchestrate.py monitor --once --json
+python scripts/orchestrate.py route-events
 ```
 
 ## Configuration
@@ -40,6 +70,28 @@ Projects are registered in `coordination/monitor/projects.json` (Git-ignored).
 ]
 ```
 
+**Do not commit local paths to Git.**  The project registry is Git-ignored
+because it contains machine-specific paths.
+
+### Routing Policy
+
+Routing policy is configured in `coordination/monitor/routing_policy.json`
+(Git-ignored).
+
+```json
+[
+  {
+    "project_id": "my-project",
+    "routes": [
+      {"event_type": "review_submitted", "destination": "orchestrator"},
+      {"event_type": "ready_assigned", "destination": "registered_worker"},
+      {"event_type": "incident_opened", "destination": "orchestrator"}
+    ],
+    "enabled": true
+  }
+]
+```
+
 ### Event Ledger
 
 Events are appended to `coordination/monitor/events.jsonl` (Git-ignored).
@@ -49,6 +101,11 @@ Each event has a deterministic ID and is deduplicated automatically.
 
 Monitor state (last-seen commits per project/branch) is stored in
 `coordination/monitor/state.json` (Git-ignored).
+
+### Delivery State
+
+Delivery records are stored in `coordination/monitor/delivery/delivery_state.jsonl`
+(Git-ignored). Records include acknowledgement, retry, and failure state.
 
 ## Event Types
 
@@ -71,7 +128,9 @@ Monitor state (last-seen commits per project/branch) is stored in
   "task_id": "phase12-events-01",
   "event_type": "review_submitted",
   "detected_at": "2026-07-17T12:00:00Z",
-  "delivery_state": "pending"
+  "delivery_state": "pending",
+  "owner": "agent-name",
+  "reviewer": "ORCHESTRATOR"
 }
 ```
 
@@ -109,6 +168,13 @@ Fix: Verify project has task cards in coordination/task-board/{review,ready,bloc
 ```
 Symptom: events not updating after pushes
 Fix: Delete coordination/monitor/state.json to reset cursors
+```
+
+### Routing Policy Errors
+
+```
+Symptom: events detected but no delivery records created
+Fix: Validate routing_policy.json — check project_id, event_type, destination
 ```
 
 ## Cadence and Resources

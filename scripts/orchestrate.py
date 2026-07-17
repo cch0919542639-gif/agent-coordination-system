@@ -179,10 +179,15 @@ def main() -> int:
     if known_args.command == "monitor":
         from remote_ref_monitor import monitor_once
         output_json = "--json" in passthrough
+        if getattr(known_args, "route", False) and output_json:
+            print("ERROR: --route --json is not supported. Run separately:", file=sys.stderr)
+            print("  python scripts/orchestrate.py monitor --json", file=sys.stderr)
+            print("  python scripts/orchestrate.py route-events --json", file=sys.stderr)
+            return 1
         rc = monitor_once(output_json=output_json)
         if rc == 0 and getattr(known_args, "route", False):
             from routing_runner import route_pending_events
-            route_rc = route_pending_events(output_json=output_json)
+            route_rc = route_pending_events(output_json=False)
             return route_rc
         return rc
 

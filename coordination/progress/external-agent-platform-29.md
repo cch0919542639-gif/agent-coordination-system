@@ -2,23 +2,27 @@
 - Agent: external-agent-platform-29
 - Active Task: phase13-events-01
 - Phase: phase13-event-delivery-runtime
-- Status: WAITING_FOR_REVIEW
+- Status: NEEDS_FIX
 - Last Updated: 2026-07-17
 ---
 
 # Progress: phase13-events-01
 
 ## Current Step
-WAITING_FOR_REVIEW — implementation complete, validation passed.
+NEEDS_FIX — implementing fixes for owner-aware delivery, stale docs, and JSON output.
 
 ## Changes So Far
-- Created `scripts/routing_runner.py` — idempotent event-routing runtime entry point that reads pending events from the ledger and produces delivery records
-- Updated `scripts/orchestrate.py` — added `route-events` command and `--route` flag on `monitor` subcommand
-- Created `tests/scripts/test_routing_runner.py` — 18 focused regression tests covering ready/review/incident delivery, no-policy/disabled-policy, idempotency, no task-card mutation, project isolation, acknowledgement state preservation, and no external calls
-- All 18 focused tests pass, full suite 319 passed 2 skipped, coordination validation passes
+- Added `owner` and `reviewer` fields to Event dataclass in event_ledger.py
+- Updated remote_ref_monitor.py to populate owner/reviewer from task card front matter
+- Updated routing_runner.py to pass owner/reviewer from events to route_event()
+- Updated worker_poller.py to filter ready_assigned notifications by owner matching worker_id
+- Corrected phase12-monitor-operator-guide.md: removed unsupported --add-project, documented actual onboarding flow
+- Rejected --route --json combination with clear error message and alternative
+- Added 4 new tests: owner-aware delivery (2), owner field round-trip, JSON rejection
+- Updated existing test helpers to set owner to match worker_id or empty
 
 ## Blocker Status
-No blockers.
+No blockers. All fixes implemented and tests passing.
 
 ## Next Step
-Awaiting ORCHESTRATOR review. Once accepted, the routing runner closes the Phase 12 runtime handoff gap.
+Pushing updated branch for re-review.

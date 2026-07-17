@@ -32,7 +32,7 @@ def _make_delivery_record(
     status: str = "pending",
     ref: str = "main",
     commit: str = "abc123def456",
-    owner: str = "test-agent",
+    owner: str = "",
     reviewer: str = "orchestrator",
 ) -> dict:
     return {

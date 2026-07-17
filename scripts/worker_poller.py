@@ -152,6 +152,7 @@ def poll_worker(
         and r.get("event_type") == "ready_assigned"
         and r.get("destination") == "registered_worker"
         and r.get("status") == "pending"
+        and (r.get("owner", "") == worker.worker_id or r.get("owner", "") == "")
     ]
 
     if not pending:

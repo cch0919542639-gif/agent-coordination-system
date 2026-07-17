@@ -1102,7 +1102,7 @@ class TestWorkerPollerMultiplePending:
                 json.dumps({"payload_id": f"pay-{i}", "project_id": "p1", "task_id": f"t{i}",
                             "event_type": "ready_assigned", "destination": "registered_worker",
                             "status": "pending", "ref": "main", "commit": "abc",
-                            "owner": "agent", "reviewer": "orch", "artifact_paths": []})
+                            "owner": "w-multi", "reviewer": "orch", "artifact_paths": []})
                 for i in range(3)
             ]
             (delivery_dir / "delivery_state.jsonl").write_text(

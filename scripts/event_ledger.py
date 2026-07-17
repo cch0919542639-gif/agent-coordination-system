@@ -36,6 +36,8 @@ class Event:
     event_type: str
     detected_at: str
     delivery_state: str = "pending"
+    owner: str = ""
+    reviewer: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)

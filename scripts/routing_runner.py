@@ -61,8 +61,8 @@ def route_pending_events(output_json: bool = False) -> int:
             event_type=event.event_type,
             ref=event.ref,
             commit=event.commit,
-            owner="",
-            reviewer="",
+            owner=event.owner,
+            reviewer=event.reviewer,
             artifact_paths=None,
         )
 

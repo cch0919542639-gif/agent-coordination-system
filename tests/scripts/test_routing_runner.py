@@ -56,6 +56,8 @@ def _make_event(
     ref: str = "main",
     commit: str = "abc123def456",
     delivery_state: str = "pending",
+    owner: str = "",
+    reviewer: str = "",
 ) -> Event:
     return Event(
         event_id=_event_id(project_id, task_id, event_type, ref, commit),
@@ -67,6 +69,8 @@ def _make_event(
         event_type=event_type,
         detected_at=now_iso(),
         delivery_state=delivery_state,
+        owner=owner,
+        reviewer=reviewer,
     )
 
 
@@ -546,3 +550,103 @@ class TestAlreadyDeliveredEvent:
 
             records = load_delivery_state_map()
             assert len(records) == 1
+
+
+# ---------------------------------------------------------------------------
+# Test: owner-aware worker delivery
+# ---------------------------------------------------------------------------
+
+class TestOwnerAwareDelivery:
+    """Each worker only receives notifications for tasks assigned to them."""
+
+    def test_two_workers_see_only_own_tasks(self, tmp_path: Path):
+        """Two workers in one project each see only their own ready tasks."""
+        mock1, mock2 = _setup_env(tmp_path)
+        with mock1, mock2:
+            _write_policy("proj-own", [
+                {"event_type": "ready_assigned", "destination": "registered_worker"},
+            ])
+
+            # Create events with different owners
+            e1 = _make_event("proj-own", "task-alice", "ready_assigned", owner="alice")
+            e2 = _make_event("proj-own", "task-bob", "ready_assigned", owner="bob")
+            append_events([e1, e2])
+
+            route_pending_events()
+
+            records = load_delivery_state_map()
+            assert len(records) == 2
+
+            # Verify owner is stored in delivery records
+            recs = list(records.values())
+            owners = {r.owner for r in recs}
+            assert owners == {"alice", "bob"}
+
+    def test_worker_filters_by_owner(self, tmp_path: Path):
+        """Worker poll filters by owner matching worker_id."""
+        mock1, mock2 = _setup_env(tmp_path)
+        with mock1, mock2:
+            # Patch worker_poller paths too
+            from worker_poller import poll_worker, register_worker, WORKERS_FILE
+            with patch("worker_poller.WORKERS_FILE", tmp_path / "monitor" / "workers.json"):
+                register_worker("alice", "proj-own")
+                register_worker("bob", "proj-own")
+
+                _write_policy("proj-own", [
+                    {"event_type": "ready_assigned", "destination": "registered_worker"},
+                ])
+
+                e1 = _make_event("proj-own", "task-alice", "ready_assigned", owner="alice")
+                e2 = _make_event("proj-own", "task-bob", "ready_assigned", owner="bob")
+                append_events([e1, e2])
+
+                route_pending_events()
+
+                # Alice should see only task-alice
+                import io
+                from contextlib import redirect_stdout
+                f = io.StringIO()
+                with redirect_stdout(f):
+                    poll_worker("alice", output_json=True)
+                data = json.loads(f.getvalue())
+                task_ids = [n["task_id"] for n in data["notifications"]]
+                assert task_ids == ["task-alice"]
+
+                # Bob should see only task-bob
+                f2 = io.StringIO()
+                with redirect_stdout(f2):
+                    poll_worker("bob", output_json=True)
+                data2 = json.loads(f2.getvalue())
+                task_ids2 = [n["task_id"] for n in data2["notifications"]]
+                assert task_ids2 == ["task-bob"]
+
+    def test_owner_field_populated_in_event(self, tmp_path: Path):
+        """Events carry owner/reviewer metadata from task card front matter."""
+        event = _make_event("proj-x", "task-50", "ready_assigned", owner="worker-1", reviewer="ORCH")
+        assert event.owner == "worker-1"
+        assert event.reviewer == "ORCH"
+
+        # Serialization round-trip preserves owner/reviewer
+        d = event.to_dict()
+        restored = Event.from_dict(d)
+        assert restored.owner == "worker-1"
+        assert restored.reviewer == "ORCH"
+
+
+# ---------------------------------------------------------------------------
+# Test: --route --json combination rejected
+# ---------------------------------------------------------------------------
+
+class TestCombinedJsonRejected:
+    """monitor --route --json is rejected with clear guidance."""
+
+    def test_route_json_rejected(self, tmp_path: Path):
+        """--route --json returns error with usage instructions."""
+        import subprocess
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / "orchestrate.py"), "monitor", "--route", "--json"],
+            capture_output=True, text=True, cwd=str(ROOT),
+        )
+        assert result.returncode == 1
+        assert "--route --json is not supported" in result.stderr
+        assert "route-events --json" in result.stderr
