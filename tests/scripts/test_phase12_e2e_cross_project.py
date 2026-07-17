@@ -287,7 +287,7 @@ class TestCrossProjectE2EPipeline:
         clone_a = _clone_remote(remote_a, tmp_path, "proj-alpha")
 
         remote_b = _init_remote(tmp_path, "proj-beta")
-        _write_task_card(tmp_path / "proj-beta_work", "task-b-02", "READY", owner="beta-agent", state="ready")
+        _write_task_card(tmp_path / "proj-beta_work", "task-b-02", "READY", owner="worker-b", state="ready")
         clone_b = _clone_remote(remote_b, tmp_path, "proj-beta")
 
         patches = _patch_all(tmp_path)
@@ -331,6 +331,7 @@ class TestCrossProjectE2EPipeline:
                     results = route_event(
                         event.project_id, event.task_id, event.event_type,
                         event.ref, event.commit,
+                        owner=event.owner,
                     )
                     for payload, record in results:
                         delivery_records.append(record)
@@ -1140,11 +1141,11 @@ class TestCorruptDeliveryState:
             (delivery_dir / "delivery_state.jsonl").write_text(
                 '{"payload_id": "good1", "project_id": "p1", "task_id": "t1", '
                 '"event_type": "ready_assigned", "destination": "registered_worker", '
-                '"status": "pending"}\n'
+                '"status": "pending", "owner": "w-corrupt"}\n'
                 'NOT JSON\n'
                 '{"payload_id": "good2", "project_id": "p1", "task_id": "t2", '
                 '"event_type": "ready_assigned", "destination": "registered_worker", '
-                '"status": "pending"}\n',
+                '"status": "pending", "owner": "w-corrupt"}\n',
                 encoding="utf-8",
             )
             f = io.StringIO()

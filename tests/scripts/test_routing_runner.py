@@ -650,3 +650,106 @@ class TestCombinedJsonRejected:
         assert result.returncode == 1
         assert "--route --json is not supported" in result.stderr
         assert "route-events --json" in result.stderr
+
+
+# ---------------------------------------------------------------------------
+# Test: ownerless / malformed delivery records
+# ---------------------------------------------------------------------------
+
+class TestOwnerlessDeliveryRecords:
+    """Ownerless or malformed records are not delivered to any worker."""
+
+    def test_ownerless_record_not_delivered_to_any_worker(self, tmp_path: Path):
+        """A delivery record with owner='' is not visible to any worker."""
+        mock1, mock2 = _setup_env(tmp_path)
+        with mock1, mock2:
+            from worker_poller import poll_worker, register_worker
+            with patch("worker_poller.WORKERS_FILE", tmp_path / "monitor" / "workers.json"):
+                register_worker("alice", "proj-own")
+                register_worker("bob", "proj-own")
+
+                _write_policy("proj-own", [
+                    {"event_type": "ready_assigned", "destination": "registered_worker"},
+                ])
+
+                # Route event with no owner
+                e = _make_event("proj-own", "task-orphan", "ready_assigned", owner="")
+                append_events([e])
+                route_pending_events()
+
+                import io
+                from contextlib import redirect_stdout
+
+                # Alice sees nothing
+                f = io.StringIO()
+                with redirect_stdout(f):
+                    poll_worker("alice", output_json=True)
+                data = json.loads(f.getvalue())
+                assert data["notifications"] == []
+
+                # Bob sees nothing
+                f2 = io.StringIO()
+                with redirect_stdout(f2):
+                    poll_worker("bob", output_json=True)
+                data2 = json.loads(f2.getvalue())
+                assert data2["notifications"] == []
+
+    def test_malformed_owner_not_delivered(self, tmp_path: Path):
+        """A delivery record with owner missing from JSON is not visible."""
+        mock1, mock2 = _setup_env(tmp_path)
+        with mock1, mock2:
+            from worker_poller import poll_worker, register_worker
+            with patch("worker_poller.WORKERS_FILE", tmp_path / "monitor" / "workers.json"):
+                register_worker("alice", "proj-own")
+
+                # Write a record with no owner key at all
+                monitor_dir = tmp_path / "monitor"
+                delivery_dir = monitor_dir / "delivery"
+                delivery_dir.mkdir(parents=True, exist_ok=True)
+                record = json.dumps({
+                    "payload_id": "pay-no-owner",
+                    "project_id": "proj-own",
+                    "task_id": "task-no-owner",
+                    "event_type": "ready_assigned",
+                    "destination": "registered_worker",
+                    "status": "pending",
+                })
+                (delivery_dir / "delivery_state.jsonl").write_text(record + "\n", encoding="utf-8")
+
+                import io
+                from contextlib import redirect_stdout
+                f = io.StringIO()
+                with redirect_stdout(f):
+                    poll_worker("alice", output_json=True)
+                data = json.loads(f.getvalue())
+                assert data["notifications"] == []
+
+    def test_wrong_owner_not_delivered(self, tmp_path: Path):
+        """A delivery record with owner='other' is not visible to alice."""
+        mock1, mock2 = _setup_env(tmp_path)
+        with mock1, mock2:
+            from worker_poller import poll_worker, register_worker
+            with patch("worker_poller.WORKERS_FILE", tmp_path / "monitor" / "workers.json"):
+                register_worker("alice", "proj-own")
+
+                monitor_dir = tmp_path / "monitor"
+                delivery_dir = monitor_dir / "delivery"
+                delivery_dir.mkdir(parents=True, exist_ok=True)
+                record = json.dumps({
+                    "payload_id": "pay-wrong-owner",
+                    "project_id": "proj-own",
+                    "task_id": "task-wrong",
+                    "event_type": "ready_assigned",
+                    "destination": "registered_worker",
+                    "status": "pending",
+                    "owner": "other-worker",
+                })
+                (delivery_dir / "delivery_state.jsonl").write_text(record + "\n", encoding="utf-8")
+
+                import io
+                from contextlib import redirect_stdout
+                f = io.StringIO()
+                with redirect_stdout(f):
+                    poll_worker("alice", output_json=True)
+                data = json.loads(f.getvalue())
+                assert data["notifications"] == []

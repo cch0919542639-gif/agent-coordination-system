@@ -169,8 +169,8 @@ class TestWorkerProjectIsolation:
             from worker_poller import register_worker, poll_worker
             register_worker("worker-proj-a", "proj-a")
             _write_delivery_state(tmp_path, [
-                _make_delivery_record(payload_id="p1", project_id="proj-a", task_id="t1"),
-                _make_delivery_record(payload_id="p2", project_id="proj-b", task_id="t2"),
+                _make_delivery_record(payload_id="p1", project_id="proj-a", task_id="t1", owner="worker-proj-a"),
+                _make_delivery_record(payload_id="p2", project_id="proj-b", task_id="t2", owner="worker-proj-a"),
             ])
             import io
             from contextlib import redirect_stdout
@@ -249,7 +249,7 @@ class TestPolling:
             from worker_poller import register_worker, poll_worker
             register_worker("w1", "proj-a")
             _write_delivery_state(tmp_path, [
-                _make_delivery_record(payload_id="p1", project_id="proj-a", task_id="task-ready"),
+                _make_delivery_record(payload_id="p1", project_id="proj-a", task_id="task-ready", owner="w1"),
             ])
             import io
             from contextlib import redirect_stdout
@@ -269,9 +269,9 @@ class TestPolling:
             register_worker("w1", "proj-a")
             _write_delivery_state(tmp_path, [
                 _make_delivery_record(payload_id="p1", project_id="proj-a", task_id="t1",
-                                      event_type="review_submitted"),
+                                      event_type="review_submitted", owner="w1"),
                 _make_delivery_record(payload_id="p2", project_id="proj-a", task_id="t2",
-                                      event_type="ready_assigned"),
+                                      event_type="ready_assigned", owner="w1"),
             ])
             import io
             from contextlib import redirect_stdout
@@ -289,9 +289,9 @@ class TestPolling:
             register_worker("w1", "proj-a")
             _write_delivery_state(tmp_path, [
                 _make_delivery_record(payload_id="p1", project_id="proj-a", task_id="t1",
-                                      status="acknowledged"),
+                                      status="acknowledged", owner="w1"),
                 _make_delivery_record(payload_id="p2", project_id="proj-a", task_id="t2",
-                                      status="pending"),
+                                      status="pending", owner="w1"),
             ])
             import io
             from contextlib import redirect_stdout
@@ -309,9 +309,9 @@ class TestPolling:
             register_worker("w1", "proj-a")
             _write_delivery_state(tmp_path, [
                 _make_delivery_record(payload_id="p1", project_id="proj-a", task_id="t1",
-                                      destination="orchestrator"),
+                                      destination="orchestrator", owner="w1"),
                 _make_delivery_record(payload_id="p2", project_id="proj-a", task_id="t2",
-                                      destination="registered_worker"),
+                                      destination="registered_worker", owner="w1"),
             ])
             import io
             from contextlib import redirect_stdout
@@ -328,7 +328,7 @@ class TestPolling:
             from worker_poller import register_worker, poll_worker
             register_worker("w1", "proj-a")
             _write_delivery_state(tmp_path, [
-                _make_delivery_record(payload_id="p-json", project_id="proj-a", task_id="t-json"),
+                _make_delivery_record(payload_id="p-json", project_id="proj-a", task_id="t-json", owner="w1"),
             ])
             import io
             from contextlib import redirect_stdout
@@ -506,11 +506,11 @@ class TestMalformedState:
             delivery_file.write_text(
                 '{"payload_id": "good", "project_id": "p1", "task_id": "t1", '
                 '"event_type": "ready_assigned", "destination": "registered_worker", '
-                '"status": "pending"}\n'
+                '"status": "pending", "owner": "w1"}\n'
                 'NOT JSON\n'
                 '{"payload_id": "good2", "project_id": "p1", "task_id": "t2", '
                 '"event_type": "ready_assigned", "destination": "registered_worker", '
-                '"status": "pending"}\n',
+                '"status": "pending", "owner": "w1"}\n',
                 encoding="utf-8",
             )
             import io
