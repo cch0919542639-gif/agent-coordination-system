@@ -72,6 +72,17 @@ remote ref monitor -> event ledger -> routing runner -> delivery state -> worker
 - Correct stale documentation discovered within allowed scope; do not silently
   leave an advertised CLI operation unsupported.
 
+## Implementation Notes
+
+- Prefer a small explicit routing command or a monitor subcommand that can be
+  run once and produce machine-readable output. It must consume persisted
+  ledger events rather than chat messages or raw GitHub API data.
+- Preserve existing delivery records by using the current idempotent append and
+  update helpers. Acknowledged, retry-pending, and failed records must never be
+  reset to pending merely because the source event is observed again.
+- The project registry and routing policy remain local Git-ignored operator
+  state. Documentation may show placeholders, never a real machine path.
+
 ## Validation Steps
 
 1. Run focused routing-runner tests.
