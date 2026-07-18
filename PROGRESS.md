@@ -11,8 +11,9 @@
 ## Active Work
 
 - Review and correct `phase14-local-01`.
-- Add branch-aware monitoring so a worker branch's `review/` task card wakes
-  the orchestrator without manual chat forwarding.
+- `phase14-branch-01` is ready for the explicit-allowlist branch-aware monitor
+  change, so a worker branch's `review/` task card wakes the orchestrator
+  without manual chat forwarding.
 
 ## Blockers And Risks
 
