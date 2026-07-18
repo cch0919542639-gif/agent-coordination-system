@@ -8,3 +8,5 @@
 - Added a platform-neutral token and resource efficiency policy with task and
   review integration.
 - Added a portable core behavior policy and safe shared-skill registry tooling.
+- Recorded the machine-local compliance layer and explicit Junction approval
+  boundary.

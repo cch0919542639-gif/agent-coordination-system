@@ -22,6 +22,8 @@ repository evidence.
   context and output without hiding evidence or reading private transcripts.
 - Follow `docs/operations/agent-core-behavior-policy.md` for common operating
   boundaries. Use the shared-resource policy before linking global skills.
+- When present, read `coordination/monitor/local-agent-compliance.md` for this
+  machine's additional compliance and shared-resource rules.
 - Update `PROGRESS.md` after material changes and `DECISIONS.md` for durable
   decisions.
 

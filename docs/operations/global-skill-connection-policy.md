@@ -66,7 +66,8 @@ Only add verified targets to the local registry.
    instructions.
 3. Add it to the local registry with only verified runtime targets.
 4. Run `validate`, then `plan`; inspect all reported source and link paths.
-5. Run `apply` only after approving the plan.
+5. Run `apply` only after explicit user or local-owner approval of the exact
+   plan.
 6. Add the resource to the project task or skill routing when it is actually
    needed. Do not globally inject a large reference into every agent prompt.
 7. Update the source repository in place, then rerun `validate` and `plan` to
