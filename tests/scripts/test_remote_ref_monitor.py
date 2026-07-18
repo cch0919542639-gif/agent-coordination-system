@@ -110,6 +110,36 @@ def _write_registry(tmp_path: Path, entries: list[dict]) -> Path:
     return registry
 
 
+def _push_review_branch(clone: Path, branch: str, task_id: str) -> None:
+    """Push one REVIEW task card on an explicitly named worker branch."""
+    _run(["git", "checkout", "-b", branch], cwd=str(clone))
+    card = clone / "coordination" / "task-board" / "review" / f"{task_id}.md"
+    card.write_text(textwrap.dedent(f"""\
+        ---
+        task_id: {task_id}
+        phase: test
+        status: REVIEW
+        owner: worker-agent
+        reviewer: ORCHESTRATOR
+        priority: medium
+        dependencies: []
+        allowed_scope:
+          - tests/**
+        forbidden_scope:
+          - src/**
+        acceptance:
+          - test
+        expected_artifacts:
+          - code_changes
+        ---
+        # Task Packet
+    """), encoding="utf-8")
+    _run(["git", "add", "."], cwd=str(clone))
+    _run(["git", "commit", "-m", f"submit {task_id} for review"], cwd=str(clone))
+    _run(["git", "push", "origin", branch], cwd=str(clone))
+    _run(["git", "checkout", "main"], cwd=str(clone))
+
+
 def _cleanup_monitor():
     """Clean up monitor state from previous runs."""
     import shutil
@@ -262,6 +292,21 @@ class TestProjectRegistry:
         finally:
             if REGISTRY_FILE.exists():
                 REGISTRY_FILE.unlink(missing_ok=True)
+
+    def test_monitor_branches_round_trip_and_deduplicate(self) -> None:
+        from project_registry import ProjectEntry
+        entry = ProjectEntry.from_dict({
+            "project_id": "test-branches",
+            "local_path": "/tmp/project",
+            "monitor_branches": ["agent/one", "agent/one", "agent/two"],
+        })
+        assert entry.monitor_branches == ["agent/one", "agent/two"]
+        assert entry.to_dict()["monitor_branches"] == ["agent/one", "agent/two"]
+
+    def test_monitor_branches_reject_invalid_ref(self) -> None:
+        from project_registry import ProjectEntry
+        with pytest.raises(ValueError):
+            ProjectEntry(project_id="bad", local_path="/tmp/project", monitor_branches=["refs/heads/main"])
 
 
 # ─── 4. Monitor with isolated remote ────────────────────────────────
@@ -481,6 +526,63 @@ class TestBranchIsolation:
         # Only main branch events
         refs = {e.ref for e in events}
         assert "feature/other" not in refs
+
+    def test_allowed_worker_branch_emits_review_event_with_actual_ref_and_commit(self, tmp_path: Path) -> None:
+        remote = _init_bare_remote(tmp_path)
+        entry = _make_project_entry(tmp_path, remote)
+        worker_branch = "agent/worker/usage-mvp-01"
+        clone = Path(entry["local_path"])
+        _push_review_branch(clone, worker_branch, "usage-mvp-01")
+        entry["monitor_branches"] = [worker_branch]
+
+        from project_registry import ProjectEntry
+        from remote_ref_monitor import _scan_project
+
+        events = _scan_project(ProjectEntry.from_dict(entry), {})
+        worker_events = [e for e in events if e.ref == worker_branch and e.task_id == "usage-mvp-01"]
+        assert len(worker_events) == 1
+        assert worker_events[0].event_type == "review_submitted"
+        assert worker_events[0].task_id == "usage-mvp-01"
+        assert worker_events[0].commit
+
+    def test_worker_branch_is_excluded_without_explicit_registration(self, tmp_path: Path) -> None:
+        remote = _init_bare_remote(tmp_path)
+        entry = _make_project_entry(tmp_path, remote)
+        worker_branch = "agent/worker/unregistered"
+        _push_review_branch(Path(entry["local_path"]), worker_branch, "unregistered-review")
+
+        from project_registry import ProjectEntry
+        from remote_ref_monitor import _scan_project
+
+        events = _scan_project(ProjectEntry.from_dict(entry), {})
+        assert all(e.ref != worker_branch for e in events)
+
+    def test_worker_branch_duplicate_poll_and_other_ref_update_are_independent(self, tmp_path: Path) -> None:
+        remote = _init_bare_remote(tmp_path)
+        entry = _make_project_entry(tmp_path, remote)
+        worker_branch = "agent/worker/independent"
+        clone = Path(entry["local_path"])
+        _push_review_branch(clone, worker_branch, "worker-review")
+        entry["monitor_branches"] = [worker_branch]
+
+        from project_registry import ProjectEntry
+        from remote_ref_monitor import _scan_project
+
+        project = ProjectEntry.from_dict(entry)
+        state: dict = {}
+        first = _scan_project(project, state)
+        assert any(e.ref == worker_branch for e in first)
+        assert _scan_project(project, state) == []
+
+        # A new default-branch commit must not erase the worker branch cursor.
+        marker = clone / "main-marker.txt"
+        marker.write_text("default changed\n", encoding="utf-8")
+        _run(["git", "add", "."], cwd=str(clone))
+        _run(["git", "commit", "-m", "change default branch"], cwd=str(clone))
+        _run(["git", "push", "origin", "main"], cwd=str(clone))
+        _scan_project(project, state)
+        assert state["seen_commits"][project.project_id][worker_branch]
+        assert _scan_project(project, state) == []
 
 
 # ─── 7. CLI integration ─────────────────────────────────────────────
