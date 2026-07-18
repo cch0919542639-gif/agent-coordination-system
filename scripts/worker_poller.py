@@ -11,12 +11,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
-from coordination_common import ROOT
+from coordination_common import ROOT, parse_front_matter
 
 MONITOR_DIR = ROOT / "coordination" / "monitor"
 WORKERS_FILE = MONITOR_DIR / "workers.json"
@@ -262,6 +264,229 @@ def acknowledge_delivery(payload_id: str) -> int:
         return 1
 
 
+# ---------------------------------------------------------------------------
+# Activation — Phase 14 same-machine worker handoff
+# ---------------------------------------------------------------------------
+
+def activate_worker(worker_id: str, output_json: bool = False) -> int:
+    """Emit one safe action payload for the first owner-matching pending delivery.
+
+    Acknowledgement happens only after the payload is durably printed.
+    Returns 0 on success, 1 on any failure (fail-closed).
+
+    Constraints honoured:
+    - No subprocess, HTTP, webhook, agent launch, or Codex/MiMo invocation.
+    - No task-card claim, move, review, merge, commit, or push.
+    - Empty or mismatched owner fails closed.
+    """
+    worker = get_worker(worker_id)
+    if worker is None:
+        print(f"Worker `{worker_id}` not registered.", file=sys.stderr)
+        return 1
+    if not worker.enabled:
+        print(f"Worker `{worker_id}` is disabled.", file=sys.stderr)
+        return 1
+
+    records = _load_delivery_records()
+
+    # Strict owner-strict filtering: only pending ready_assigned for this worker
+    eligible = [
+        r for r in records
+        if r.get("project_id") == worker.project_id
+        and r.get("event_type") == "ready_assigned"
+        and r.get("destination") == "registered_worker"
+        and r.get("status") == "pending"
+        and r.get("owner", "") == worker.worker_id
+    ]
+
+    if not eligible:
+        if output_json:
+            print(json.dumps({"worker_id": worker_id, "activated": False, "reason": "no eligible delivery"}))
+        else:
+            print("No eligible delivery for activation.")
+        return 0
+
+    rec = eligible[0]
+    payload_id = rec.get("payload_id", "")
+
+    # Fail-closed: reject non-pending states
+    status = rec.get("status", "")
+    if status != "pending":
+        reason = f"delivery status is '{status}', expected 'pending'"
+        if output_json:
+            print(json.dumps({"worker_id": worker_id, "activated": False, "reason": reason}))
+        else:
+            print(f"Activation rejected: {reason}", file=sys.stderr)
+        return 1
+
+    # Persist the safe action payload before acknowledging the delivery.  The
+    # inbox is the durable handoff; stdout is only a convenience for a live
+    # heartbeat session.
+    try:
+        action_payload = _build_activation_payload(rec)
+    except ValueError as exc:
+        if output_json:
+            print(json.dumps({"worker_id": worker_id, "activated": False, "reason": str(exc)}))
+        else:
+            print(f"Activation rejected: {exc}", file=sys.stderr)
+        return 1
+    if not _write_activation_inbox(worker_id, action_payload):
+        if output_json:
+            print(json.dumps({"worker_id": worker_id, "activated": False, "reason": "durable inbox write failed"}))
+        else:
+            print("Activation rejected: durable inbox write failed", file=sys.stderr)
+        return 1
+
+    if output_json:
+        output = {"activated": True, **action_payload}
+        print(json.dumps(output, indent=2, ensure_ascii=False))
+    else:
+        _render_activation(action_payload)
+
+    # Acknowledge only after the payload is durably available in the inbox.
+    from event_routing import acknowledge
+    if not acknowledge(payload_id):
+        print("Activation rejected: acknowledgement failed", file=sys.stderr)
+        return 1
+
+    return 0
+
+
+def _build_activation_payload(rec: dict) -> dict:
+    """Build a safe, compact action payload from a delivery record.
+
+    Never includes raw task body, prompt text, source code, or absolute paths.
+    """
+    task_id = rec.get("task_id", "")
+    project_id = rec.get("project_id", "")
+    task_card_path = _resolve_task_card_path(project_id, task_id)
+    if task_card_path is None:
+        raise ValueError("registered project task card could not be resolved")
+    return {
+        "action": "ready_task_available",
+        "worker_id": rec.get("owner", ""),
+        "project_id": project_id,
+        "task_id": task_id,
+        "event_type": rec.get("event_type", ""),
+        "ref": rec.get("ref", ""),
+        "commit": rec.get("commit", ""),
+        "reviewer": rec.get("reviewer", ""),
+        "payload_id": rec.get("payload_id", ""),
+        "task_card_path": task_card_path,
+        "protocol_path": PROTOCOL_DOC,
+        "instructions": [
+            "Pull the latest repo.",
+            f"Read {PROTOCOL_DOC}.",
+            f"Read {task_card_path}",
+            "Claim the task by moving the card to in_progress/.",
+            "Execute within allowed scope.",
+            "Submit for review when done.",
+        ],
+    }
+
+
+def _resolve_task_card_path(project_id: str, task_id: str) -> str | None:
+    """Return the actual task-card path relative to its registered project root.
+
+    Delivery state deliberately contains no machine paths.  The path is looked
+    up only in the local project registry, then emitted as a POSIX-style
+    repository-relative path.  A missing or ambiguous card fails closed.
+    """
+    if not project_id or not task_id:
+        return None
+
+    from project_registry import get_project
+
+    project = get_project(project_id)
+    if project is None:
+        return None
+    try:
+        repo_root = Path(project.local_path).resolve(strict=True)
+    except OSError:
+        return None
+
+    matches: list[Path] = []
+    board = repo_root / "coordination" / "task-board"
+    for state in ("ready", "in_progress", "review", "blocked"):
+        state_dir = board / state
+        if not state_dir.is_dir():
+            continue
+        for card in state_dir.glob("*.md"):
+            try:
+                front_matter, _ = parse_front_matter(card.read_text(encoding="utf-8"))
+            except OSError:
+                continue
+            if front_matter and str(front_matter.get("task_id", "")).strip() == task_id:
+                matches.append(card)
+
+    if len(matches) != 1:
+        return None
+    try:
+        return matches[0].resolve().relative_to(repo_root).as_posix()
+    except ValueError:
+        return None
+
+
+def _worker_inbox_path(worker_id: str, payload_id: str) -> Path | None:
+    """Build a local-only inbox path without allowing directory traversal."""
+    if not worker_id or not payload_id:
+        return None
+    if any(part in {"", ".", ".."} for part in (worker_id, payload_id)):
+        return None
+    if any(sep in worker_id or sep in payload_id for sep in ("/", "\\")):
+        return None
+    return MONITOR_DIR / "inbox" / worker_id / f"{payload_id}.json"
+
+
+def _write_activation_inbox(worker_id: str, payload: dict) -> bool:
+    """Atomically persist one idempotent safe payload in the worker's inbox."""
+    inbox_path = _worker_inbox_path(worker_id, str(payload.get("payload_id", "")))
+    if inbox_path is None:
+        return False
+    try:
+        serialized = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+        inbox_path.parent.mkdir(parents=True, exist_ok=True)
+        if inbox_path.exists():
+            return inbox_path.read_text(encoding="utf-8") == serialized
+
+        fd, tmp_name = tempfile.mkstemp(
+            dir=str(inbox_path.parent), prefix=".activation-", suffix=".tmp"
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                handle.write(serialized)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(tmp_name, inbox_path)
+        finally:
+            Path(tmp_name).unlink(missing_ok=True)
+        return inbox_path.read_text(encoding="utf-8") == serialized
+    except OSError:
+        return False
+
+
+def _render_activation(payload: dict) -> None:
+    """Render a human-readable activation message."""
+    print("=" * 60)
+    print("  WORKER ACTIVATION — Phase 14 Local Handoff")
+    print("=" * 60)
+    print(f"  Worker:  {payload.get('worker_id', '')}")
+    print(f"  Task:    {payload.get('task_id', '')}")
+    print(f"  Project: {payload.get('project_id', '')}")
+    print(f"  Ref:     {payload.get('ref', '')}")
+    print(f"  Commit:  {payload.get('commit', '')[:12] if payload.get('commit') else ''}")
+    print(f"  Reviewer:{payload.get('reviewer', '')}")
+    print()
+    print("  Next steps:")
+    for i, step in enumerate(payload.get("instructions", []), 1):
+        print(f"    {i}. {step}")
+    print()
+    print(f"  Card:    {payload.get('task_card_path', '')}")
+    print(f"  Protocol:{payload.get('protocol_path', '')}")
+    print(f"  Payload: {payload.get('payload_id', '')}")
+    print("=" * 60)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Opt-in worker-side polling for registered worker notifications.",
@@ -297,6 +522,14 @@ def build_parser() -> argparse.ArgumentParser:
     # acknowledge
     ack_parser = subparsers.add_parser("acknowledge", help="Acknowledge a delivery notification.")
     ack_parser.add_argument("payload_id", help="Payload ID to acknowledge.")
+
+    # activate
+    act_parser = subparsers.add_parser(
+        "activate",
+        help="Activate one owner-matching pending delivery for a worker.",
+    )
+    act_parser.add_argument("worker_id", help="Registered worker identifier.")
+    act_parser.add_argument("--json", action="store_true", help="Output action payload as JSON.")
 
     return parser
 
@@ -335,6 +568,9 @@ def main() -> int:
 
     if args.command == "acknowledge":
         return acknowledge_delivery(args.payload_id)
+
+    if args.command == "activate":
+        return activate_worker(args.worker_id, output_json=args.json)
 
     return 0
 
