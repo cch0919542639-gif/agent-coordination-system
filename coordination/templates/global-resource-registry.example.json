@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "resources": [
+    {
+      "name": "example-development-skill",
+      "type": "skill",
+      "source_path": "%USERPROFILE%\\agent-shared-resources\\skills\\example-development-skill",
+      "source_url": "https://example.invalid/example-development-skill",
+      "description": "Replace with the capability and its privacy classification.",
+      "invocation": "Read SKILL.md only when a task needs this capability.",
+      "targets": [
+        {
+          "runtime": "codex",
+          "directory": "%USERPROFILE%\\.codex\\skills",
+          "link_name": "example-development-skill"
+        }
+      ]
+    }
+  ]
+}

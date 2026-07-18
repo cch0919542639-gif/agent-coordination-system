@@ -20,6 +20,8 @@ repository evidence.
   launch agents, or expose credentials without the governing protocol.
 - Follow `docs/operations/token-efficiency-policy.md`: reduce unnecessary
   context and output without hiding evidence or reading private transcripts.
+- Follow `docs/operations/agent-core-behavior-policy.md` for common operating
+  boundaries. Use the shared-resource policy before linking global skills.
 - Update `PROGRESS.md` after material changes and `DECISIONS.md` for durable
   decisions.
 
@@ -27,5 +29,7 @@ repository evidence.
 
 - `docs/operations/universal-work-context-workflow.md`
 - `docs/operations/token-efficiency-policy.md`
+- `docs/operations/agent-core-behavior-policy.md`
+- `docs/operations/global-skill-connection-policy.md`
 - `docs/operations/agent-task-execution-protocol.md`
 - `docs/operations/lead-agent-orchestration-protocol.md`

@@ -9,3 +9,5 @@ editing. Read decisions, architecture, and memory only when they affect scope.
 - Update progress and durable decisions in repository files.
 - Reduce unnecessary context and output without hiding evidence or collecting
   private transcripts for optimization.
+- Use shared global skills only through an explicit project reference and a
+  verified local resource registry.
