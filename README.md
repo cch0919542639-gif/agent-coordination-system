@@ -35,10 +35,12 @@ scripts/
 
 If you are new to this repo, read these in order:
 
-1. [docs/operations/agent-task-execution-protocol.md](D:\codex work\docs\operations\agent-task-execution-protocol.md)
-2. [docs/operations/github-collaboration-readiness-checklist.md](D:\codex work\docs\operations\github-collaboration-readiness-checklist.md)
-3. [docs/operations/first-live-phase-rollout-guide.md](D:\codex work\docs\operations\first-live-phase-rollout-guide.md)
-4. [coordination/README.md](D:\codex work\coordination\README.md)
+1. [AGENTS.md](D:\codex work\AGENTS.md)
+2. [PLAN.md](D:\codex work\PLAN.md)
+3. [PROGRESS.md](D:\codex work\PROGRESS.md)
+4. [TASKS.md](D:\codex work\TASKS.md)
+5. [docs/operations/universal-work-context-workflow.md](D:\codex work\docs\operations\universal-work-context-workflow.md)
+6. [docs/operations/agent-task-execution-protocol.md](D:\codex work\docs\operations\agent-task-execution-protocol.md)
 
 ## First Live Pilot
 
@@ -76,4 +78,3 @@ This repository currently contains:
 - operating protocols and rollout guides
 - standard templates and sample files
 - the first wave of live pilot task cards
-
