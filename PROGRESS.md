@@ -11,18 +11,19 @@
 ## Active Work
 
 - Review and correct `phase14-local-01`.
-- `phase14-branch-01` is ready for the explicit-allowlist branch-aware monitor
-  change, so a worker branch's `review/` task card wakes the orchestrator
-  without manual chat forwarding.
+- `phase14-branch-01` is submitted for review with the explicit-allowlist
+  branch-aware monitor change, so a registered worker branch's `review/` task
+  card can wake the orchestrator without manual chat forwarding.
 
 ## Blockers And Risks
 
-- The monitor currently scans only the configured default branch, so worker
-  branch review evidence is not yet detected automatically.
+- Production validation still needs to register the `usage-mvp-01` worker ref
+  and verify the first real review-submitted event after acceptance.
 - Same-machine runtime state is Git-ignored by design; cross-machine delivery
   is deferred.
 
 ## Next Action
 
-Accept a corrected Phase 14 local activation handoff, then implement
-branch-aware review monitoring before declaring the loop fully local-live.
+Review and accept the branch-aware monitor handoff, then run the first real
+`usage-mvp-01` worker-branch review event before declaring the loop fully
+local-live.

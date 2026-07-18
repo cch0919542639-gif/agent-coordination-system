@@ -20,7 +20,8 @@ branches, or lifecycle state.
     "project_id": "my-project",
     "local_path": "/path/to/local/clone",
     "remote_name": "origin",
-    "default_branch": "main"
+    "default_branch": "main",
+    "monitor_branches": ["agent/worker-01/task-123"]
   }
 ]
 ```
@@ -72,6 +73,18 @@ Projects are registered in `coordination/monitor/projects.json` (Git-ignored).
 
 **Do not commit local paths to Git.**  The project registry is Git-ignored
 because it contains machine-specific paths.
+
+`monitor_branches` is optional. When omitted or empty, the monitor retains
+default-branch-only behavior. When present, it is an explicit per-project
+allowlist: the monitor checks the default branch and only the listed worker
+branches. It does not infer eligible branches from their names or enumerate
+all remote heads. Branch names must be normal Git branch names (for example,
+no `refs/` prefix, whitespace, or ref-control characters); invalid registry
+entries fail closed rather than widening collection.
+
+Worker branches are review-evidence only: a `REVIEW` task card on an allowed
+worker branch creates `review_submitted`; ready and blocked cards continue to
+be detected on the default branch only.
 
 ### Routing Policy
 
@@ -170,6 +183,17 @@ Symptom: events not updating after pushes
 Fix: Delete coordination/monitor/state.json to reset cursors
 ```
 
+### Disable Worker-Branch Monitoring
+
+```
+Symptom: a worker branch should no longer be monitored
+Fix: Remove that exact name from monitor_branches in projects.json, then run one normal poll.
+```
+
+The saved cursor is intentionally retained for a removed branch. Re-adding it
+later does not lose other branch cursors; delete `state.json` only when an
+operator intentionally wants every configured ref to be re-evaluated.
+
 ### Routing Policy Errors
 
 ```
@@ -181,5 +205,43 @@ Fix: Validate routing_policy.json — check project_id, event_type, destination
 
 - Default poll interval: 600 seconds (10 minutes)
 - Minimum interval: 60 seconds
-- One bounded Git fetch per project per poll
+- One bounded, depth-one Git fetch per project per poll, limited to the
+  configured default branch plus the explicit worker-branch allowlist
 - No busy loops, file watchers, or network polling
+
+Each additional configured worker branch adds only one refspec and one local
+object inspection pass. Keep the normal 10-minute cadence; use the 1-minute
+minimum only for supervised diagnosis.
+
+## usage-mvp-01 Verification Recipe
+
+For the first local-loop verification, register the existing worker branch
+alongside the default branch in the ignored local registry:
+
+```json
+[
+  {
+    "project_id": "agent-usage-collector",
+    "local_path": "/path/to/agent-usage-collector",
+    "remote_name": "origin",
+    "default_branch": "main",
+    "monitor_branches": [
+      "agent/external-agent-research-01/usage-mvp-01"
+    ]
+  }
+]
+```
+
+With the existing routing policy mapping `review_submitted` to
+`orchestrator`, run:
+
+```bash
+python scripts/orchestrate.py monitor --json
+python scripts/orchestrate.py route-events --json
+```
+
+Confirm one sanitized event for task `usage-mvp-01` with event type
+`review_submitted`, ref
+`agent/external-agent-research-01/usage-mvp-01`, its commit SHA, owner, and
+reviewer; then confirm one orchestrator delivery record. Do not copy task-card
+body content, absolute local paths, or live delivery records into reports.

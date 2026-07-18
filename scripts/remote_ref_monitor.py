@@ -42,15 +42,25 @@ def _run_git(args: list[str], cwd: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def _monitor_branches(project: ProjectEntry) -> list[str]:
+    """Return the bounded default-plus-explicit branch scan set."""
+    branches = [project.default_branch]
+    for branch in project.monitor_branches or []:
+        if branch not in branches:
+            branches.append(branch)
+    return branches
+
+
 def _bounded_fetch(
     local_path: str,
     remote_name: str,
-    refspec: str = "refs/heads/*:refs/remotes/origin/*",
+    branches: list[str],
     timeout_seconds: int = 30,
 ) -> tuple[bool, str]:
-    """Fetch remote refs with a bounded timeout. Returns (success, message)."""
+    """Fetch only configured refs with a bounded, depth-one Git operation."""
+    refspecs = [f"refs/heads/{branch}:refs/remotes/{remote_name}/{branch}" for branch in branches]
     result = _run_git(
-        ["fetch", "--no-tags", "--depth=1", remote_name, refspec],
+        ["fetch", "--no-tags", "--depth=1", remote_name, *refspecs],
         cwd=local_path,
     )
     if result.returncode != 0:
@@ -61,11 +71,11 @@ def _bounded_fetch(
 def _ls_remote_refs(
     local_path: str,
     remote_name: str,
-    pattern: str = "refs/heads/*",
+    branches: list[str],
 ) -> dict[str, str]:
-    """List remote refs as {ref_name: commit_sha}."""
+    """List only configured remote refs as {ref_name: commit_sha}."""
     result = _run_git(
-        ["ls-remote", "--heads", remote_name, pattern],
+        ["ls-remote", "--heads", remote_name, *[f"refs/heads/{branch}" for branch in branches]],
         cwd=local_path,
     )
     refs: dict[str, str] = {}
@@ -139,8 +149,10 @@ def _scan_project(
     if not Path(local_path).is_dir():
         return []
 
-    # Bounded fetch
-    success, _msg = _bounded_fetch(local_path, remote_name)
+    branches = _monitor_branches(project)
+
+    # Bounded fetch and ref listing: default branch plus explicit allowlist.
+    success, _msg = _bounded_fetch(local_path, remote_name, branches)
     if not success:
         # Record health event
         return [Event(
@@ -154,53 +166,46 @@ def _scan_project(
             detected_at=now_iso(),
         )]
 
-    # List remote refs — only scan the default branch
-    refs = _ls_remote_refs(local_path, remote_name)
+    refs = _ls_remote_refs(local_path, remote_name, branches)
     default = project.default_branch
-    if default not in refs:
-        return []
 
     # Get last-seen commits per branch
     seen: dict[str, str] = state.get("seen_commits", {}).get(project_id, {})
 
     events: list[Event] = []
-    new_seen: dict[str, str] = {}
-
-    branch = default
-    commit_sha = refs[branch]
-    new_seen[branch] = commit_sha
-    if seen.get(branch) == commit_sha:
-        return []  # No change
-
-    # Discover task cards on this branch
-    cards = _discover_task_cards(local_path, remote_name, branch)
-
-    for fm in cards:
-        event_type = detect_event_type(fm)
-        if not event_type:
-            continue
-        task_id = str(fm.get("task_id", "")).strip()
-        if not task_id:
+    for branch in branches:
+        commit_sha = refs.get(branch)
+        if not commit_sha or seen.get(branch) == commit_sha:
             continue
 
-        event = Event(
-            event_id=make_event_id(project_id, local_path, branch, commit_sha, task_id, event_type),
-            project_id=project_id,
-            repository=local_path,
-            ref=branch,
-            commit=commit_sha,
-            task_id=task_id,
-            event_type=event_type,
-            detected_at=now_iso(),
-            owner=str(fm.get("owner", "")).strip(),
-            reviewer=str(fm.get("reviewer", "")).strip(),
-        )
-        events.append(event)
+        # Worker branches are review-evidence only.  The default branch keeps
+        # the established review/ready/blocked event behaviour.
+        for fm in _discover_task_cards(local_path, remote_name, branch):
+            event_type = detect_event_type(fm)
+            if not event_type or (branch != default and event_type != "review_submitted"):
+                continue
+            task_id = str(fm.get("task_id", "")).strip()
+            if not task_id:
+                continue
+
+            events.append(Event(
+                event_id=make_event_id(project_id, local_path, branch, commit_sha, task_id, event_type),
+                project_id=project_id,
+                repository=local_path,
+                ref=branch,
+                commit=commit_sha,
+                task_id=task_id,
+                event_type=event_type,
+                detected_at=now_iso(),
+                owner=str(fm.get("owner", "")).strip(),
+                reviewer=str(fm.get("reviewer", "")).strip(),
+            ))
+        seen[branch] = commit_sha
 
     # Update state
     if project_id not in state.get("seen_commits", {}):
         state.setdefault("seen_commits", {})[project_id] = {}
-    state["seen_commits"][project_id] = new_seen
+    state["seen_commits"][project_id] = seen
 
     return events
 

@@ -25,8 +25,12 @@ class ProjectEntry:
     local_path: str
     remote_name: str = "origin"
     default_branch: str = "main"
+    monitor_branches: list[str] | None = None
     profile: str | None = None
     event_destinations: list[str] | None = None
+
+    def __post_init__(self) -> None:
+        self.monitor_branches = _validated_monitor_branches(self.monitor_branches)
 
     def to_dict(self) -> dict:
         d = {
@@ -37,6 +41,8 @@ class ProjectEntry:
         }
         if self.profile:
             d["profile"] = self.profile
+        if self.monitor_branches:
+            d["monitor_branches"] = self.monitor_branches
         if self.event_destinations:
             d["event_destinations"] = self.event_destinations
         return d
@@ -48,9 +54,45 @@ class ProjectEntry:
             local_path=data["local_path"],
             remote_name=data.get("remote_name", "origin"),
             default_branch=data.get("default_branch", "main"),
+            monitor_branches=data.get("monitor_branches"),
             profile=data.get("profile"),
             event_destinations=data.get("event_destinations"),
         )
+
+
+def _validated_monitor_branches(value: object) -> list[str] | None:
+    """Return a de-duplicated, safe explicit worker-branch allowlist.
+
+    The registry is local configuration, but invalid branch syntax must never
+    broaden monitoring to arbitrary remote refs.  Empty/missing values retain
+    the historical default-branch-only behaviour.
+    """
+    if value is None:
+        return None
+    if not isinstance(value, list):
+        raise ValueError("monitor_branches must be a list of branch names")
+
+    branches: list[str] = []
+    for branch in value:
+        if not isinstance(branch, str) or not _is_safe_branch_name(branch):
+            raise ValueError("monitor_branches contains an invalid branch name")
+        if branch not in branches:
+            branches.append(branch)
+    return branches
+
+
+def _is_safe_branch_name(branch: str) -> bool:
+    """Validate a branch name without invoking Git or a shell."""
+    if not branch or branch != branch.strip() or branch.startswith("refs/"):
+        return False
+    if branch.startswith("/") or branch.endswith("/") or "//" in branch:
+        return False
+    if any(char.isspace() or ord(char) < 32 for char in branch):
+        return False
+    if any(token in branch for token in ("..", "@{", "\\", "~", "^", ":", "?", "*", "[")):
+        return False
+    return all(part and not part.startswith(".") and not part.endswith(".") and not part.endswith(".lock")
+               for part in branch.split("/"))
 
 
 def load_registry() -> list[ProjectEntry]:
