@@ -45,12 +45,33 @@ def _patch_all(tmp_path: Path):
     monitor_dir = tmp_path / "monitor"
     delivery_dir = monitor_dir / "delivery"
     workers_file = monitor_dir / "workers.json"
+    project_root = tmp_path / "registered-product"
+    delivery_file = delivery_dir / "delivery_state.jsonl"
+    if delivery_file.exists():
+        for line in delivery_file.read_text(encoding="utf-8").splitlines():
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            task_id = record.get("task_id", "")
+            if task_id:
+                card = project_root / "coordination" / "task-board" / "ready" / f"2026-07-19_{task_id}_card.md"
+                card.parent.mkdir(parents=True, exist_ok=True)
+                card.write_text(f"---\ntask_id: {task_id}\n---\n", encoding="utf-8")
+    registry_file = monitor_dir / "projects.json"
+    registry_file.parent.mkdir(parents=True, exist_ok=True)
+    registry_file.write_text(json.dumps([{
+        "project_id": "proj-a",
+        "local_path": str(project_root),
+    }]), encoding="utf-8")
     return (
         patch("worker_poller.MONITOR_DIR", monitor_dir),
         patch("worker_poller.WORKERS_FILE", workers_file),
         patch("event_routing.MONITOR_DIR", monitor_dir),
         patch("event_routing.DELIVERY_DIR", delivery_dir),
         patch("event_routing.DELIVERY_FILE", delivery_dir / "delivery_state.jsonl"),
+        patch("project_registry.MONITOR_DIR", monitor_dir),
+        patch("project_registry.REGISTRY_FILE", registry_file),
     )
 
 
@@ -112,6 +133,11 @@ class TestBasicActivation:
             assert data["worker_id"] == "worker-a"
             assert data["task_id"] == "task-01"
             assert data["project_id"] == "proj-a"
+            assert data["task_card_path"] == "coordination/task-board/ready/2026-07-19_task-01_card.md"
+            inbox = tmp_path / "monitor" / "inbox" / "worker-a" / "pay-001.json"
+            assert json.loads(inbox.read_text(encoding="utf-8")) == {
+                key: value for key, value in data.items() if key != "activated"
+            }
         finally:
             for p in patches:
                 p.stop()
@@ -133,6 +159,7 @@ class TestBasicActivation:
             rec = records["pay-001"]
             assert rec.status == "acknowledged"
             assert rec.acknowledged_at != ""
+            assert (tmp_path / "monitor" / "inbox" / "worker-a" / "pay-001.json").exists()
         finally:
             for p in patches:
                 p.stop()
@@ -160,6 +187,48 @@ class TestBasicActivation:
             data2 = json.loads(f2.getvalue())
             assert data2["activated"] is False
             assert data2["reason"] == "no eligible delivery"
+            assert len(list((tmp_path / "monitor" / "inbox" / "worker-a").glob("*.json"))) == 1
+        finally:
+            for p in patches:
+                p.stop()
+
+    def test_inbox_failure_does_not_acknowledge(self, tmp_path: Path):
+        _register(tmp_path, "worker-a", "proj-a")
+        _write_delivery_state(tmp_path, [_delivery_record()])
+        patches = _patch_all(tmp_path)
+        for p in patches:
+            p.start()
+        try:
+            from worker_poller import activate_worker
+            with patch("worker_poller._write_activation_inbox", return_value=False):
+                f = io.StringIO()
+                with redirect_stdout(f):
+                    rc = activate_worker("worker-a", output_json=True)
+            assert rc == 1
+            assert json.loads(f.getvalue())["reason"] == "durable inbox write failed"
+            from event_routing import load_delivery_state_map
+            assert load_delivery_state_map()["pay-001"].status == "pending"
+        finally:
+            for p in patches:
+                p.stop()
+
+    def test_missing_registered_project_card_fails_closed(self, tmp_path: Path):
+        _register(tmp_path, "worker-a", "proj-a")
+        _write_delivery_state(tmp_path, [_delivery_record()])
+        patches = _patch_all(tmp_path)
+        for p in patches:
+            p.start()
+        try:
+            card = tmp_path / "registered-product" / "coordination" / "task-board" / "ready" / "2026-07-19_task-01_card.md"
+            card.unlink()
+            from worker_poller import activate_worker
+            f = io.StringIO()
+            with redirect_stdout(f):
+                rc = activate_worker("worker-a", output_json=True)
+            assert rc == 1
+            assert "task card could not be resolved" in json.loads(f.getvalue())["reason"]
+            from event_routing import load_delivery_state_map
+            assert load_delivery_state_map()["pay-001"].status == "pending"
         finally:
             for p in patches:
                 p.stop()

@@ -56,8 +56,11 @@ Ensure the project's routing policy routes `ready_assigned` events to
 python scripts/orchestrate.py worker activate <worker-id>
 ```
 
-If a pending delivery exists for this worker, you will see an action payload
-with the task details.  If not, you will see "No eligible delivery."
+If a pending delivery exists for this worker, the command first writes one
+safe action payload to `coordination/monitor/inbox/<worker-id>/` and then
+acknowledges the delivery. The payload's task-card path is resolved from the
+registered product checkout and is always repository-root-relative. If not,
+you will see "No eligible delivery."
 
 ## Per-Worker Heartbeat Configuration
 
@@ -98,8 +101,10 @@ python scripts/orchestrate.py worker activate <worker-id> --json
 1. Reads the shared delivery state (Git-ignored, local only).
 2. Finds the first pending `ready_assigned` record matching this worker's
    project and owner.
-3. Emits a safe action payload with task ID, project, ref, and instructions.
-4. Acknowledges the delivery after the payload is durably printed.
+3. Resolves the card in the registered product checkout and writes one safe,
+   worker-specific inbox payload atomically.
+4. Emits that payload with task ID, project, ref, and instructions.
+5. Acknowledges the delivery only after the inbox file is durable.
 
 ## What Activation Does NOT Do
 
@@ -121,6 +126,8 @@ python scripts/orchestrate.py worker activate <worker-id> --json
 | Already acknowledged | Exit code 0, activation skipped |
 | Retry-pending / failed | Exit code 0, activation skipped |
 | Malformed record | Skipped silently, other records processed |
+| Missing/ambiguous product task card | Exit code 1; delivery remains pending |
+| Inbox write failure | Exit code 1; delivery remains pending |
 
 ## Recovery
 
@@ -150,6 +157,9 @@ Fix: The system is idempotent; acknowledged records are skipped automatically
 ```bash
 # Check delivery state
 cat coordination/monitor/delivery/delivery_state.jsonl | python -m json.tool
+
+# Inspect a worker's durable handoff inbox
+Get-ChildItem coordination/monitor/inbox/<worker-id>
 
 # List registered workers
 python scripts/orchestrate.py worker list

@@ -11,12 +11,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
-from coordination_common import ROOT
+from coordination_common import ROOT, parse_front_matter
 
 MONITOR_DIR = ROOT / "coordination" / "monitor"
 WORKERS_FILE = MONITOR_DIR / "workers.json"
@@ -317,19 +319,35 @@ def activate_worker(worker_id: str, output_json: bool = False) -> int:
             print(f"Activation rejected: {reason}", file=sys.stderr)
         return 1
 
-    # Build the safe action payload for the local agent heartbeat
-    action_payload = _build_activation_payload(rec)
+    # Persist the safe action payload before acknowledging the delivery.  The
+    # inbox is the durable handoff; stdout is only a convenience for a live
+    # heartbeat session.
+    try:
+        action_payload = _build_activation_payload(rec)
+    except ValueError as exc:
+        if output_json:
+            print(json.dumps({"worker_id": worker_id, "activated": False, "reason": str(exc)}))
+        else:
+            print(f"Activation rejected: {exc}", file=sys.stderr)
+        return 1
+    if not _write_activation_inbox(worker_id, action_payload):
+        if output_json:
+            print(json.dumps({"worker_id": worker_id, "activated": False, "reason": "durable inbox write failed"}))
+        else:
+            print("Activation rejected: durable inbox write failed", file=sys.stderr)
+        return 1
 
-    # Emit the payload durably (to stdout — the agent session reads it)
     if output_json:
         output = {"activated": True, **action_payload}
         print(json.dumps(output, indent=2, ensure_ascii=False))
     else:
         _render_activation(action_payload)
 
-    # Acknowledge only after the payload is durably available
+    # Acknowledge only after the payload is durably available in the inbox.
     from event_routing import acknowledge
-    acknowledge(payload_id)
+    if not acknowledge(payload_id):
+        print("Activation rejected: acknowledgement failed", file=sys.stderr)
+        return 1
 
     return 0
 
@@ -341,6 +359,9 @@ def _build_activation_payload(rec: dict) -> dict:
     """
     task_id = rec.get("task_id", "")
     project_id = rec.get("project_id", "")
+    task_card_path = _resolve_task_card_path(project_id, task_id)
+    if task_card_path is None:
+        raise ValueError("registered project task card could not be resolved")
     return {
         "action": "ready_task_available",
         "worker_id": rec.get("owner", ""),
@@ -351,17 +372,97 @@ def _build_activation_payload(rec: dict) -> dict:
         "commit": rec.get("commit", ""),
         "reviewer": rec.get("reviewer", ""),
         "payload_id": rec.get("payload_id", ""),
-        "task_card_path": f"coordination/task-board/ready/{task_id}.md",
+        "task_card_path": task_card_path,
         "protocol_path": PROTOCOL_DOC,
         "instructions": [
             "Pull the latest repo.",
             f"Read {PROTOCOL_DOC}.",
-            f"Read coordination/task-board/ready/{task_id}.md",
+            f"Read {task_card_path}",
             "Claim the task by moving the card to in_progress/.",
             "Execute within allowed scope.",
             "Submit for review when done.",
         ],
     }
+
+
+def _resolve_task_card_path(project_id: str, task_id: str) -> str | None:
+    """Return the actual task-card path relative to its registered project root.
+
+    Delivery state deliberately contains no machine paths.  The path is looked
+    up only in the local project registry, then emitted as a POSIX-style
+    repository-relative path.  A missing or ambiguous card fails closed.
+    """
+    if not project_id or not task_id:
+        return None
+
+    from project_registry import get_project
+
+    project = get_project(project_id)
+    if project is None:
+        return None
+    try:
+        repo_root = Path(project.local_path).resolve(strict=True)
+    except OSError:
+        return None
+
+    matches: list[Path] = []
+    board = repo_root / "coordination" / "task-board"
+    for state in ("ready", "in_progress", "review", "blocked"):
+        state_dir = board / state
+        if not state_dir.is_dir():
+            continue
+        for card in state_dir.glob("*.md"):
+            try:
+                front_matter, _ = parse_front_matter(card.read_text(encoding="utf-8"))
+            except OSError:
+                continue
+            if front_matter and str(front_matter.get("task_id", "")).strip() == task_id:
+                matches.append(card)
+
+    if len(matches) != 1:
+        return None
+    try:
+        return matches[0].resolve().relative_to(repo_root).as_posix()
+    except ValueError:
+        return None
+
+
+def _worker_inbox_path(worker_id: str, payload_id: str) -> Path | None:
+    """Build a local-only inbox path without allowing directory traversal."""
+    if not worker_id or not payload_id:
+        return None
+    if any(part in {"", ".", ".."} for part in (worker_id, payload_id)):
+        return None
+    if any(sep in worker_id or sep in payload_id for sep in ("/", "\\")):
+        return None
+    return MONITOR_DIR / "inbox" / worker_id / f"{payload_id}.json"
+
+
+def _write_activation_inbox(worker_id: str, payload: dict) -> bool:
+    """Atomically persist one idempotent safe payload in the worker's inbox."""
+    inbox_path = _worker_inbox_path(worker_id, str(payload.get("payload_id", "")))
+    if inbox_path is None:
+        return False
+    try:
+        serialized = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+        inbox_path.parent.mkdir(parents=True, exist_ok=True)
+        if inbox_path.exists():
+            return inbox_path.read_text(encoding="utf-8") == serialized
+
+        fd, tmp_name = tempfile.mkstemp(
+            dir=str(inbox_path.parent), prefix=".activation-", suffix=".tmp"
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                handle.write(serialized)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(tmp_name, inbox_path)
+        finally:
+            Path(tmp_name).unlink(missing_ok=True)
+        return inbox_path.read_text(encoding="utf-8") == serialized
+    except OSError:
+        return False
 
 
 def _render_activation(payload: dict) -> None:
