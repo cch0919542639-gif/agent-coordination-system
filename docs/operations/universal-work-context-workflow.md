@@ -8,6 +8,10 @@ production-first delivery standard: an agent loads only the context needed for
 the current decision, but every meaningful outcome remains documented and
 verifiable.
 
+For recurring agent workflows, also apply
+`docs/operations/token-efficiency-policy.md`. Efficiency work must preserve
+validation evidence, privacy boundaries, and a recovery path.
+
 ## Context Kit
 
 Every active project keeps these top-level entry files. They are a navigation

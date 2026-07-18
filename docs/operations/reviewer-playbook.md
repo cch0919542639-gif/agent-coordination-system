@@ -38,6 +38,19 @@ The submission must contain repo-based evidence for every acceptance criterion i
 - For each `acceptance` line in the front matter, verify there is a matching artifact, file change, or documented result.
 - Chat-only explanations do not count as evidence.
 
+## Token And Resource Check
+
+Apply this check only when the task changes agent count, model selection,
+polling cadence, long-running commands, always-loaded context, or output
+handling.
+
+- Confirm the change has a bounded operational purpose and a measurement basis.
+- Confirm summaries retain failures, warnings, validation results, and paths to
+  recoverable original evidence.
+- Confirm transcript or usage collection follows the privacy boundary in
+  `docs/operations/token-efficiency-policy.md`.
+- Require a disable or rollback path for a runtime behavior change.
+
 ## Outcome Decision Guide
 
 ### `accepted`

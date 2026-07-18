@@ -40,6 +40,14 @@ State the rules the agent must obey.
 
 List any important implementation hints, dependencies, or assumptions.
 
+## Token And Resource Impact (If Applicable)
+
+Complete this section when the task changes agent count, model selection,
+polling, long-running commands, always-loaded context, or output handling.
+State the expected impact, whether the baseline is measured, estimated, or
+unknown, how delivery evidence remains recoverable, and the disable or rollback
+path. Otherwise write `Not applicable`.
+
 ## Validation Steps
 
 Describe how the agent should verify the result before submission.

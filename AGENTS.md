@@ -18,11 +18,14 @@ repository evidence.
 - Validate before submission and provide delivery evidence for review.
 - Keep safety boundaries explicit: do not auto-claim, auto-review, merge, push,
   launch agents, or expose credentials without the governing protocol.
+- Follow `docs/operations/token-efficiency-policy.md`: reduce unnecessary
+  context and output without hiding evidence or reading private transcripts.
 - Update `PROGRESS.md` after material changes and `DECISIONS.md` for durable
   decisions.
 
 ## References
 
 - `docs/operations/universal-work-context-workflow.md`
+- `docs/operations/token-efficiency-policy.md`
 - `docs/operations/agent-task-execution-protocol.md`
 - `docs/operations/lead-agent-orchestration-protocol.md`
