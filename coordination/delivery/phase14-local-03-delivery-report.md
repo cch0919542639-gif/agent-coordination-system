@@ -30,3 +30,7 @@ The selected non-mutating monitor regression subset completed 17 tests before
 the bounded local 60-second runner window elapsed. The status-projector change
 does not alter monitor code; a provisioned longer monitor-suite run remains a
 review follow-up.
+
+The review submission and commit `350e6b8` are local only. Pushing the branch
+to the configured external remote requires explicit authorization; see incident
+`20260719-1535-EXTERNAL-AGENT-PLATFORM-33-PUSH-AUTHORIZATION`.
