@@ -162,6 +162,16 @@ That report should summarize:
 - which decisions were made autonomously
 - which user decisions are now required
 
+### 9. Record Accepted Phase Knowledge
+
+After an evidence-backed phase or material segment is accepted, the lead agent
+opens a bounded documentation task for a suitable docs agent. The task may
+start only after acceptance and must update the designated project Master Plan
+from repository evidence. The record must distinguish accepted delivery from
+merged integration, state residual risks and next actions, and link or name
+the authoritative task, delivery, review, and commit evidence. It must never
+turn chat-only claims into completion evidence.
+
 ## Required System Artifacts
 
 The lead agent is responsible for ensuring these artifacts exist and stay coherent:
