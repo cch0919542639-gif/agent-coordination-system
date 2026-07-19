@@ -17,6 +17,11 @@ Required pytest runtime is unavailable
 
 Implemented the read-only projector; py_compile, status safe-output inspection, coordination validation, and diff check passed; focused pytest invocation was attempted.
 
+## Exact Blocker
+
+The worktree initially lacked the pytest runtime required for the focused
+validation suite.
+
 ## Resolution
 
 The assigned worktree now provides pytest 9.1.1. The focused projector suite

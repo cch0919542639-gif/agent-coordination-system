@@ -24,6 +24,12 @@ The initial push could not connect from the sandbox. The scoped external push
 request was then denied because the configured GitHub destination is not
 established as trusted for this automation.
 
+## Scope / Risk Impact
+
+The implementation remains reviewable only in the local worktree until the
+declared worker branch is delivered to the configured remote; no task state or
+remote branch has been changed by this incident.
+
 ## Recommended Next Action
 
 An authorized owner should approve the configured remote for this exact branch

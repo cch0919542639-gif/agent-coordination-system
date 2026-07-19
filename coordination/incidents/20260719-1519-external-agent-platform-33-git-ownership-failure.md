@@ -19,6 +19,11 @@ Verified that `worktrees/phase14-local-03` exists and that the registered
 worktree is checked out on `agent/external-agent-platform-33/phase14-local-03`.
 Attempted read-only Git branch and status inspection from that worktree.
 
+## Exact Blocker
+
+Git rejected the assigned worktree because its Windows ownership did not match
+the invoking worker identity.
+
 ## Resolution
 
 Git status and diff inspection now succeed in the assigned worktree without a
