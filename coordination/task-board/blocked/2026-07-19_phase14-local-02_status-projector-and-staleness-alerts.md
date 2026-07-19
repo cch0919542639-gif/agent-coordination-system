@@ -1,7 +1,7 @@
 ---
 task_id: phase14-local-02
 phase: phase14-local-observability
-status: READY
+status: BLOCKED
 owner: external-agent-platform-33
 reviewer: ORCHESTRATOR
 priority: high
@@ -96,3 +96,10 @@ observability projection only.
 Create an incident and stop if the implementation needs to change task
 lifecycle, acknowledge deliveries, launch a worker, make a network call, or
 inspect private product data.
+
+## Cancellation
+
+Cancelled by the operator on 2026-07-19 after the worker could not create its
+required Git branch. The uncommitted implementation attempt was discarded.
+Do not re-dispatch this task; use `phase14-local-03` with a provisioned
+worktree instead.
