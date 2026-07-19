@@ -28,10 +28,11 @@ credential use was introduced.
 ## Validation Check
 
 - Focused standard-library compatibility runner: 18/18 activation methods passed.
+- Independent focused pytest rerun: `18 passed` in a provisioned Python runtime.
 - `python -m py_compile scripts/worker_poller.py tests/scripts/test_worker_activation.py`: passed.
 - `python scripts/orchestrate.py validate`: passed.
-- The active runtime has no `pytest`; focused/full pytest remain a documented
-  follow-up gate in a provisioned runtime.
+- The full scripts suite exceeded the bounded local verification window and
+  remains a documented follow-up gate.
 
 ## Required Changes
 

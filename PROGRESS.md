@@ -4,26 +4,28 @@
 
 - Central monitor and owner-strict routing are active for the local
   `agent-usage-collector` project.
-- `usage-mvp-01` has been detected and routed as one pending worker delivery.
-- Phase 14 local activation is submitted for review but requires a durable
-  inbox/task-card-path correction before acceptance.
+- Phase 14 local activation is accepted: a worker payload is durably written
+  to a local inbox before acknowledgement and resolves the real task-card path.
+- Phase 14 branch-aware monitoring is accepted: the configured worker branch
+  for `usage-mvp-01` produced a `review_submitted` orchestrator delivery.
 
 ## Active Work
 
-- Review and correct `phase14-local-01`.
-- `phase14-branch-01` is submitted for review with the explicit-allowlist
-  branch-aware monitor change, so a registered worker branch's `review/` task
-  card can wake the orchestrator without manual chat forwarding.
+- Review the `usage-mvp-01` worker-branch submission and record an evidence-
+  backed decision.
+- Reconcile the older pending `ready_assigned` delivery only through the
+  governing delivery-state protocol; do not activate work already submitted on
+  a worker branch.
 
 ## Blockers And Risks
 
-- Production validation still needs to register the `usage-mvp-01` worker ref
-  and verify the first real review-submitted event after acceptance.
+- The focused branch-aware pytest suite exceeded the bounded local verification
+  window; the accepted compatibility runner and real monitor demonstration are
+  retained as evidence, with a provisioned full-suite rerun still desirable.
 - Same-machine runtime state is Git-ignored by design; cross-machine delivery
   is deferred.
 
 ## Next Action
 
-Review and accept the branch-aware monitor handoff, then run the first real
-`usage-mvp-01` worker-branch review event before declaring the loop fully
-local-live.
+Review `usage-mvp-01`, then prove the next clean ready task can activate from
+the durable inbox through to a branch review without manual status forwarding.
