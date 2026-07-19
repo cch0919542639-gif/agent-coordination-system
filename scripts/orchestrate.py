@@ -30,6 +30,7 @@ COMMAND_MAP = {
     "complete": "complete_task.py",
     "repo-sync": "repo_sync.py",
     "worker": "worker_poller.py",
+    "runtime-preflight": "runtime_adapter_preflight.py",
 }
 
 
@@ -102,6 +103,12 @@ def build_parser() -> argparse.ArgumentParser:
             subparsers.add_parser(
                 name,
                 help="Worker-side polling: register, poll, and acknowledge notifications.",
+            )
+            continue
+        if name == "runtime-preflight":
+            subparsers.add_parser(
+                name,
+                help="Read-only OpenCode/MiMo adapter discovery; never launches a runtime.",
             )
             continue
         subparsers.add_parser(name, help=f"Run `{COMMAND_MAP[name]}`")
