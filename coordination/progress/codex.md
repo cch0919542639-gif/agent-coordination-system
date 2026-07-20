@@ -1,10 +1,10 @@
 # Progress Report
 
 - Agent: codex
-- Active Task: phase14-runtime-adapter-01
-- Phase: phase14-runtime-adapters
+- Active Task: phase14.5-02
+- Phase: phase14.5-external-runtime-launcher
 - Status: DONE
-- Last Updated: 2026-07-20 00:54
+- Last Updated: 2026-07-20 23:58
 
 ## Current Step
 
@@ -12,9 +12,9 @@ Review accepted. Task completed.
 
 ## Changes So Far
 
-- done\2026-07-19_phase14-runtime-adapter-01_opencode-mimo-preflight.md
+- done\2026-07-20_phase14.5-02_launcher-safety-contract.md
 
-- reviews\review-phase14-runtime-adapter-01.md
+- reviews\review-phase14.5-02.md
 
 ## Blocker Status
 
