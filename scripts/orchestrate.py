@@ -31,6 +31,7 @@ COMMAND_MAP = {
     "repo-sync": "repo_sync.py",
     "worker": "worker_poller.py",
     "runtime-preflight": "runtime_adapter_preflight.py",
+    "launcher-dry-run": "launcher_dry_run.py",
 }
 
 
@@ -110,6 +111,9 @@ def build_parser() -> argparse.ArgumentParser:
                 name,
                 help="Read-only OpenCode/MiMo adapter discovery; never launches a runtime.",
             )
+            continue
+        if name == "launcher-dry-run":
+            subparsers.add_parser(name, help="Fail-closed launcher dry run; never starts a runtime.")
             continue
         subparsers.add_parser(name, help=f"Run `{COMMAND_MAP[name]}`")
 
