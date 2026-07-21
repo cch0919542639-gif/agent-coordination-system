@@ -14,10 +14,10 @@
 
 ## Active Work
 
-- Integrate the accepted `phase14-local-03` worker branch only after an
-  explicit review/merge decision; automatic merge remains prohibited.
-- Review the `usage-mvp-01` worker-branch submission and record an evidence-
-  backed decision.
+- `phase14.5-summary-01` is ready to record the accepted and integrated
+  Phase 14.5 evidence in the project plan.
+- `phase14.5-04` is ready but depends on that summary; it is restricted to a
+  supervised-launch design and cannot implement or invoke a runtime.
 
 ## Blockers And Risks
 
