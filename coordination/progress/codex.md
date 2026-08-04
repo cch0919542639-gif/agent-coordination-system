@@ -1,20 +1,26 @@
 # Progress Report
 
 - Agent: codex
-- Active Task: phase14-runtime-adapter-01
-- Phase: phase14-runtime-adapters
+- Active Task: phase14-opencode-01
+- Phase: phase14-opencode-controlled-worker-pilot
 - Status: DONE
-- Last Updated: 2026-07-20 00:54
+- Last Updated: 2026-08-03 21:23
 
 ## Current Step
 
-Review accepted. Task completed.
+Windows Task Scheduler OpenCode poller is configured and disabled; no worker is
+running.
 
 ## Changes So Far
 
-- done\2026-07-19_phase14-runtime-adapter-01_opencode-mimo-preflight.md
+- done\2026-08-02_phase14-opencode-01_controlled-worker-pilot.md
 
-- reviews\review-phase14-runtime-adapter-01.md
+- reviews\review-phase14-opencode-01.md
+- Created paused Codex app automation `opencode-controlled-worker-poller` at
+  a 10-minute cadence with a one-delivery, no-retry policy.
+- Verified the native Windows task `OpenCode Controlled Worker`: one supervised
+  invocation claimed `phase14-opencode-pilot-02`, submitted it to review, and
+  ended with Task Scheduler result `0`.
 
 ## Blocker Status
 
@@ -22,4 +28,5 @@ none
 
 ## Next Step
 
-No further action required.
+Enable the disabled Windows task only when the operator wants scheduled
+OpenCode polling to begin.

@@ -78,3 +78,36 @@ This repository currently contains:
 - operating protocols and rollout guides
 - standard templates and sample files
 - the first wave of live pilot task cards
+
+## Controlled Hermes and OpenCode Workers
+
+Both runtimes use the same repo-first, owner-strict handoff: an assigned task
+creates a durable delivery, the worker claims at most one matching task, writes
+delivery evidence, and submits it to `review/`. Neither runtime may accept,
+merge, commit, push, select unassigned work, or handle a second task in one
+turn.
+
+### Hermes
+
+Hermes uses the local `coordination-worker` skill and its own cron job. Its
+supervised pilot completed one assigned handoff. The Hermes cron remains paused
+until an operator explicitly resumes it. See
+[Hermes operator guide](docs/operations/hermes-controlled-worker-pilot.md).
+
+### OpenCode
+
+OpenCode uses `opencode/deepseek-v4-flash-free` through the controlled launcher:
+
+```powershell
+.\integrations\opencode-coordination-worker\run-controlled-worker.ps1 -Run
+```
+
+The launcher isolates runtime state with `XDG_CONFIG_HOME` and processes only
+`opencode-coordination-pilot` deliveries. Windows Task Scheduler is the native
+wake-up mechanism, using the `OpenCode Controlled Worker` task at a 10-minute
+cadence. It is currently **Disabled** after a successful supervised test; enable
+it only when scheduled polling is desired. See
+[OpenCode operator guide](docs/operations/opencode-controlled-worker-pilot.md).
+
+Before any model run, ensure the selected task is explicitly authorized for
+external model processing. Completion still requires an orchestrator review.

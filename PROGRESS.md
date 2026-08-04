@@ -21,6 +21,9 @@
 
 ## Blockers And Risks
 
+- Hermes and OpenCode controlled workers have each completed supervised,
+  owner-strict handoff pilots. OpenCode's Windows Task Scheduler wake-up path
+  is verified and disabled by default.
 - The focused branch-aware pytest suite exceeded the bounded local verification
   window; the accepted compatibility runner and real monitor demonstration are
   retained as evidence, with a provisioned full-suite rerun still desirable.

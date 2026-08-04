@@ -13,6 +13,8 @@ Task lifecycle lives in `coordination/task-board/`:
 ## Current Groups
 
 - Phase 14 same-machine automation is accepted in `coordination/task-board/done/`.
+- `phase14-hermes-01` is active: establish a bounded Hermes controlled-worker
+  skill and one-task supervised pilot using the existing local handoff.
 - Product project work: each registered project owns its own `coordination/`
   directory and task board; `usage-mvp-01` is awaiting orchestrator review on
   its configured worker branch.

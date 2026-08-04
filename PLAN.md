@@ -8,7 +8,7 @@ automation.
 
 ## Current Milestone
 
-Phase 14: same-machine worker automation.
+Phase 14.5: Hermes controlled-worker pilot.
 
 ## Milestones
 
@@ -17,6 +17,7 @@ Phase 14: same-machine worker automation.
 | Phase 12-13 | Monitor, event ledger, owner-strict local routing. | Accepted on `main`. |
 | Phase 14 local | Same-machine worker activation with durable, safe handoff. | Activation task accepted and first local project loop verified. |
 | Phase 14 branch-aware | Detect review evidence on worker branches or PR refs. | Product worker review triggers one orchestrator event. |
+| Phase 14.5 | Hermes consumes one owner-strict local handoff per scheduled turn. | A supervised pilot submits exactly one assigned task for review without lifecycle overreach. |
 | Phase 15 | Cross-machine worker delivery. | Designed only after local loop is stable. |
 
 ## Non-Goals For Current Milestone
