@@ -12,6 +12,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 COMMAND_MAP = {
     "validate": "validate_coordination_files.py",
     "summary": "daily_orchestration_summary.py",
+    "status": "status_projector.py",
     "next": None,
     "intake": "intake_phase.py",
     "assigned": "list_assigned_tasks.py",
