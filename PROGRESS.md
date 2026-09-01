@@ -18,6 +18,9 @@
 
 ## Active Work
 
+- `phase14.5-architecture-01` is defining the repository-first architecture,
+  run-manifest contract, safety gates, and phased delivery map informed by
+  ClawChat and ORCA source analysis; it does not implement a runtime or UI.
 - `phase14.5-summary-01` is compiling the accepted and integrated Phase 14.5
   evidence in the project plan.
 - `phase14.5-04` is ready but depends on that summary; it is restricted to a
