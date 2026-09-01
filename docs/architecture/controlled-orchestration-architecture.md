@@ -19,6 +19,10 @@ This design borrows the useful boundaries from the reviewed projects:
 - ORCA: deterministic lifecycle control, risk gates, bounded retries, and
   human approval as an auditable state transition. We do not adopt its daemon,
   transcript store, or autonomous execution mode.
+- Munder Difflin: per-agent ownership, atomic one-file mailboxes, an
+  append-only event feed, and a single Git committer. We do not adopt its
+  Electron/PTY interface, auto-installer, secret broker, autonomous "god"
+  approval model, or its unverified OpenCode bridge.
 
 ## Architecture
 
@@ -64,6 +68,22 @@ Operator surfaces                              (approval and observability)
 | Run view | derived manifest keyed by task ID and attempt | Rebuildable; no second lifecycle state machine. |
 | Runtime readiness | explicit preflight result | Discovery is not authorization or launch readiness. |
 | Approval | reviewer/operator decision recorded as evidence | A missing approval always denies a critical action. |
+
+## Local Delivery Transport
+
+For the initial same-machine connector, the durable outbox/inbox protocol is
+implemented as one message file per immutable envelope. The producing connector
+writes it in its own private run directory using a temporary file followed by an
+atomic rename. The scheduler alone validates it, appends a sanitized event
+record, and writes any recipient delivery record. A connector never writes a
+different connector's inbox, a shared board, a task card, or Git metadata.
+
+The append-only event feed is evidence and can be replayed to reconstruct a
+derived run view; it is not a second task lifecycle authority. A future shared
+operator summary is scheduler-owned rather than co-edited. This adopts Munder
+Difflin's useful file-ownership and single-committer pattern while retaining
+this project's stronger signed-envelope, lease-fencing, sandbox, and explicit
+human-approval contracts.
 
 ## Trusted Connector and Approval Contract
 
@@ -212,7 +232,7 @@ the following with at least six registered agents:
 | --- | --- | --- |
 | A. Architecture baseline | This decision record, contracts, task map | Independent architecture review. |
 | B. Connector grants + admission | Identity, capability grant lifecycle, sandbox verification, capacity six, dependency/cycle validation | Fixtures prove revocation and rejected/accepted admission without launch. |
-| C. Durable scheduler | Single-writer task revisions, authenticated idempotent outbox/inbox, context snapshots | Restart, stale-message, and duplicate-delivery tests pass. |
+| C. Durable scheduler | Single-writer task revisions, authenticated idempotent atomic-file outbox/inbox, append-only event projection, context snapshots | Restart, stale-message, and duplicate-delivery tests pass. |
 | D. Worktree and context lifecycle | Provisioned isolated worktrees and bounded context assembly | Six concurrent dry-run allocations do not collide or leak scope. |
 | E. Lease and recovery | Heartbeats, fencing epochs, expiry, retry budget, incident routing | Simulated disconnect and late submission recover or block deterministically. |
 | F. Evidence and review queue | Review bundle, validation routing, DONE-only dependency unlock | End-to-end graph reaches review without manual relaying. |
