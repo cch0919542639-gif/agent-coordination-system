@@ -23,26 +23,30 @@
 - `git diff --check` passed.
 - Sensitive-pattern scan of the new architecture document and task card found
   no credential, bearer-token, password-value, or absolute-user-path match.
+- User-confirmed scope rework for six or more external agents passed
+  `scripts/orchestrate.py validate` and `git diff --check` again.
 
 ## Known Residual Risks
 
 - External repositories may change; their concepts, not their code or runtime,
   are used here.
-- The architecture intentionally defers runtime launch, remote transport, and
-  an interactive UI until separately scoped and reviewed phases.
+- Six-agent readiness remains unproven until the Phase B--H implementation and
+  restart-safe acceptance scenario pass. No agent connector is enabled yet.
 
 ## Recommended Handoff
 
-Independently review the canonical-source boundary and Phase A--H delivery map.
-If accepted, open Phase B only for a deterministic, no-write admission and
-run-manifest planner.
+Independently review the canonical-source boundary, six-agent acceptance
+scenario, and Phase A--I delivery map. If accepted, open Phase B only for the
+deterministic, no-launch agent registry and admission planner.
 
 ## Acceptance Criteria Coverage
 
-- Complete architecture, canonical boundaries, safety gates, and phased map:
+- Complete six-agent control-plane architecture, canonical boundaries, safety
+  gates, and phased map:
   met by `controlled-orchestration-architecture.md`.
-- Task-card authority and exclusion of prohibited autonomy/credential/transport
-  behavior: met by the Decision, Canonical Data Boundaries, Control Rules, and
-  Explicit Non-Goals sections.
-- Follow-up scopes and verification gates without runtime or UI implementation:
-  met by the Phased Delivery table.
+- Task-card authority, automatic low-risk dispatch, and prohibition of
+  unapproved high-risk actions: met by the Decision, Canonical Data Boundaries,
+  Control Rules, and Explicit Non-Goals sections.
+- Six-agent restart-safe verification gates without runtime or UI
+  implementation: met by the Six-Agent Acceptance Scenario and Phased Delivery
+  table.
