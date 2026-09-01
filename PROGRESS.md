@@ -10,8 +10,9 @@
   for `usage-mvp-01` produced a `review_submitted` orchestrator delivery.
 - `phase14-local-03` is accepted: the worker branch was pushed, the monitor
   detected `review_submitted`, 72 focused tests and coordination validation
-  passed, and the status-projector delivery is recorded on the task board. It
-  is now staged on `codex/phase14-local-03-promotion` for main-branch review.
+  passed, and the status-projector delivery is recorded on the task board.
+- `phase14-runtime-adapter-01` is accepted: its deterministic, read-only
+  OpenCode/MiMo preflight is integrated with the status projector on `main`.
 - Phase 14.5 contract and dry-run-only preflight are accepted, integrated on
   `main`, and pushed; no runtime launch was performed or authorized.
 
@@ -29,13 +30,10 @@
   retained as evidence, with a provisioned full-suite rerun still desirable.
 - Same-machine runtime state is Git-ignored by design; cross-machine delivery
   is deferred.
-- The status-projector is staged on a dedicated promotion branch and still
-  requires main-branch review and merge.
 - OpenCode/provider credentials, model behavior, and supervised one-shot
   execution remain unverified and unapproved.
 
 ## Next Action
 
-Review the `phase14-local-03` promotion branch for merge to `main`, then
-finish independent verification of the Phase 14.5 summary before beginning
+Finish independent verification of the Phase 14.5 summary before beginning
 the documentation-only `phase14.5-04` supervised-launch design task.
