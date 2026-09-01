@@ -8,7 +8,7 @@ automation.
 
 ## Current Milestone
 
-Phase 14.5: external-runtime launcher safety design.
+Phase 14.5: six-agent controlled orchestration plane.
 
 ## Milestones
 
@@ -22,7 +22,8 @@ Phase 14.5: external-runtime launcher safety design.
 
 ## Non-Goals For Current Milestone
 
-- automatic review acceptance, merge, or external agent launch
+- automatic review acceptance, merge, push, or external agent launch outside a
+  pre-approved, sandboxed connector grant
 - supervised runtime invocation or mutable launch artifacts without a separate
   one-shot approval and accepted implementation task
 - cross-machine transport or credentials

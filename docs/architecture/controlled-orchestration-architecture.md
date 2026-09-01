@@ -65,6 +65,74 @@ Operator surfaces                              (approval and observability)
 | Runtime readiness | explicit preflight result | Discovery is not authorization or launch readiness. |
 | Approval | reviewer/operator decision recorded as evidence | A missing approval always denies a critical action. |
 
+## Trusted Connector and Approval Contract
+
+An external agent may be automatically started only through a pre-approved
+connector grant. A grant is created by an explicit operator decision and is
+scoped to a project, adapter version, named agent identity, allowed task
+classes, maximum concurrent runs, worktree root, network policy, and expiry.
+The grant is revocable immediately. It is not a credential and must not be
+stored in Git; the scheduler stores only its opaque local reference and status.
+
+Each connector has a stable `agent_id`, key fingerprint, and capability profile.
+Every control-plane message is authenticated by the connector transport and
+contains a short-lived capability token bound to one run attempt. Agents may
+only perform the allowlisted execution action in their assigned worktree. They
+cannot read the operator credential store, invoke arbitrary network access,
+reuse Git credentials, access another worktree, merge, push, or modify task
+cards. A denied sandbox capability is a terminal policy event, never a prompt
+to retry by another route.
+
+The initial deployment must use an enforcement adapter, not a policy-only
+wrapper: dedicated process identity, isolated worktree, restricted filesystem
+write set, denied-by-default network egress, sanitized environment, and a Git
+remote configuration without push credentials. Platform-specific enforcement
+is verified during connector admission and rechecked before every launch.
+
+## Durable Scheduler Protocol
+
+The scheduler is the sole writer of task-card lifecycle state. External agents
+never move cards or edit progress files; they send signed status/evidence
+messages to the scheduler, which validates and applies the corresponding
+transition with an expected task revision. A conflicting revision creates a
+reconciliation incident and cannot silently overwrite repository evidence.
+
+Every outbox/inbox record uses this envelope:
+
+```text
+message_id, idempotency_key, type, project_id, task_id, run_id, attempt,
+lease_epoch, sender_agent_id, issued_at, expires_at, context_snapshot_ref,
+context_snapshot_hash, payload_ref, capability_token_ref
+```
+
+`message_id` is immutable; `idempotency_key` is unique for one logical action;
+and a new attempt increments `lease_epoch`. The scheduler rejects expired,
+unauthenticated, duplicated, or stale-epoch acknowledgement, heartbeat,
+submission, and cancellation messages. Persisting the outbox transition and
+task revision is atomic; on restart, the scheduler replays pending records and
+reconciles only through these keys and epochs.
+
+Leases declare an acknowledgement deadline, heartbeat interval, expiry, and
+retry budget. Cancellation invalidates the current capability token. Late work
+may be retained as forensic evidence but cannot update a card, unlock a
+dependency, or enter review.
+
+## Dependency and Context Contracts
+
+A task is runnable only when every hard dependency has a verified `DONE`
+task-card transition, or when an explicit operator override records why that
+dependency is waived. `blocked`, `rejected`, `cancelled`, missing, cyclic, and
+revision-conflicted dependencies never unlock downstream work. The admission
+validator rejects cycles, invalid fan-in, duplicate task ownership, and
+unbounded optional dependencies before any dispatch.
+
+The scheduler builds one immutable context snapshot per attempt. It contains
+only an allowlisted task-card projection, protocol/version references,
+dependency evidence references, and project-relative paths. It records a
+content hash, maximum byte/token size, sensitivity label, schema version, and
+expiry. Untrusted task text is data, not executable instruction; context
+assembly never expands it into shell commands or connector configuration.
+
 ## Run Manifest Contract
 
 Each attempt has a local, Git-ignored manifest with only safe identifiers:
@@ -133,19 +201,23 @@ the following with at least six registered agents:
    blocked until a recorded human approval.
 6. Restarting the control plane neither loses an accepted dispatch nor creates
    duplicate worktrees, runs, or notifications.
+7. Six actual admitted connector instances, rather than six mocks, complete
+   the scenario under enforced sandbox policy; fault injection uses a fake
+   clock and deterministic connector test harness in addition to the live
+   supervised run.
 
 ## Phased Delivery
 
 | Phase | Deliverable | Exit gate |
 | --- | --- | --- |
 | A. Architecture baseline | This decision record, contracts, task map | Independent architecture review. |
-| B. Agent registry + admission | Agent profiles, capability matching, capacity six, dependency/cycle validation | Fixtures prove rejected/accepted admission without a launch. |
-| C. Durable dispatch | Idempotent outbox/inbox, context packets, acknowledgement protocol | Restart and duplicate-delivery tests pass. |
-| D. Worktree and context lifecycle | Provisioned isolated worktrees and bounded context assembly | Six concurrent dry-run allocations do not collide. |
-| E. Lease and recovery | Heartbeats, expiry, retry budget, incident routing | Simulated disconnect recovers or blocks deterministically. |
-| F. Evidence and review queue | Review bundle, validation routing, dependency unlock | End-to-end graph reaches review without manual relaying. |
+| B. Connector grants + admission | Identity, capability grant lifecycle, sandbox verification, capacity six, dependency/cycle validation | Fixtures prove revocation and rejected/accepted admission without launch. |
+| C. Durable scheduler | Single-writer task revisions, authenticated idempotent outbox/inbox, context snapshots | Restart, stale-message, and duplicate-delivery tests pass. |
+| D. Worktree and context lifecycle | Provisioned isolated worktrees and bounded context assembly | Six concurrent dry-run allocations do not collide or leak scope. |
+| E. Lease and recovery | Heartbeats, fencing epochs, expiry, retry budget, incident routing | Simulated disconnect and late submission recover or block deterministically. |
+| F. Evidence and review queue | Review bundle, validation routing, DONE-only dependency unlock | End-to-end graph reaches review without manual relaying. |
 | G. Operator surface | Dashboard/API and approval queue | Human sees only decisions and exceptions, not relay work. |
-| H. Six-agent pilot | Six registered adapters under supervised policy | Six-Agent Acceptance Scenario passes. |
+| H. Six-agent pilot | Six actual admitted adapters under supervised policy | Six-Agent Acceptance Scenario passes. |
 | I. Cross-machine expansion | Authenticated transport, threat model, and controlled rollout | Separate design approval and security review. |
 
 ## Explicit Non-Goals

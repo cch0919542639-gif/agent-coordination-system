@@ -18,10 +18,9 @@
 
 ## Active Work
 
-- `phase14.5-architecture-01` is defining the repository-first six-agent
-  control plane: capacity, durable dispatch, context delivery, leases,
-  recovery, evidence routing, and high-risk human approval gates; it does not
-  implement a runtime or UI.
+- `phase14.5-architecture-01` is accepted: it defines the repository-first
+  six-agent control plane and its connector, scheduler, safety, and acceptance
+  contracts. Phase B admission planning is next; no connector is enabled yet.
 - `phase14.5-summary-01` is compiling the accepted and integrated Phase 14.5
   evidence in the project plan.
 - `phase14.5-04` is ready but depends on that summary; it is restricted to a
