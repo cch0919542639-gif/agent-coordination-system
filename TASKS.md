@@ -18,7 +18,7 @@ Task lifecycle lives in `coordination/task-board/`:
   its configured worker branch.
 - Phase 14.5 delivery is sequenced in
   `docs/operations/phase14.5-controlled-orchestration-task-map.md`:
-  `phase14.5-bootstrap-01` is the only current implementation candidate;
+  `phase14.5-bootstrap-02` is the only current implementation candidate;
   Phase C–H cards are dependency-gated follow-up work. Cross-machine work is
   not scheduled.
 

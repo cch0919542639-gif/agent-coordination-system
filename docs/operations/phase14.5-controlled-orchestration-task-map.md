@@ -10,8 +10,9 @@ reviews, and delivery reports remain the authoritative lifecycle evidence.
 
 | Order | Task | Architecture phase | Depends on | Owner profile | Exit evidence |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `phase14.5-bootstrap-01` | B0. Manual bootstrap handoff | `phase14.5-architecture-01` | platform / OpenCode candidate | One-shot, approval-bound handoff and no-launch proof. |
-| 2 | `phase14.5-controlplane-02` | B. Connector grants + admission | `phase14.5-bootstrap-01` | platform | Accepted/rejected admission fixtures; no-launch proof. |
+| 1 | `phase14.5-bootstrap-02` | B0.1. Least-privilege permission profile | `phase14.5-architecture-01` | orchestrator/platform | Reviewed B0-scoped OpenCode allow/deny profile. |
+| 2 | `phase14.5-bootstrap-01` | B0. Manual bootstrap handoff | `phase14.5-bootstrap-02` | platform / OpenCode candidate | One-shot, approval-bound handoff and no-launch proof. |
+| 3 | `phase14.5-controlplane-02` | B. Connector grants + admission | `phase14.5-bootstrap-01` | platform | Accepted/rejected admission fixtures; no-launch proof. |
 | 3 | `phase14.5-scheduler-03` | C. Durable scheduler | `phase14.5-controlplane-02` | platform | Restart, duplicate, stale-epoch, and atomic-transition tests. |
 | 4 | `phase14.5-worktree-context-04` | D. Worktree and context lifecycle | `phase14.5-scheduler-03` | platform | Six dry-run allocations; bounded, hashed context-packet tests. |
 | 5 | `phase14.5-lease-recovery-05` | E. Lease and recovery | `phase14.5-worktree-context-04` | platform | Fake-clock expiry, retry-budget, fencing, and incident-routing tests. |
@@ -36,6 +37,6 @@ reviews, and delivery reports remain the authoritative lifecycle evidence.
 
 ## Current Dispatch Decision
 
-`phase14.5-bootstrap-01` is the sole current implementation candidate.
+`phase14.5-bootstrap-02` is the sole current implementation candidate.
 All other cards are sequenced follow-up work and remain blocked by their hard
 dependencies until the task-card `DONE` evidence exists.
