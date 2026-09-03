@@ -16,6 +16,11 @@ Task lifecycle lives in `coordination/task-board/`:
 - Product project work: each registered project owns its own `coordination/`
   directory and task board; `usage-mvp-01` is awaiting orchestrator review on
   its configured worker branch.
+- Phase 14.5 delivery is sequenced in
+  `docs/operations/phase14.5-controlled-orchestration-task-map.md`:
+  `phase14.5-bootstrap-01` is the only current implementation candidate;
+  Phase C–H cards are dependency-gated follow-up work. Cross-machine work is
+  not scheduled.
 
 Use `python scripts/orchestrate.py next` for a suggestion, then confirm status
 from the actual task card before dispatching.

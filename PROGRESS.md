@@ -40,3 +40,18 @@
 
 Finish independent verification of the Phase 14.5 summary before beginning
 the documentation-only `phase14.5-04` supervised-launch design task.
+
+## 2026-09-03 Orchestration Planning
+
+- The accepted controlled-orchestration architecture is now mapped to Phase
+  B–H task cards in `docs/operations/phase14.5-controlled-orchestration-task-map.md`.
+- `phase14.5-bootstrap-01` is the sole dispatchable implementation candidate.
+  It provides a manual, approval-bound OpenCode handoff without launch power;
+  `phase14.5-controlplane-02` and subsequent cards have hard `DONE`
+  dependencies and are not
+  authorization to start a connector or a runtime.
+- Phase I cross-machine expansion remains intentionally unscheduled pending
+  separate design approval and security review.
+- OpenCode bootstrap execution is blocked pending a successful bounded runtime
+  probe and provisioned worker worktree; see
+  `coordination/incidents/20260903-01_opencode-bootstrap-probe-failed.md`.
