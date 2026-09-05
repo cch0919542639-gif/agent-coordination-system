@@ -75,7 +75,7 @@ def prepare(
     They are retained only in local variables by ``run_once`` after validation.
     """
     if not _valid_manifest(manifest):
-        return _decision("deny_invalid_manifest", manifest)
+        return _decision("deny_invalid_manifest", None)
     assert isinstance(manifest, Mapping)
     if manifest["enabled"] is not True or globally_enabled is not True:
         return _decision("deny_disabled", manifest)
@@ -103,6 +103,8 @@ def prepare(
     )
     if admission.get("decision") != "admitted_no_launch":
         return _decision(str(admission.get("decision", "deny_admission")), manifest)
+    if not _task_matches_manifest(task, manifest):
+        return _decision("deny_provenance_mismatch", manifest)
     return _decision("launch_ready", manifest)
 
 
@@ -132,13 +134,18 @@ def run_once(
         return result
     assert isinstance(manifest, Mapping)
     argv = tuple(manifest["argv"])
-    process = process_factory(argv)
     consumed_run_ids.add(str(manifest["run_id"]))
+    try:
+        process = process_factory(argv)
+    except Exception:
+        return _decision("stopped_safety_signal", manifest)
     try:
         returncode = process.wait(timeout=int(manifest["timeout_seconds"]))
     except TimeoutError:
         process.terminate()
         return _decision("stopped_timeout", manifest)
+    except Exception:
+        return _decision("stopped_safety_signal", manifest)
     if returncode != 0:
         return _decision("stopped_nonzero_exit", manifest)
     return _decision("completed", manifest)
@@ -154,6 +161,8 @@ def _valid_manifest(value: object) -> bool:
     if value.get("mode") != "supervised_one_shot" or type(value.get("enabled")) is not bool:
         return False
     if type(value.get("timeout_seconds")) is not int or not 1 <= value["timeout_seconds"] <= 900:
+        return False
+    if any(not isinstance(value.get(key), str) for key in ("branch", "worktree_ref")):
         return False
     if not isinstance(value.get("argv"), list) or not 1 <= len(value["argv"]) <= 8:
         return False
@@ -184,15 +193,34 @@ def _valid_approval(approval: object, manifest: Mapping[str, Any], now: datetime
 def _valid_one_shot_grant(grant: object, manifest: Mapping[str, Any]) -> bool:
     if not isinstance(grant, Mapping) or grant.get("one_shot") is not True:
         return False
+    task_classes = grant.get("allowed_task_classes")
+    if not isinstance(task_classes, list) or any(not isinstance(value, str) for value in task_classes):
+        return False
     if grant.get("agent_id") != manifest["worker_id"] or grant.get("project_id") != manifest["project_id"]:
         return False
-    if grant.get("adapter_id") != "opencode" or "external-runtime-pilot" not in grant.get("allowed_task_classes", []):
+    if grant.get("adapter_id") != "opencode" or "external-runtime-pilot" not in task_classes:
         return False
-    return grant.get("grant_digest") == grant_digest(grant)
+    try:
+        return grant.get("grant_digest") == grant_digest(grant)
+    except (TypeError, ValueError):
+        return False
 
 
 def _pilot_matches(manifest: Mapping[str, Any]) -> bool:
     return all(manifest.get(key) == expected for key, expected in PILOT.items())
+
+
+def _task_matches_manifest(task: object, manifest: Mapping[str, Any]) -> bool:
+    return isinstance(task, Mapping) and all(
+        task.get(task_key) == manifest.get(manifest_key)
+        for task_key, manifest_key in (
+            ("task_id", "task_id"),
+            ("project_id", "project_id"),
+            ("owner", "worker_id"),
+            ("branch", "branch"),
+            ("worktree_path", "worktree_ref"),
+        )
+    )
 
 
 def _timestamp(value: object) -> datetime | None:
@@ -209,9 +237,9 @@ def _safe_id(value: object) -> bool:
     return isinstance(value, str) and bool(_SAFE_ID.fullmatch(value))
 
 
-def _decision(category: str, manifest: object) -> dict[str, object]:
+def _decision(category: str, manifest: Mapping[str, Any] | None) -> dict[str, object]:
     result: dict[str, object] = {"decision": category, "dry_run": category != "completed"}
-    if isinstance(manifest, Mapping):
+    if manifest is not None:
         for key in ("run_id", "manifest_id", "manifest_digest", "task_id", "runtime_id", "worker_id", "project_id", "timeout_seconds"):
             value = manifest.get(key)
             if isinstance(value, (str, int)) and not isinstance(value, bool):

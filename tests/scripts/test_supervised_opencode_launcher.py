@@ -86,6 +86,13 @@ def test_disabled_stop_capacity_and_nonallowlisted_inputs_deny() -> None:
     assert prepare(value, approval(value), grant(), task(), **options())["decision"] == "deny_allowlist"
 
 
+def test_malformed_grant_denies_without_exception_or_process() -> None:
+    bad_grant = grant(); bad_grant["allowed_task_classes"] = object()  # type: ignore[assignment]
+    calls: list[tuple[str, ...]] = []
+    result = run_once(manifest(), approval(manifest()), bad_grant, task(), **options(), process_factory=lambda argv: calls.append(argv))
+    assert result["decision"] == "deny_invalid_grant" and calls == []
+
+
 def test_one_process_success_and_safe_result() -> None:
     process = FakeProcess(); received: list[tuple[str, ...]] = []
     result = run_once(manifest(), approval(manifest()), grant(), task(), **options(), process_factory=lambda argv: received.append(argv) or process)
@@ -103,11 +110,36 @@ def test_timeout_and_nonzero_are_terminal_and_single_process() -> None:
     assert timeout.terminated is True
 
 
+def test_factory_failure_is_terminal_and_consumes_the_one_shot_run() -> None:
+    consumed: set[str] = set()
+    result = run_once(manifest(), approval(manifest()), grant(), task(), **options(consumed_run_ids=consumed), process_factory=lambda argv: (_ for _ in ()).throw(RuntimeError("unsafe detail")))
+    assert result["decision"] == "stopped_safety_signal" and consumed == {"run-01"}
+    timeout_result = run_once(manifest(), approval(manifest()), grant(), task(), **options(), process_factory=lambda argv: (_ for _ in ()).throw(TimeoutError))
+    assert timeout_result["decision"] == "stopped_safety_signal"
+
+
+def test_non_string_worktree_fails_closed_without_digest_error() -> None:
+    value = manifest(); value["worktree_ref"] = object()  # type: ignore[assignment]
+    assert prepare(value, approval(value), grant(), task(), **options())["decision"] == "deny_invalid_manifest"
+
+
 def test_manifest_rejects_shellish_argv_and_sensitive_fields() -> None:
     value = manifest(); value["argv"] = ["opencode", ";unsafe"]; value["manifest_digest"] = manifest_digest(value)
     assert prepare(value, approval(value), grant(), task(), **options())["decision"] == "deny_invalid_manifest"
     value = manifest(); value["token"] = "forbidden"; value["manifest_digest"] = manifest_digest(value)
     assert prepare(value, approval(value), grant(), task(), **options())["decision"] == "deny_invalid_manifest"
+
+
+def test_task_must_exactly_match_manifest_task_branch_and_worktree() -> None:
+    for key, replacement in (("task_id", "other-task"), ("branch", "agent/other/task"), ("worktree_path", "worktrees/other")):
+        altered = task(); altered[key] = replacement
+        assert prepare(manifest(), approval(manifest()), grant(), altered, **options())["decision"] == "deny_provenance_mismatch"
+
+
+def test_invalid_manifest_never_echoes_unverified_values() -> None:
+    value = manifest(); value["run_id"] = "untrusted-value"
+    result = prepare(value, approval(value), grant(), task(), **options())
+    assert result == {"decision": "deny_invalid_manifest", "dry_run": True}
 
 
 def test_source_has_no_filesystem_network_shell_or_real_process_factory() -> None:

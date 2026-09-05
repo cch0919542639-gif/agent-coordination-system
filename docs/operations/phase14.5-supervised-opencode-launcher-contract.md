@@ -21,6 +21,9 @@ array of one through eight safe opaque tokens, a timeout from 1 through 900
 seconds, and `supervised_one_shot` mode. It rejects unknown or sensitive
 fields, shell-like argument tokens, unallowlisted identities, altered digests,
 and mismatched project, worker, reviewer, branch, or worktree values.
+The admitted task must also exactly match the manifest's task ID, project,
+worker owner, branch, and worktree; a same-capability but different task is a
+terminal provenance denial.
 
 The approval exactly binds manifest ID/digest and run ID, is enabled, has the
 `ORCHESTRATOR` role, begins before the call, is at most five minutes old, and
@@ -34,12 +37,16 @@ owner denies before the process factory is called.
 
 Only one factory call is possible per accepted run. Its bounded wait returns
 `completed`, `stopped_timeout`, or `stopped_nonzero_exit`; timeout terminates
-only that injected process. There is no retry, task-card mutation, Git action,
+only that injected process. A factory or wait failure is `stopped_safety_signal`
+and consumes the one-shot run without exposing its detail. There is no retry,
+task-card mutation, Git action,
 network operation, captured runtime output, or persisted transcript.
 
 Every result is limited to safe IDs, digest, runtime ID, timeout, and terminal
 category. It never returns argv, worktree value, executable path, environment,
 credentials, task content, or process output.
+An invalid manifest returns only its denial category and `dry_run`; none of its
+unverified fields are echoed.
 
 ## Remaining Enforcement Gap
 

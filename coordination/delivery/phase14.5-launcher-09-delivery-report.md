@@ -23,7 +23,7 @@ manifest, operator approval, connector grant, and admission validation.
 
 ## Validation Steps Performed
 
-- `D:\codex work\.venv\Scripts\python.exe -m pytest -p no:cacheprovider tests\scripts\test_supervised_opencode_launcher.py tests\scripts\test_controlplane_admission.py tests\scripts\test_supervised_launch_validation.py tests\scripts\test_launcher_dry_run.py tests\scripts\test_bootstrap_handoff.py -q` — 53 passed.
+- `D:\codex work\.venv\Scripts\python.exe -m pytest -p no:cacheprovider tests\scripts\test_supervised_opencode_launcher.py tests\scripts\test_controlplane_admission.py tests\scripts\test_supervised_launch_validation.py tests\scripts\test_launcher_dry_run.py tests\scripts\test_bootstrap_handoff.py -q` — 58 passed.
 - `D:\codex work\.venv\Scripts\python.exe scripts\validate_coordination_files.py` — passed.
 - `git diff --check` — passed.
 - Source-level coverage rejects filesystem, network, shell, and direct process
@@ -51,3 +51,10 @@ manifest, operator approval, connector grant, and admission validation.
 - Independent review must validate the fail-closed boundary before the planning
   branch integrates this delivery. A real pilot then needs a new exact operator
   approval for its immutable manifest and grant.
+
+## Review Fixes Applied
+
+- Require exact task-to-manifest task ID, project, worker, branch, and
+  worktree equality after admission, rejecting a same-capability different task.
+- Invalid manifests emit no unverified fields; malformed grants, process-factory
+  failures, and wait failures become safe terminal denials without retry.
