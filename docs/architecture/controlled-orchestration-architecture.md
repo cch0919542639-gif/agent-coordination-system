@@ -232,6 +232,7 @@ the following with at least six registered agents:
 | --- | --- | --- |
 | A. Architecture baseline | This decision record, contracts, task map | Independent architecture review. |
 | B. Connector grants + admission | Identity, capability grant lifecycle, sandbox verification, capacity six, dependency/cycle validation | Fixtures prove revocation and rejected/accepted admission without launch. |
+| B.1 Supervised local launcher | One grant-bound OpenCode process launcher with immutable manifest validation, bounded timeout, safe terminal outcome, and operator stop | One separately approved local pilot starts exactly one allowlisted runtime and emits acknowledgement or a terminal incident without lifecycle mutation. This is not a claim of full OS sandbox enforcement. |
 | C. Durable scheduler | Single-writer task revisions, authenticated idempotent atomic-file outbox/inbox, append-only event projection, context snapshots | Restart, stale-message, and duplicate-delivery tests pass. |
 | D. Worktree and context lifecycle | Provisioned isolated worktrees and bounded context assembly | Six concurrent dry-run allocations do not collide or leak scope. |
 | E. Lease and recovery | Heartbeats, fencing epochs, expiry, retry budget, incident routing | Simulated disconnect and late submission recover or block deterministically. |
