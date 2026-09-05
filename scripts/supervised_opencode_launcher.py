@@ -142,7 +142,10 @@ def run_once(
     try:
         returncode = process.wait(timeout=int(manifest["timeout_seconds"]))
     except TimeoutError:
-        process.terminate()
+        try:
+            process.terminate()
+        except Exception:
+            return _decision("stopped_safety_signal", manifest)
         return _decision("stopped_timeout", manifest)
     except Exception:
         return _decision("stopped_safety_signal", manifest)

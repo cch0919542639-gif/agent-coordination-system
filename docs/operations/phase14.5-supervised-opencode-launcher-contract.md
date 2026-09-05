@@ -37,8 +37,9 @@ owner denies before the process factory is called.
 
 Only one factory call is possible per accepted run. Its bounded wait returns
 `completed`, `stopped_timeout`, or `stopped_nonzero_exit`; timeout terminates
-only that injected process. A factory or wait failure is `stopped_safety_signal`
-and consumes the one-shot run without exposing its detail. There is no retry,
+only that injected process. A factory, wait, or terminate failure is
+`stopped_safety_signal` and consumes the one-shot run without exposing its
+detail. There is no retry,
 task-card mutation, Git action,
 network operation, captured runtime output, or persisted transcript.
 

@@ -54,6 +54,11 @@ class FakeProcess:
         self.terminated = True
 
 
+class FailingTerminateProcess(FakeProcess):
+    def terminate(self) -> None:
+        raise RuntimeError("unsafe terminate detail")
+
+
 def test_exact_bound_request_is_launch_ready_without_process() -> None:
     assert prepare(manifest(), approval(manifest()), grant(), task(), **options())["decision"] == "launch_ready"
 
@@ -108,6 +113,9 @@ def test_timeout_and_nonzero_are_terminal_and_single_process() -> None:
     timeout = FakeProcess(timeout=True)
     run_once(manifest(), approval(manifest()), grant(), task(), **options(), process_factory=lambda argv: timeout)
     assert timeout.terminated is True
+    terminate_failure = FailingTerminateProcess(timeout=True)
+    result = run_once(manifest(), approval(manifest()), grant(), task(), **options(), process_factory=lambda argv: terminate_failure)
+    assert result["decision"] == "stopped_safety_signal" and terminate_failure.calls == 1
 
 
 def test_factory_failure_is_terminal_and_consumes_the_one_shot_run() -> None:
