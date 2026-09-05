@@ -8,12 +8,14 @@
 
 ## Current Step
 
-Provisioned the approved ORCHESTRATOR worktree and beginning the deterministic,
-no-launch connector grant and admission planner implementation.
+Implemented the deterministic no-launch connector grant and admission planner;
+submission is ready for independent review.
 
 ## Changes So Far
 
 - Task reassigned from unregistered `external-agent-platform-34`.
+- `scripts/controlplane_admission.py` and focused tests added.
+- Connector grant/admission contract and delivery report added.
 
 ## Blocker Status
 
@@ -21,5 +23,4 @@ none
 
 ## Next Step
 
-Read the referenced registry/poller patterns and implement pure validation with
-focused fake-clock tests.
+Await independent review; do not launch a runtime.
