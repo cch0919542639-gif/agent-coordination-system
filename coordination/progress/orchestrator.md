@@ -3,13 +3,13 @@
 - Agent: ORCHESTRATOR
 - Active Task: phase14.5-controlplane-02
 - Phase: phase14.5-control-plane
-- Status: IN_PROGRESS
+- Status: DONE
 - Last Updated: 2026-09-06
 
 ## Current Step
 
-Implemented the deterministic no-launch connector grant and admission planner;
-submission is ready for independent review.
+Independent review accepted the deterministic no-launch connector grant and
+admission planner.
 
 ## Changes So Far
 
@@ -23,4 +23,4 @@ none
 
 ## Next Step
 
-Await independent review; do not launch a runtime.
+Await explicit integration into the planning branch; do not launch a runtime.
