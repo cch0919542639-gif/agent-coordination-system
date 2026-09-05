@@ -3,12 +3,12 @@
 - Agent: ORCHESTRATOR
 - Active Task: phase14.5-launcher-09
 - Phase: phase14.5-supervised-launcher
-- Status: REVIEW
+- Status: DONE
 - Last Updated: 2026-09-06
 
 ## Current Step
 
-Focused implementation and verification are complete; await independent review.
+Independent review accepted the B.1 no-launch launcher boundary.
 
 ## Changes So Far
 
@@ -16,14 +16,15 @@ Focused implementation and verification are complete; await independent review.
   approval, one-shot grant, admission, and terminal process-outcome checks.
 - `tests/scripts/test_supervised_opencode_launcher.py` covers all denial
   paths, one-process success, timeout, nonzero outcome, and output redaction.
-- The task card is submitted for independent review with a delivery report.
+- Independent review accepted the task after 58 focused tests, coordination
+  validation, and a clean diff check.
 
 ## Blocker Status
 
 No implementation blocker. A genuine process factory and exact manifest remain
-operator-approved pilot inputs after independent review.
+operator-approved pilot inputs after integration.
 
 ## Next Step
 
-Independent review; do not run the real OpenCode pilot unless the operator
-separately approves its exact manifest and grant.
+Integrate accepted B.1 delivery. Do not run the real OpenCode pilot unless the
+operator separately approves its exact manifest and grant.
