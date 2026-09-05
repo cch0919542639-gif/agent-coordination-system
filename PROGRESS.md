@@ -59,3 +59,17 @@ the documentation-only `phase14.5-04` supervised-launch design task.
 - `phase14.5-bootstrap-02` is accepted. One B0 OpenCode retry is authorized
   only with its accepted least-privilege profile and the existing isolated
   worker worktree.
+- `phase14.5-bootstrap-01` is independently reviewed, accepted, and integrated
+  on this planning branch. Its 24 focused tests and coordination validation
+  pass. The external corrective-session failure remains recorded as a connector
+  capability incident; it does not invalidate the local-only handoff contract.
+- `phase14.5-launcher-09` is now the required B.1 task after connector
+  admission. It is explicitly a supervised single-worker launcher, not a claim
+  of full Windows sandbox enforcement.
+
+## 2026-09-06 Next Dispatch Gate
+
+- `phase14.5-controlplane-02` is now dependency-eligible. Its recorded owner,
+  `external-agent-platform-34`, is not an admitted callable connector. Do not
+  dispatch or substitute an owner until the operator records the assignment
+  decision.
