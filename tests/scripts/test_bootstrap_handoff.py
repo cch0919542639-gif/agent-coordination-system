@@ -239,3 +239,12 @@ def test_source_contains_no_file_io_or_git_operations() -> None:
     assert "os.mkdir" not in source
     assert "os.makedirs" not in source
     assert "shutil" not in source
+
+
+def test_runbook_documents_digest_and_current_dependency() -> None:
+    runbook = Path(__file__).resolve().parents[2].joinpath(
+        "docs", "operations", "phase14.5-bootstrap-handoff-operator-runbook.md"
+    ).read_text(encoding="utf-8")
+    assert "`approval_digest`" in runbook
+    assert "phase14.5-bootstrap-02" in runbook
+    assert "mismatched" in runbook

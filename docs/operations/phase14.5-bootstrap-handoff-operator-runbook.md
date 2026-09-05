@@ -10,7 +10,7 @@ authorise an automatic retry.
 ## Prerequisites
 
 - The approved task card `phase14.5-bootstrap-01` is in `in_progress/` and its
-  dependency `phase14.5-architecture-01` is accepted.
+  dependency `phase14.5-bootstrap-02` is accepted.
 - The operator has verified that the OpenCode runtime is available and that a
   one-shot manual invocation is intended.
 - A worktree provisioned at the project-relative reference
@@ -32,6 +32,11 @@ fields:
 | `approver_role` | Must be `ORCHESTRATOR`. |
 | `one_shot` | Must be `true`. |
 | `enabled` | Must be `true`. |
+| `approval_digest` | SHA-256 of the canonical JSON form of every other approval field: sort keys, use compact separators, UTF-8 encode, then hash. |
+
+Calculate `approval_digest` only after all other fields are final. The supplied
+value must exactly match the canonical digest; a missing, stale, or altered
+digest receives the terminal decision `deny_invalid_approval`.
 
 The approval record is not a connector grant.  It does not authorise a runtime
 launch by itself.
@@ -79,12 +84,12 @@ automatic retry, merge, or push is performed by this handoff module.
 | Category | Meaning |
 | --- | --- |
 | `deny_missing_approval` | The approval record is absent or not a mapping. |
-| `deny_invalid_approval` | Required fields are missing, the approver role is wrong, or one-shot/enabled flags are not set. |
+| `deny_invalid_approval` | Required fields are missing, `approval_digest` is missing or mismatched, the approver role is wrong, or one-shot/enabled flags are not set. |
 | `deny_disabled` | The approval is explicitly disabled. |
 | `deny_approval_expired` | The current time is outside the issued_at/expires_at window. |
 | `deny_task_mismatch` | The task ID in the approval does not match the task card. |
 | `deny_worktree_mismatch` | The worktree reference does not match the approval. |
-| `deny_unsafe_path` | A project-relative path contains `..`, starts with `/`, or starts with `./`. |
+| `deny_unsafe_path` | A project-relative path contains `..`, `\\`, or `:`, starts with `/`, or starts with `./`. |
 | `deny_replay` | The idempotency key has already been consumed in this session. |
 | `deny_invalid_task` | The task card projection is missing or lacks a task_id. |
 

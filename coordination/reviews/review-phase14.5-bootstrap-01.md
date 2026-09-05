@@ -4,40 +4,30 @@
 - Reviewer: ORCHESTRATOR
 - Task ID: phase14.5-bootstrap-01
 - Phase: phase14.5-bootstrap-connector
-- Decision: needs_fix
-- Reviewed At: 2026-09-03 21:55
+- Decision: accepted
+- Reviewed At: 2026-09-05
 
 ## Summary
 
-The submitted bootstrap handoff is deliberately local-only and the focused test
-suite, coordination validator, and whitespace check pass. It cannot yet be
-accepted because approval-integrity and platform-safe reference validation do
-not meet the task's terminal-denial boundary.
+The corrected bootstrap handoff is deliberately local-only, passes independent
+review, and meets the task's approval-integrity and platform-safe reference
+validation boundary. The external corrective session incident remains evidence
+of connector unreliability, not a defect in the local-only handoff contract.
 
 ## Findings
 
-1. **P1 — `approval_digest` is generated but never verified.**
-   `approval_digest()` exists, but `_validate_approval()` only checks field
-   presence and values. An altered approval record with a stale or replaced
-   digest can therefore still be accepted. The task explicitly requires an
-   altered approval to receive terminal denial.
-2. **P1 — Windows drive-qualified paths pass the relative-path guard.**
-   `_is_relative_safe()` rejects slash-prefixed paths but accepts values such
-   as `C:\\outside`, despite declaring that only forward-slash project-relative
-   references are safe. This could put an absolute path in the envelope.
-3. **P2 — The task dependency was regressed during lifecycle transition.**
-   The submitted card lists `phase14.5-architecture-01`; the approved base
-   lists `phase14.5-bootstrap-02`. Restore the approved dependency while
-   returning the card to `IN_PROGRESS`.
+1. **Resolved P1 — approval integrity.** `_validate_approval()` requires a
+   canonical `approval_digest`; a stale or altered digest receives terminal
+   `deny_invalid_approval`.
+2. **Resolved P1 — Windows paths.** `_is_relative_safe()` rejects backslashes
+   and colons, covering drive-qualified paths, with focused tests.
+3. **Resolved P2 — dependency and operator instructions.** The task card and
+   runbook both name `phase14.5-bootstrap-02`; the runbook documents canonical
+   digest generation and terminal denial.
 
 ## Required Changes
 
-- Require a present, canonical `approval_digest` equal to `approval_digest(approval)`;
-  return a terminal denial on mismatch and add a focused altered-digest test.
-- Reject Windows drive-qualified and backslash-containing references, with
-  tests proving the rejection.
-- Preserve `phase14.5-bootstrap-02` as the task dependency.
-- Re-run the focused tests, coordination validation, and `git diff --check`.
+- None. The independent corrective review is accepted.
 
 ## Scope Compliance
 
@@ -48,10 +38,13 @@ handoff module.
 
 ## Validation Check
 
-- `D:\\codex work\\.venv\\Scripts\\python.exe -m pytest tests\\scripts\\test_bootstrap_handoff.py -q`: 20 passed (one non-fatal pytest cache permission warning).
+- `D:\\codex work\\.venv\\Scripts\\python.exe -m pytest -p no:cacheprovider tests\\scripts\\test_bootstrap_handoff.py -q`: 24 passed.
 - `D:\\codex work\\.venv\\Scripts\\python.exe scripts\\validate_coordination_files.py`: passed.
 - `git diff --check`: passed.
 
 ## Accepted Artifacts
 
-None pending the required safety corrections.
+- `scripts/bootstrap_handoff.py`
+- `tests/scripts/test_bootstrap_handoff.py`
+- `docs/operations/phase14.5-bootstrap-handoff-operator-runbook.md`
+- `coordination/delivery/phase14.5-bootstrap-01-delivery-report.md`
