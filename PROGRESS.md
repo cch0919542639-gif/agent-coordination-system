@@ -66,10 +66,14 @@ the documentation-only `phase14.5-04` supervised-launch design task.
 - `phase14.5-launcher-09` is now the required B.1 task after connector
   admission. It is explicitly a supervised single-worker launcher, not a claim
   of full Windows sandbox enforcement.
+- `phase14.5-controlplane-02` is independently reviewed, accepted, and
+  integrated on this planning branch. Its local-only grant validator and
+  no-launch admission planner pass 33 focused tests and coordination
+  validation; the stale READY card for the former uncallable owner was removed.
 
 ## 2026-09-06 Next Dispatch Gate
 
-- `phase14.5-controlplane-02` is now dependency-eligible. Its recorded owner,
-  `external-agent-platform-34`, is not an admitted callable connector. Do not
-  dispatch or substitute an owner until the operator records the assignment
-  decision.
+- `phase14.5-launcher-09` is dependency-eligible and remains READY for its
+  assigned ORCHESTRATOR implementation. Its implementation must preserve the
+  no-launch boundary; a real supervised process start still requires separate,
+  exact operator approval.

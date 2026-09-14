@@ -1,26 +1,31 @@
 # Progress Report
 
 - Agent: ORCHESTRATOR
-- Active Task: phase14.5-controlplane-02
-- Phase: phase14.5-control-plane
+- Active Task: phase14.5-launcher-09
+- Phase: phase14.5-supervised-launcher
 - Status: DONE
 - Last Updated: 2026-09-06
 
 ## Current Step
 
-Independent review accepted the deterministic no-launch connector grant and
-admission planner.
+Independent review accepted the B.1 no-launch launcher boundary.
 
 ## Changes So Far
 
-- Task reassigned from unregistered `external-agent-platform-34`.
-- `scripts/controlplane_admission.py` and focused tests added.
-- Connector grant/admission contract and delivery report added.
+- `scripts/supervised_opencode_launcher.py` implements immutable manifest,
+  approval, one-shot grant, admission, and terminal process-outcome checks.
+- `tests/scripts/test_supervised_opencode_launcher.py` covers all denial
+  paths, one-process success, timeout, nonzero outcome, and output redaction.
+- Independent review accepted the task after 58 focused tests, coordination
+  validation, and a clean diff check.
 
 ## Blocker Status
 
-none
+No implementation blocker. A genuine process factory and exact manifest remain
+operator-approved pilot inputs after integration.
 
 ## Next Step
 
-Await explicit integration into the planning branch; do not launch a runtime.
+Begin the deterministic scheduler task only after this integration is
+validated. Do not run the real OpenCode pilot unless the operator separately
+approves its exact manifest and grant.
