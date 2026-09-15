@@ -1,7 +1,7 @@
 ---
 task_id: phase14-local-02
 phase: phase14-local-observability
-status: BLOCKED
+status: CANCELLED
 owner: external-agent-platform-33
 reviewer: ORCHESTRATOR
 priority: high
