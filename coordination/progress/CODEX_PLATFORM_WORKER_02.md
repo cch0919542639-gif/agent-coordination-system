@@ -8,7 +8,7 @@
 
 ## Current Step
 
-Fixed re-review P1 by restricting safe reference grammar to explicit ASCII.
+Fixed final re-review P1 by restricting identity and reference grammar to explicit ASCII.
 
 ## Changes So Far
 

@@ -6,10 +6,11 @@ persist records, start a runtime, contact a network, invoke Git, or access
 credentials.
 
 `build_review_bundle()` accepts an exact review-task identity and exact safe
-evidence references, then returns a task-keyed deterministic bundle. References
-are project-relative slash paths made only of ASCII letters, digits, dot,
-underscore, and hyphen path components; whitespace, Unicode, and prompt-like scalar values fail
-closed. Bundle
+evidence references, then returns a task-keyed deterministic bundle. Task,
+owner, and reviewer identities use ASCII letters, digits, dot, underscore,
+and hyphen only. References are project-relative slash paths using the same
+ASCII character set in each component; whitespace, Unicode, and prompt-like
+values fail closed. Bundle
 fields are limited to task-card, branch, changed-file, validation, delivery,
 review, and incident references.  Raw logs, prompts, source bodies,
 credentials, and absolute paths fail closed.

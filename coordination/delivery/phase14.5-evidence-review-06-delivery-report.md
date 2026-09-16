@@ -16,8 +16,8 @@
 ## Acceptance Criteria Coverage
 
 - A deterministic task-keyed review-bundle projection accepts only exact,
-  safe ASCII relative evidence references, rejects whitespace, Unicode, and
-  prompt-like references in every scalar and sequence bundle field, and
+  safe ASCII task identities and relative evidence references, rejects whitespace,
+  Unicode, and prompt-like values in every identity, scalar, and sequence field, and
   excludes private content.
 - Worker submission creates a reviewer-targeted queue projection only; it
   never accepts, merges, pushes, or mutates lifecycle state.
@@ -28,8 +28,8 @@
 ## Validation Steps Performed
 
 - `python -m py_compile scripts/evidence_review.py`
-- `python -m pytest -p no:cacheprovider tests/scripts/test_evidence_review.py -q` — 9 passed
-- Combined Phase B.1–F regression suite — 76 passed
+- `python -m pytest -p no:cacheprovider tests/scripts/test_evidence_review.py -q` — 10 passed
+- Combined Phase B.1–F regression suite — 77 passed
 - `python scripts/orchestrate.py validate` — passed
 - `git diff --check` — passed
 

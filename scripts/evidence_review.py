@@ -29,7 +29,7 @@ def _identifier(value: object) -> bool:
     return (
         isinstance(value, str) and bool(value) and value == value.strip()
         and len(value) <= 128 and ".." not in value
-        and all(char.isalnum() or char in "-_." for char in value)
+        and all(char in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_." for char in value)
     )
 
 
