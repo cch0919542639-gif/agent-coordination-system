@@ -8,7 +8,7 @@
 
 ## Current Step
 
-Fixed independent-review P1 by tightening safe reference grammar.
+Fixed re-review P1 by restricting safe reference grammar to explicit ASCII.
 
 ## Changes So Far
 
@@ -23,4 +23,4 @@ none
 
 ## Next Step
 
-Re-run focused and Phase B.1–F regression checks, then resubmit for independent review.
+Re-run focused and Phase B.1–F regression checks, then resubmit for independent re-review.

@@ -7,8 +7,8 @@ credentials.
 
 `build_review_bundle()` accepts an exact review-task identity and exact safe
 evidence references, then returns a task-keyed deterministic bundle. References
-are project-relative slash paths made only of alphanumeric, dot, underscore,
-and hyphen path components; whitespace and prompt-like scalar values fail
+are project-relative slash paths made only of ASCII letters, digits, dot,
+underscore, and hyphen path components; whitespace, Unicode, and prompt-like scalar values fail
 closed. Bundle
 fields are limited to task-card, branch, changed-file, validation, delivery,
 review, and incident references.  Raw logs, prompts, source bodies,
