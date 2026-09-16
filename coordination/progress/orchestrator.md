@@ -25,6 +25,6 @@ none; this remains fixture-only and must not create a worktree or runtime state.
 
 ## Next Step
 
-Phase G was independently accepted; its safe operator projections do not
-authorize an effectful runtime action. Inspect the Phase H pilot gate before
-any dispatch.
+Phase H's safe pre-approval protocol was independently accepted. The live
+pilot is BLOCKED pending exact operator approval, six admitted enforcement-
+capable connectors, and accepted effectful-adapter evidence.
