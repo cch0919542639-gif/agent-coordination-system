@@ -15,7 +15,7 @@
 ## Acceptance Criteria Coverage
 
 - The protocol defines the supervised acceptance procedure and exact recorded approval preflight.
-- The test harness fail-closes absent approval, fewer than six connector records, and absent enforcement evidence; it runs six deterministic fake-clock lease identities with bounded fencing and incident routing.
+- The test harness validates an exact task/run-bound one-shot approval schema and separately reviewed effectful-adapter evidence. It fail-closes absent, malformed, mismatched, and expired approval; absent, malformed, and stale adapter evidence; fewer than six connector records; and absent enforcement evidence.
 - The incident records why real execution remains gated without claiming connector instances or pilot execution.
 
 ## Validation Steps Performed

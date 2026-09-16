@@ -8,7 +8,7 @@
 
 ## Current Step
 
-Safe pre-approval protocol and deterministic fault evidence complete; awaiting independent review.
+Corrected the preflight P1 findings: exact task/run-bound approval and accepted effectful-adapter evidence are mandatory; awaiting re-review.
 
 ## Changes So Far
 
@@ -16,6 +16,7 @@ Safe pre-approval protocol and deterministic fault evidence complete; awaiting i
 - `tests/scripts/test_six_agent_pilot_preflight.py`
 - `coordination/incidents/20260917-02_phase14.5-six-agent-pilot-preflight-gate.md`
 - `coordination/delivery/phase14.5-six-agent-pilot-08-delivery-report.md`
+- `coordination/reviews/review-phase14.5-six-agent-pilot-08.md` (reviewed, not modified)
 
 ## Blocker Status
 

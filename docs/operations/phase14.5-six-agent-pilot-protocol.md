@@ -8,9 +8,9 @@ The live pilot is fail-closed. It may begin only when every preflight input belo
 
 ## Exact approval preflight
 
-The operator must record one enabled, unexpired, one-shot approval bound to `phase14.5-six-agent-pilot-08`. It must name six connector grants and six distinct admitted agent identities; the exact project-relative worktree root and six allocated worktree references; network policy, adapter/version, sandbox-enforcement evidence, run-window start/end, timeout, and stop authority; plus expected manifest/allocation digests.
+The operator must record one enabled, unexpired, one-shot approval bound to `phase14.5-six-agent-pilot-08` and its exact run ID. It must name six connector grants and six distinct admitted agent identities; the exact project-relative worktree root and six allocated worktree references; network policy, adapter/version, sandbox-enforcement evidence references, run-window start/end, timeout, and stop authority; plus expected manifest/allocation digests. Unknown fields, malformed values, mismatched run/task IDs, expired windows, duplicate identities, and unsafe references deny the preflight.
 
-The approval must state that merge, push, credential access, and cleanup are not approved by this pilot. Each connector needs independently verifiable grant admission and enforcement-capability evidence. A `network_policy: deny` grant is not proof of enforced sandbox policy. The preflight rejects unless it has exactly six distinct admitted identities, six enforcement records, a current exact approval, and all run-bound provenance.
+The approval must state that merge, push, credential access, and cleanup are not approved by this pilot. Each connector needs independently verifiable grant admission and enforcement-capability evidence. A `network_policy: deny` grant is not proof of enforced sandbox policy. The preflight also requires evidence for a separately reviewed, accepted, current effectful adapter whose approved capability is a sandboxed one-shot launch. The preflight rejects unless it has exactly six distinct admitted identities, six enforcement records, this adapter evidence, a current exact approval, and all run-bound provenance.
 
 ## Supervised acceptance procedure
 
