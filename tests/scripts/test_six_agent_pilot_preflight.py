@@ -17,7 +17,7 @@ def safe_identifier(value: object) -> bool:
 
 
 def safe_ref(value: object) -> bool:
-    return isinstance(value, str) and bool(value) and len(value) <= 256 and not value.startswith(("/", "\\", "./", "refs/")) and all(safe_identifier(part) for part in value.split("/"))
+    return isinstance(value, str) and bool(value) and len(value) <= 256 and not value.startswith(("/", "\\", "./", "refs/")) and all(part not in {".", ".."} and safe_identifier(part) for part in value.split("/"))
 
 
 def safe_digest(value: object) -> bool:
@@ -68,9 +68,14 @@ def preflight(approval: object, connector_records: object, adapter_evidence: obj
         return {"decision": "deny_effectful_adapter_evidence"}
     if not isinstance(connector_records, list) or len(connector_records) != 6:
         return {"decision": "deny_connector_evidence"}
-    identities = {item.get("agent_id") for item in connector_records if isinstance(item, dict)}
-    if identities != set(IDENTITIES) or any(item.get("admitted") is not True or item.get("enforcement_verified") is not True for item in connector_records if isinstance(item, dict)):
+    fields = {"agent_id", "grant_id", "enforcement_evidence_ref", "worktree_ref", "admitted", "enforcement_verified"}
+    if any(not isinstance(item, dict) or set(item) != fields for item in connector_records):
         return {"decision": "deny_connector_evidence"}
+    expected = set(zip(approval["agent_ids"], approval["grant_ids"], approval["enforcement_evidence_refs"], approval["worktree_refs"]))
+    bindings = {(item["agent_id"], item["grant_id"], item["enforcement_evidence_ref"], item["worktree_ref"]) for item in connector_records}
+    if bindings != expected or any(item["admitted"] is not True or item["enforcement_verified"] is not True for item in connector_records):
+        return {"decision": "deny_connector_evidence"}
+    identities = {item["agent_id"] for item in connector_records}
     return {"decision": "pilot_preflight_ready", "agent_ids": sorted(identities)}
 
 
@@ -83,7 +88,8 @@ def adapter() -> dict[str, object]:
 
 
 def connectors(*, enforced: bool = True) -> list[dict[str, object]]:
-    return [{"agent_id": identity, "admitted": True, "enforcement_verified": enforced} for identity in IDENTITIES]
+    value = approval()
+    return [{"agent_id": identity, "grant_id": grant_id, "enforcement_evidence_ref": evidence_ref, "worktree_ref": worktree_ref, "admitted": True, "enforcement_verified": enforced} for identity, grant_id, evidence_ref, worktree_ref in zip(value["agent_ids"], value["grant_ids"], value["enforcement_evidence_refs"], value["worktree_refs"])]
 
 
 def test_preflight_fails_closed_without_approval_or_six_enforced_connectors() -> None:
@@ -99,6 +105,10 @@ def test_preflight_rejects_malformed_mismatched_and_expired_exact_approval() -> 
     assert preflight(mismatched, connectors(), adapter())["decision"] == "deny_missing_or_invalid_approval"
     expired = approval(); expired["expires_at"] = "2026-09-17T07:59:00+00:00"
     assert preflight(expired, connectors(), adapter())["decision"] == "deny_missing_or_invalid_approval"
+    traversal = approval(); traversal["enforcement_evidence_refs"][0] = "coordination/../evidence/agent-01"
+    assert preflight(traversal, connectors(), adapter())["decision"] == "deny_missing_or_invalid_approval"
+    dot_component = approval(); dot_component["worktree_refs"][0] = "worktrees/./phaseh/agent-01"
+    assert preflight(dot_component, connectors(), adapter())["decision"] == "deny_missing_or_invalid_approval"
 
 
 def test_preflight_requires_current_accepted_effectful_adapter_evidence() -> None:
@@ -109,6 +119,21 @@ def test_preflight_requires_current_accepted_effectful_adapter_evidence() -> Non
     assert preflight(approval(), connectors(), stale)["decision"] == "deny_effectful_adapter_evidence"
     mismatched = adapter(); mismatched["adapter_version"] = "2"
     assert preflight(approval(), connectors(), mismatched)["decision"] == "deny_effectful_adapter_evidence"
+    traversal = adapter(); traversal["review_ref"] = "coordination/../reviews/adapter"
+    assert preflight(approval(), connectors(), traversal)["decision"] == "deny_effectful_adapter_evidence"
+
+
+def test_preflight_binds_each_connector_to_approved_provenance() -> None:
+    mismatched_grant = connectors(); mismatched_grant[0]["grant_id"] = "grant-agent-02"
+    assert preflight(approval(), mismatched_grant, adapter())["decision"] == "deny_connector_evidence"
+    mismatched_evidence = connectors(); mismatched_evidence[0]["enforcement_evidence_ref"] = "coordination/evidence/agent-02"
+    assert preflight(approval(), mismatched_evidence, adapter())["decision"] == "deny_connector_evidence"
+    mismatched_worktree = connectors(); mismatched_worktree[0]["worktree_ref"] = "worktrees/phaseh/agent-02"
+    assert preflight(approval(), mismatched_worktree, adapter())["decision"] == "deny_connector_evidence"
+    duplicate = connectors(); duplicate[1] = dict(duplicate[0])
+    assert preflight(approval(), duplicate, adapter())["decision"] == "deny_connector_evidence"
+    missing = connectors(); del missing[0]["grant_id"]
+    assert preflight(approval(), missing, adapter())["decision"] == "deny_connector_evidence"
 
 
 def test_six_identity_fake_clock_harness_has_bounded_fencing_and_incident_routing() -> None:

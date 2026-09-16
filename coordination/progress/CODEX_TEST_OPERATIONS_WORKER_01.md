@@ -8,7 +8,7 @@
 
 ## Current Step
 
-Corrected the preflight P1 findings: exact task/run-bound approval and accepted effectful-adapter evidence are mandatory; awaiting re-review.
+Corrected re-review P1 findings: references reject dot components and each connector is exactly bound to approved grant/evidence/worktree provenance; awaiting re-review.
 
 ## Changes So Far
 
