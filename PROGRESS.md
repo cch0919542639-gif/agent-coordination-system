@@ -74,6 +74,10 @@ the documentation-only `phase14.5-04` supervised-launch design task.
   this planning branch. Its fixture-only six-identity allocation planner and
   bounded context snapshot builder pass 58 focused regression tests; no real
   worktree, runtime, network, or credential operation was performed.
+- `phase14.5-lease-recovery-05` is independently reviewed and accepted. Its
+  fake-clock lease fencing, terminal submission, bounded retry, incident, and
+  approval-projection fixtures pass 67 focused regression tests; no runtime,
+  network, credential, or real timer operation was performed.
 
 ## 2026-09-06 Next Dispatch Gate
 

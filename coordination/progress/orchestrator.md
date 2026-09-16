@@ -25,5 +25,5 @@ none; this remains fixture-only and must not create a worktree or runtime state.
 
 ## Next Step
 
-Phase D is complete. The historical accepted B0 review was normalized to
-DONE; evaluate the now-unlocked Phase E lease/recovery task before dispatch.
+Phase E was implemented by `CODEX_PLATFORM_WORKER_01`, independently accepted
+by `CODEX_INDEPENDENT_REVIEWER_01`, and is now ready for lifecycle completion.
