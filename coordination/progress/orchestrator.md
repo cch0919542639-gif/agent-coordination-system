@@ -25,5 +25,6 @@ none; this remains fixture-only and must not create a worktree or runtime state.
 
 ## Next Step
 
-Phase F was independently accepted after three fail-closed input-validation
-reviews; integrate it and dispatch the next dependency-eligible task.
+Phase G was independently accepted; its safe operator projections do not
+authorize an effectful runtime action. Inspect the Phase H pilot gate before
+any dispatch.
