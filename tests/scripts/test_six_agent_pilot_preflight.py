@@ -24,6 +24,10 @@ def safe_digest(value: object) -> bool:
     return isinstance(value, str) and len(value) == 64 and all(char in "0123456789abcdef" for char in value)
 
 
+def within_root(reference: object, root: object) -> bool:
+    return safe_ref(root) and safe_ref(reference) and str(reference).startswith(str(root) + "/")
+
+
 def current_time(value: object) -> datetime | None:
     try:
         parsed = datetime.fromisoformat(value) if isinstance(value, str) else None
@@ -44,7 +48,7 @@ def exact_approval(value: object) -> bool:
         return False
     if tuple(value["agent_ids"]) != IDENTITIES or not all(safe_identifier(item) for key in ("approval_id", "run_id", "stop_authority", "adapter_id", "adapter_version") for item in (value[key],)):
         return False
-    if not safe_ref(value["worktree_root"]) or not all(safe_identifier(item) for item in value["grant_ids"]) or not all(safe_digest(item) for key in ("manifest_digests", "allocation_digests") for item in value[key]) or not all(safe_ref(item) for key in ("worktree_refs", "enforcement_evidence_refs") for item in value[key]):
+    if not safe_ref(value["worktree_root"]) or not all(within_root(item, value["worktree_root"]) for item in value["worktree_refs"]) or not all(safe_identifier(item) for item in value["grant_ids"]) or not all(safe_digest(item) for key in ("manifest_digests", "allocation_digests") for item in value[key]) or not all(safe_ref(item) for item in value["enforcement_evidence_refs"]):
         return False
     return value["network_policy"] == "deny" and isinstance(value["timeout_seconds"], int) and 1 <= value["timeout_seconds"] <= 3600 and value["prohibited_actions"] == ["cleanup", "credential_access", "merge", "push"]
 
@@ -109,6 +113,8 @@ def test_preflight_rejects_malformed_mismatched_and_expired_exact_approval() -> 
     assert preflight(traversal, connectors(), adapter())["decision"] == "deny_missing_or_invalid_approval"
     dot_component = approval(); dot_component["worktree_refs"][0] = "worktrees/./phaseh/agent-01"
     assert preflight(dot_component, connectors(), adapter())["decision"] == "deny_missing_or_invalid_approval"
+    cross_root = approval(); cross_root["worktree_refs"][0] = "worktrees/other-root/agent-01"
+    assert preflight(cross_root, connectors(), adapter())["decision"] == "deny_missing_or_invalid_approval"
 
 
 def test_preflight_requires_current_accepted_effectful_adapter_evidence() -> None:

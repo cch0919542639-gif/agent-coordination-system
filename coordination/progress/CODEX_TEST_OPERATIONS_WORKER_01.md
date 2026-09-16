@@ -8,7 +8,7 @@
 
 ## Current Step
 
-Corrected re-review P1 findings: references reject dot components and each connector is exactly bound to approved grant/evidence/worktree provenance; awaiting re-review.
+Corrected final P1: each allocated worktree reference must be a component-safe child of the declared root; awaiting re-review.
 
 ## Changes So Far
 

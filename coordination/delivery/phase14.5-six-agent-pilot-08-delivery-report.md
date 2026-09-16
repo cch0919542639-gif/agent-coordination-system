@@ -15,7 +15,7 @@
 ## Acceptance Criteria Coverage
 
 - The protocol defines the supervised acceptance procedure and exact recorded approval preflight.
-- The test harness validates an exact task/run-bound one-shot approval schema and separately reviewed effectful-adapter evidence. It fail-closes traversal/dot reference components; absent, malformed, mismatched, and expired approval; absent, malformed, and stale adapter evidence; and missing, duplicate, or cross-wired connector grant/evidence/worktree provenance.
+- The test harness validates an exact task/run-bound one-shot approval schema and separately reviewed effectful-adapter evidence. It fail-closes traversal/dot and cross-root worktree references; absent, malformed, mismatched, and expired approval; absent, malformed, and stale adapter evidence; and missing, duplicate, or cross-wired connector grant/evidence/worktree provenance.
 - The incident records why real execution remains gated without claiming connector instances or pilot execution.
 
 ## Validation Steps Performed
