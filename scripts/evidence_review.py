@@ -40,7 +40,11 @@ def _relative_ref(value: object) -> bool:
         return False
     if ":" in value or "://" in value or "@{" in value:
         return False
-    return all(part and part != "." and not part.endswith((".", " ")) for part in value.split("/"))
+    return all(
+        part and part != "." and not part.endswith(".")
+        and all(char.isalnum() or char in "-_." for char in part)
+        for part in value.split("/")
+    )
 
 
 def _unsafe(value: object) -> bool:
