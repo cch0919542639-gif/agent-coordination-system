@@ -89,6 +89,7 @@ class LeaseRecovery:
         if self.clock.now() >= lease["acknowledgement_deadline"]:
             return self._late(lease, "acknowledge", "deny_acknowledgement_timeout")
         lease["acknowledged"] = True
+        lease["heartbeat_deadline"] = self.clock.now() + timedelta(seconds=self.policy.heartbeat_seconds)
         return self._projection(lease, "accepted_acknowledge")
 
     def heartbeat(self, task_id: str, run_id: str, lease_epoch: int) -> dict[str, Any]:
@@ -97,8 +98,11 @@ class LeaseRecovery:
             return denial
         if not lease["acknowledged"]:
             return self._late(lease, "heartbeat", "deny_unacknowledged")
+        if self.clock.now() >= lease["heartbeat_deadline"]:
+            return self._late(lease, "heartbeat", "deny_missed_heartbeat")
         if self.clock.now() >= lease["lease_expires_at"]:
             return self._late(lease, "heartbeat", "deny_expired_lease")
+        lease["heartbeat_deadline"] = self.clock.now() + timedelta(seconds=self.policy.heartbeat_seconds)
         lease["lease_expires_at"] = self.clock.now() + timedelta(seconds=self.policy.lease_seconds)
         return self._projection(lease, "accepted_heartbeat")
 
@@ -108,6 +112,7 @@ class LeaseRecovery:
             return denial
         if self.clock.now() >= lease["lease_expires_at"]:
             return self._late(lease, "submit", "deny_expired_lease")
+        lease["state"] = "submitted"
         return self._projection(lease, "accepted_submission")
 
     def cancel(self, task_id: str, run_id: str, lease_epoch: int) -> dict[str, Any]:
@@ -130,6 +135,8 @@ class LeaseRecovery:
             reason = None
             if not lease["acknowledged"] and now >= lease["acknowledgement_deadline"]:
                 reason = "acknowledgement_timeout"
+            elif lease["acknowledged"] and now >= lease["heartbeat_deadline"]:
+                reason = "heartbeat_missed"
             elif now >= lease["lease_expires_at"]:
                 reason = "lease_expired"
             if reason is None:
@@ -170,6 +177,7 @@ class LeaseRecovery:
             "acknowledged": False,
             "state": "active",
             "acknowledgement_deadline": now + timedelta(seconds=self.policy.acknowledgement_seconds),
+            "heartbeat_deadline": None,
             "lease_expires_at": now + timedelta(seconds=self.policy.lease_seconds),
         }
 
@@ -201,6 +209,7 @@ class LeaseRecovery:
             "acknowledged": lease["acknowledged"],
             "state": lease["state"],
             "acknowledgement_deadline": lease["acknowledgement_deadline"].isoformat(),
+            "heartbeat_deadline": lease["heartbeat_deadline"].isoformat() if lease["heartbeat_deadline"] else None,
             "lease_expires_at": lease["lease_expires_at"].isoformat(),
             **extra,
         }

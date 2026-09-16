@@ -8,8 +8,8 @@
 
 ## Current Step
 
-Submitted the fixture-only lease model and validation evidence for independent
-review.
+Corrected review findings: submission is terminal and heartbeat deadlines are
+enforced by the fake clock. Resubmitted with passing validation evidence.
 
 ## Changes So Far
 
@@ -24,5 +24,5 @@ none; fake-clock and in-memory boundary retained.
 
 ## Next Step
 
-Wait for independent review; do not modify this task unless it returns
+Wait for the independent re-review; do not modify this task unless it returns
 `needs_fix`.

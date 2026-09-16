@@ -18,14 +18,17 @@
 - Fake-clock acknowledgement deadline, heartbeat renewal, lease expiry,
   fencing epoch, stale/late evidence, retry exhaustion, incident, and
   approval-queue cases are covered by the focused suite.
+- Resubmission corrects independent-review P1 findings: successful submission
+  is terminal and cannot recover; `heartbeat_seconds` now supplies an enforced
+  deadline with timely and missed-heartbeat cases.
 - The module is in-memory only and the source test rejects runtime, network,
   persistence, Git worktree, and real-sleep APIs.
 
 ## Validation Steps Performed
 
 - `python -m py_compile scripts/lease_recovery.py`
-- `python -m pytest -p no:cacheprovider tests/scripts/test_lease_recovery.py -q` — 7 passed
-- Combined Phase B.1–E regression suite — 65 passed
+- `python -m pytest -p no:cacheprovider tests/scripts/test_lease_recovery.py -q` — 9 passed
+- Combined Phase B.1–E regression suite — 67 passed
 - `python scripts/orchestrate.py validate`
 - `git diff --check`
 

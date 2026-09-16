@@ -6,9 +6,12 @@ network, read credentials, invoke Git, or use a real timer.
 
 `LeaseRecovery.dispatch()` creates epoch 1 with an acknowledgement deadline
 and lease expiry. `acknowledge()`, `heartbeat()`, `submit()`, and `cancel()`
-accept only the active epoch. A heartbeat extends only an acknowledged active
-lease. Invalid, stale, terminal, and expired evidence becomes a safe forensic
-projection and cannot mutate the current lease.
+accept only the active epoch. An acknowledgement starts a heartbeat deadline;
+a heartbeat at or after that deadline is forensic-only and recoverable. A
+timely heartbeat extends both its heartbeat deadline and the lease. An
+accepted submission sets the execution projection to terminal `submitted`, so
+it cannot recover. Invalid, stale, terminal, and expired evidence becomes a
+safe forensic projection and cannot mutate the current lease.
 
 `recover_expired()` is explicit and one-shot: it deterministically creates at
 most one next epoch for a due lease when the retry budget permits. Exhaustion

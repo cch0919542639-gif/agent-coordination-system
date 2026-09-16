@@ -20,10 +20,11 @@ def test_acknowledgement_and_heartbeat_extend_fake_lease() -> None:
     clock, model = leases()
     assert model.dispatch("task-01", "run-01")["lease_epoch"] == 1
     assert model.acknowledge("task-01", "run-01", 1)["decision"] == "accepted_acknowledge"
-    clock.advance(seconds=25)
+    clock.advance(seconds=19)
     result = model.heartbeat("task-01", "run-01", 1)
     assert result["decision"] == "accepted_heartbeat"
-    assert result["lease_expires_at"] == "2026-09-16T08:00:55+00:00"
+    assert result["heartbeat_deadline"] == "2026-09-16T08:00:39+00:00"
+    assert result["lease_expires_at"] == "2026-09-16T08:00:49+00:00"
 
 
 def test_acknowledgement_timeout_retries_with_a_new_fenced_epoch() -> None:
@@ -42,7 +43,8 @@ def test_expired_heartbeat_submission_and_cancellation_are_forensic_only() -> No
     model.dispatch("task-01", "run-01")
     model.acknowledge("task-01", "run-01", 1)
     clock.advance(seconds=30)
-    for method in (model.heartbeat, model.submit, model.cancel):
+    assert model.heartbeat("task-01", "run-01", 1)["decision"] == "deny_missed_heartbeat"
+    for method in (model.submit, model.cancel):
         assert method("task-01", "run-01", 1)["decision"] == "deny_expired_lease"
     assert len(model.forensic_evidence) == 3
     assert model.recover_expired()[0]["lease_epoch"] == 2
@@ -67,6 +69,31 @@ def test_lease_expiry_recovers_once_then_late_submission_cannot_mutate_new_epoch
     assert model.recover_expired()[0]["decision"] == "recovery_retry"
     assert model.submit("task-01", "run-01", 1)["decision"] == "deny_stale_epoch"
     assert model.submit("task-01", "run-01", 2)["decision"] == "accepted_submission"
+
+
+def test_submission_is_terminal_and_never_recovers_or_accepts_later_evidence() -> None:
+    clock, model = leases()
+    model.dispatch("task-01", "run-01")
+    model.acknowledge("task-01", "run-01", 1)
+    assert model.submit("task-01", "run-01", 1)["state"] == "submitted"
+    clock.advance(seconds=30)
+    assert model.recover_expired() == []
+    for method in (model.submit, model.heartbeat, model.cancel):
+        assert method("task-01", "run-01", 1)["decision"] == "deny_terminal_lease"
+    assert model.incidents == []
+    assert model.approval_queue == []
+
+
+def test_missed_heartbeat_is_denied_then_recovered_with_new_epoch() -> None:
+    clock, model = leases()
+    model.dispatch("task-01", "run-01")
+    model.acknowledge("task-01", "run-01", 1)
+    clock.advance(seconds=20)
+    assert model.heartbeat("task-01", "run-01", 1)["decision"] == "deny_missed_heartbeat"
+    recovered = model.recover_expired()
+    assert recovered[0]["decision"] == "recovery_retry"
+    assert recovered[0]["recovery_reason"] == "heartbeat_missed"
+    assert recovered[0]["lease_epoch"] == 2
 
 
 def test_invalid_dispatch_and_policy_fail_closed() -> None:
