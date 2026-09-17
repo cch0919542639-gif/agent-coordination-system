@@ -78,6 +78,11 @@ the documentation-only `phase14.5-04` supervised-launch design task.
   fake-clock lease fencing, terminal submission, bounded retry, incident, and
   approval-projection fixtures pass 67 focused regression tests; no runtime,
   network, credential, or real timer operation was performed.
+- Phase F evidence/review projections and Phase G operator-surface projections
+  are independently accepted. Phase H's safe preflight is accepted, but the
+  live six-agent pilot remains blocked: the operator authorization intake is
+  recorded, while six actual admitted enforcement-capable connectors, accepted
+  effectful-adapter evidence, and concrete one-shot bindings are absent.
 
 ## 2026-09-06 Next Dispatch Gate
 
