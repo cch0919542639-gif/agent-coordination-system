@@ -73,6 +73,14 @@ def test_malformed_and_duplicate_records_never_call_factory():
     request, source, records = inputs(); records[1] = deepcopy(records[0])
     result, calls, _ = invoke(request, source, records)
     assert result["decision"] == "deny_unbound_approval" and not calls
+
+
+def test_cross_wired_non_selected_record_never_calls_factory_or_leaks_it():
+    request, source, records = inputs()
+    records[1]["grant_id"] = records[2]["grant_id"]
+    result, calls, _ = invoke(request, source, records)
+    assert result["decision"] == "deny_unbound_approval" and not calls
+    assert records[1]["grant_id"] not in repr(result)
     request, source, records = inputs(); records[0]["extra"] = True
     result, calls, _ = invoke(request, source, records)
     assert result["decision"] == "deny_unbound_approval" and not calls

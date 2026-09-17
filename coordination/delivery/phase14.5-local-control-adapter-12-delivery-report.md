@@ -31,14 +31,21 @@ duplicate, unsafe, malformed, or cross-wired inputs return before that call.
 Results omit the argument allowlist and never call L1 a sandbox or claim
 enforced filesystem, process-identity, or network isolation.
 
+The independent review found that an unselected record could previously be
+cross-wired while the selected record still passed. The adapter now verifies
+every record's task/run/approval fields, full binding tuple, control level, and
+stop marker against the current approval before it can call its fake factory.
+A non-selected cross-wired grant regression proves the denial is redacted and
+does not call the factory.
+
 The L2-only adapter and provisioner were not changed. No runtime, connector,
 network, credential, Git worktree, merge, push, or cleanup operation was made.
 
 ## Validation Steps Performed
 
 - `py_compile scripts/local_control_adapter.py scripts/local_control_provision.py` — passed.
-- Focused L1 tests plus L1 contract — 10 passed.
-- Affected Phase B.1–H fixture regression suite — 118 passed.
+- Focused L1 tests plus L1 contract — 11 passed after the review fix.
+- Affected Phase B.1–H fixture regression suite — 119 passed after the review fix.
 - Negative API/anti-claim source scan — no matches.
 - `python scripts/orchestrate.py validate` — passed.
 - `git diff --check` — passed.

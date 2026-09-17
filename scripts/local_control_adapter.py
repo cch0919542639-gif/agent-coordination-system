@@ -11,6 +11,7 @@ from local_control_provision import TASK_ID, validate_approval
 REQUEST_FIELDS = frozenset({"task_id", "run_id", "approval_id", "agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority"})
 SAFE_KEYS = ("task_id", "run_id", "approval_id", "agent_id", "grant_id", "worktree_ref", "runtime_id", "timeout_seconds", "stop_authority")
 RECORD_FIELDS = frozenset({"task_id", "run_id", "approval_id", "agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority", "scheduler_ref", "lease_ref", "review_ref", "manifest_digest", "allocation_digest", "control_level", "process_tree_stop_handling"})
+RECORD_BINDING_KEYS = ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority", "scheduler_ref", "lease_ref", "review_ref", "manifest_digest", "allocation_digest")
 
 
 class Process(Protocol):
@@ -60,8 +61,15 @@ def _bound(request: Mapping[str, object], approval: object, records: object) -> 
         return False
     if not all(isinstance(record, Mapping) and set(record) == RECORD_FIELDS for record in records):
         return False
+    expected = {binding.get("agent_id"): binding for binding in bindings if isinstance(binding, Mapping)}
+    if len(expected) != 6 or any(not _record_matches(record, approval, expected.get(record.get("agent_id"))) for record in records):
+        return False
     matches = [record for record in records if isinstance(record, Mapping) and all(record.get(key) == request.get(key) for key in bound_keys)]
-    return len(matches) == 1 and matches[0].get("control_level") == "best_effort" and matches[0].get("process_tree_stop_handling") is True and {record.get("agent_id") for record in records} == {binding.get("agent_id") for binding in bindings}
+    return len(matches) == 1 and {record.get("agent_id") for record in records} == set(expected)
+
+
+def _record_matches(record: Mapping[str, object], approval: Mapping[str, object], binding: object) -> bool:
+    return isinstance(binding, Mapping) and record.get("task_id") == TASK_ID and record.get("run_id") == approval.get("run_id") and record.get("approval_id") == approval.get("approval_id") and all(record.get(key) == binding.get(key) for key in RECORD_BINDING_KEYS) and record.get("control_level") == "best_effort" and record.get("process_tree_stop_handling") is True
 
 
 def _identifier(value: object) -> bool:
