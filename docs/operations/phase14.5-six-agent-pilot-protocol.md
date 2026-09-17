@@ -23,4 +23,11 @@ The approval must state that merge, push, credential access, and cleanup are not
 
 ## Current gate
 
-No real pilot has run. The repository has deterministic fixtures and an operator approval validator, but no recorded Phase H approval and no six actual admitted enforcement-capable connector instances. Phase H remains at the preflight gate. A future effectful adapter requires a separately reviewed implementation task and the exact operator record above.
+No real pilot has run. The repository now has independently accepted,
+fake-tested effectful-adapter and six-record provisioning boundaries, but no
+recorded Phase H approval and no six actual admitted enforcement-capable
+connector instances. The provisioner deliberately fails closed when the local
+platform cannot supply current restricted-write, process-identity, and
+deny-network evidence. Phase H remains at the preflight gate until a concrete
+one-shot approval, six real platform-enforced instances, and supervised-run
+evidence exist.
