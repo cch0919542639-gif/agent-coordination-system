@@ -45,6 +45,10 @@ enforcement attestations. It creates no connector or runtime.
   validator. Source inspection and the negative API test found no runtime,
   process, network, credential, Git, worktree, persistence, or CLI operation.
 
+## Required Changes
+
+none
+
 ## Validation Check
 
 - `python -m py_compile scripts/connector_provision.py` — passed.
