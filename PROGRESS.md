@@ -83,6 +83,10 @@ the documentation-only `phase14.5-04` supervised-launch design task.
   live six-agent pilot remains blocked: the operator authorization intake is
   recorded, while six actual admitted enforcement-capable connectors, accepted
   effectful-adapter evidence, and concrete one-shot bindings are absent.
+- `phase14.5-effectful-adapter-09` is independently accepted: it adds a
+  fake-tested, exact-binding one-shot process boundary that requires a current
+  external enforcement attestation. It creates no connector; the six-record
+  provisioning task is next.
 
 ## 2026-09-06 Next Dispatch Gate
 
