@@ -87,6 +87,9 @@ the documentation-only `phase14.5-04` supervised-launch design task.
   fake-tested, exact-binding one-shot process boundary that requires a current
   external enforcement attestation. It creates no connector; the six-record
   provisioning task is next.
+- `phase14.5-connector-provision-10` is independently accepted: it validates
+  six exact in-memory connector bindings and emits one privacy-bounded incident
+  when platform enforcement is unavailable. It creates no runtime or connector.
 
 ## 2026-09-06 Next Dispatch Gate
 
