@@ -90,6 +90,10 @@ the documentation-only `phase14.5-04` supervised-launch design task.
 - `phase14.5-connector-provision-10` is independently accepted: it validates
   six exact in-memory connector bindings and emits one privacy-bounded incident
   when platform enforcement is unavailable. It creates no runtime or connector.
+- The operator approved a Phase H rebaseline: L1 local controlled collaboration
+  is the default acceptance path, with `best_effort` evidence only. L2
+  platform-enforced isolation remains optional hardening and is required before
+  any claim of enforced filesystem, process-identity, or network isolation.
 
 ## 2026-09-06 Next Dispatch Gate
 

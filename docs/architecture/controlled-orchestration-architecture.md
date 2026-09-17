@@ -82,7 +82,7 @@ The append-only event feed is evidence and can be replayed to reconstruct a
 derived run view; it is not a second task lifecycle authority. A future shared
 operator summary is scheduler-owned rather than co-edited. This adopts Munder
 Difflin's useful file-ownership and single-committer pattern while retaining
-this project's stronger signed-envelope, lease-fencing, sandbox, and explicit
+this project's signed-envelope, lease-fencing, local-control, and explicit
 human-approval contracts.
 
 ## Trusted Connector and Approval Contract
@@ -96,18 +96,30 @@ stored in Git; the scheduler stores only its opaque local reference and status.
 
 Each connector has a stable `agent_id`, key fingerprint, and capability profile.
 Every control-plane message is authenticated by the connector transport and
-contains a short-lived capability token bound to one run attempt. Agents may
-only perform the allowlisted execution action in their assigned worktree. They
-cannot read the operator credential store, invoke arbitrary network access,
-reuse Git credentials, access another worktree, merge, push, or modify task
-cards. A denied sandbox capability is a terminal policy event, never a prompt
-to retry by another route.
+contains a short-lived capability token bound to one run attempt. The approval
+and adapter allowlist bind a worker to its assigned worktree, fixed runtime and
+argv, bounded process-tree timeout/stop handling, and no credentials, merge,
+push, destructive cleanup, or task-card mutation. A policy denial is terminal,
+never a prompt to retry by another route.
 
-The initial deployment must use an enforcement adapter, not a policy-only
-wrapper: dedicated process identity, isolated worktree, restricted filesystem
-write set, denied-by-default network egress, sanitized environment, and a Git
-remote configuration without push credentials. Platform-specific enforcement
-is verified during connector admission and rechecked before every launch.
+### L1: local controlled collaboration (default)
+
+L1 is a `best_effort` local collaboration control, not a security sandbox. It
+reduces accidental cross-task activity, runaway process trees, unsafe Git
+actions, unbounded retries, and sensitive-data propagation through separate
+worktree provenance, fixed runtime/argv allowlists, process-tree timeout/stop
+handling, six real registered local workers, and durable
+scheduler/lease/review evidence. It does not claim to protect against
+malicious code, prompt-injection-directed circumvention, enforced filesystem
+restrictions, independent OS process identity, or denied network egress.
+
+### L2: platform-enforced isolation (optional hardening)
+
+L2 is separate from L1 and is required before claiming enforced restricted
+writes, independent process identity, or denied network egress. It needs
+independently verifiable platform evidence for each asserted property during
+admission and immediately before launch. L2 is not a prerequisite for an L1
+pilot and cannot weaken L1's critical-action approval gates.
 
 ## Durable Scheduler Protocol
 
@@ -221,10 +233,12 @@ the following with at least six registered agents:
    blocked until a recorded human approval.
 6. Restarting the control plane neither loses an accepted dispatch nor creates
    duplicate worktrees, runs, or notifications.
-7. Six actual admitted connector instances, rather than six mocks, complete
-   the scenario under enforced sandbox policy; fault injection uses a fake
-   clock and deterministic connector test harness in addition to the live
-   supervised run.
+7. Six actual registered local workers, rather than six mocks, complete the
+   L1 scenario with `best_effort` evidence; fault injection uses a fake clock
+   and deterministic connector test harness in addition to the live supervised
+   run. This is not a sandbox or enforced filesystem/network isolation claim.
+   L2 acceptance is optional and separately requires independently verifiable
+   restricted writes, process identity, and denied network egress.
 
 ## Phased Delivery
 
@@ -238,7 +252,7 @@ the following with at least six registered agents:
 | E. Lease and recovery | Heartbeats, fencing epochs, expiry, retry budget, incident routing | Simulated disconnect and late submission recover or block deterministically. |
 | F. Evidence and review queue | Review bundle, validation routing, DONE-only dependency unlock | End-to-end graph reaches review without manual relaying. |
 | G. Operator surface | Dashboard/API and approval queue | Human sees only decisions and exceptions, not relay work. |
-| H. Six-agent pilot | Six actual admitted adapters under supervised policy | Six-Agent Acceptance Scenario passes. |
+| H. Six-agent pilot | Six actual registered local workers under L1 supervised policy | L1 Six-Agent Acceptance Scenario passes with `best_effort` evidence; optional L2 isolation is separately evidenced. |
 | I. Cross-machine expansion | Authenticated transport, threat model, and controlled rollout | Separate design approval and security review. |
 
 ## Explicit Non-Goals

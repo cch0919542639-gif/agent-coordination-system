@@ -160,8 +160,10 @@ def test_six_identity_fake_clock_harness_has_bounded_fencing_and_incident_routin
     assert len(exhausted.incidents) == len(exhausted.approval_queue) == 1
 
 
-def test_protocol_preserves_no_merge_push_or_runtime_claim() -> None:
+def test_protocol_preserves_l1_no_merge_push_or_isolation_claim() -> None:
     protocol = Path(__file__).resolve().parents[2].joinpath("docs", "operations", "phase14.5-six-agent-pilot-protocol.md").read_text(encoding="utf-8")
     assert "No real pilot has run." in protocol
     assert "cannot merge or push" in protocol
-    assert "six actual admitted enforcement-capable connector instances" in protocol
+    assert "six actual registered local workers" in protocol
+    assert "not a security sandbox" in protocol
+    assert "not evidence of enforced restricted" in protocol
