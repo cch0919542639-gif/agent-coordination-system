@@ -81,6 +81,12 @@ def test_duplicate_run_never_calls_factory():
     assert result["decision"] == "deny_duplicate_run" and not calls
 
 
+def test_malformed_request_is_never_echoed():
+    request, approval, grant, attestation = inputs(); request["task_id"] = "prompt: private source"
+    result, calls, _ = invoke(request, approval, grant, attestation)
+    assert result == {"decision": "deny_invalid_request", "dry_run": True} and not calls
+
+
 def test_source_has_no_network_runtime_or_secret_apis():
     source = Path(__file__).resolve().parents[2].joinpath("scripts", "effectful_adapter.py").read_text(encoding="utf-8")
     for token in ("subprocess", "Popen", "socket", "requests", "urllib", "os.system", "open(", "Path(", "credentials", "argv"):

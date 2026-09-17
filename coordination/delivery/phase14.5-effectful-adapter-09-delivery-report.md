@@ -19,13 +19,14 @@ The adapter validates exact task/run/approval/grant/agent/worktree bindings,
 requires a current attestation for restricted writes, process identity, and
 denied network egress, then consumes the run before one injected factory call.
 Fake-only tests cover success, binding and malformed-attestation denials,
-timeout, termination failure, duplicate runs, and result redaction.
+timeout, termination failure, duplicate runs, and result redaction, including
+malformed requests that return no caller-supplied fields.
 
 ## Validation Steps Performed
 
 - `python -m py_compile scripts/effectful_adapter.py`
-- Focused adapter suite — 8 passed
-- Combined Phase B.1–H fixture suite — 88 passed
+- Focused adapter suite — 9 passed
+- Combined Phase B.1–H fixture suite — 89 passed
 - `python scripts/orchestrate.py validate` — passed
 - `git diff --check` — passed
 

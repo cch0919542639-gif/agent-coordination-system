@@ -25,9 +25,10 @@ ProcessFactory = Callable[[], Process]
 
 def run_once(request: object, approval: object, grant: object, attestation: object, *, now: datetime, consumed_run_ids: set[str], process_factory: ProcessFactory) -> dict[str, object]:
     """Consume one bound run before invoking the injected factory at most once."""
-    denial = _validate(request, approval, grant, attestation, now, consumed_run_ids)
+    safe_request = request if _request(request) else None
+    denial = _validate(safe_request, approval, grant, attestation, now, consumed_run_ids)
     if denial:
-        return _result(denial, request)
+        return _result(denial, safe_request)
     assert isinstance(request, Mapping)
     consumed_run_ids.add(str(request["run_id"]))
     try:
@@ -45,9 +46,8 @@ def run_once(request: object, approval: object, grant: object, attestation: obje
 
 
 def _validate(request: object, approval: object, grant: object, attestation: object, now: datetime, consumed: set[str]) -> str | None:
-    if not _request(request):
+    if not isinstance(request, Mapping):
         return "deny_invalid_request"
-    assert isinstance(request, Mapping)
     if request["run_id"] in consumed:
         return "deny_duplicate_run"
     if validate_grant(grant, now=now) is not None or not isinstance(grant, Mapping):

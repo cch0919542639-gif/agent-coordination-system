@@ -8,7 +8,7 @@
 
 ## Current Step
 
-Submitted the injected, one-shot process boundary with fake-only tests.
+Applied reviewer-requested denial-path redaction and resubmitted the fake-only boundary.
 
 ## Changes So Far
 
@@ -17,6 +17,7 @@ Submitted the injected, one-shot process boundary with fake-only tests.
 - `docs/operations/phase14.5-effectful-adapter-contract.md`
 - `coordination/delivery/phase14.5-effectful-adapter-09-delivery-report.md`
 - Claimed and submitted `phase14.5-effectful-adapter-09`.
+- Removed malformed-request values from shared denial results.
 
 ## Blocker Status
 
@@ -24,4 +25,4 @@ none
 
 ## Next Step
 
-Wait for independent review; do not make lifecycle acceptance changes.
+Wait for independent re-review; do not make lifecycle acceptance changes.
