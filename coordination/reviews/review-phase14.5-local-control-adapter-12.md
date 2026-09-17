@@ -4,33 +4,27 @@
 - Task ID: `phase14.5-local-control-adapter-12`
 - Phase: `phase14.5-local-control`
 - Reviewer: `CODEX_INDEPENDENT_REVIEWER_08`
-- Reviewed commit: `ee8d1e7`
+- Reviewed commits: `ee8d1e7`, `c160e20`
 - Reviewed At: 2026-09-18
 - Decision: needs_fix
 
 ## Summary
 
-The L1 boundary is deliberately in-memory and avoids runtime, network,
-credential, Git, persistence, and L2-enforcement claims. It has one release
-blocking binding flaw: the adapter can launch for one request even when the
-other five submitted records are cross-wired from the approved six-record set.
+The P1 implementation flaw is fixed: every submitted record now has to be
+the exact projection of its distinct approval binding before a factory call.
+One narrow test-coverage correction remains: the committed regression test
+only changes a nonselected grant, rather than covering the requested
+nonselected worktree and additional binding fields.
 
 ## Required Changes
 
-1. **P1 — bind every submitted record exactly to the approval before calling
-   the factory.** `scripts/local_control_adapter.py:52-64` validates the
-   request's matching approval binding and selected record, then compares only
-   the *set of agent IDs* for the other five records. It does not require each
-   record to be the exact projection of a distinct approval binding, nor does
-   it bind every record's task/run/approval/reference fields. A reproducible
-   counterexample is: provision valid records, change record 2's
-   `worktree_ref` to `worktrees/pilot/agent-01`, then submit the unchanged
-   agent-01 request. `run_local_once()` returns `completed` and invokes the
-   factory once. This accepts a six-record set that is no longer the exact
-   six identity/grant/worktree binding required by the task card and contract.
-   Require a one-to-one exact projection check across all six records before
-   consuming the run, and add a factory-free regression test for this and for
-   altered task/run/approval/reference fields on a nonselected record.
+1. **P2 — expand the repository regression to the required nonselected
+   fields.** `tests/scripts/test_local_control_adapter.py` exercises a
+   nonselected `grant_id` alteration only. Add factory-free denials for a
+   nonselected cross-wired `worktree_ref` and representative other binding
+   fields (at minimum task/run/approval plus one scheduler/lease/review or
+   digest reference). The implementation correctly denies these in independent
+   re-review, but the requested deterministic regression coverage is absent.
 
 ## Findings
 
@@ -50,20 +44,26 @@ other five submitted records are cross-wired from the approved six-record set.
   unchanged from the parent commit. No real runtime, connector, network,
   credential, Git/worktree, merge, push, cleanup, filesystem persistence, or
   CLI behavior was found in the L1 modules.
+- The original P1 is fixed in `scripts/local_control_adapter.py`: records must
+  have the exact field set; each is mapped to a distinct approved agent; every
+  task/run/approval field and all twelve binding fields match; and all records
+  carry the `best_effort` and process-tree-stop markers. The factory remains
+  unreachable if any one record differs.
 
 ## Validation Check
 
-- Focused L1 adapter/provisioner and L1 contract tests: **10 passed**.
+- Focused L1 adapter/provisioner and L1 contract tests: **11 passed**.
 - Affected Phase B.1--H fixture suite with isolated pytest base temp:
-  **113 passed**.
+  **114 passed**.
 - `D:\\codex work\\.venv\\Scripts\\python.exe scripts/orchestrate.py validate`:
   passed.
-- `git diff ee8d1e7^ ee8d1e7 --check`: passed.
+- `git diff ee8d1e7 c160e20 --check`: passed.
 - L2 unchanged check: passed.
 - Negative API/claim scan found only allowed policy literals; no operational
   runtime, network, credential, Git, worktree, persistence, or CLI API.
-- Independent adversarial check reproduced the P1 above: a nonselected
-  cross-wired record still resulted in `completed` and one fake-factory call.
+- Independent adversarial checks changed a nonselected worktree, task ID, run
+  ID, approval ID, and scheduler reference in turn. Each returned
+  `deny_unbound_approval` without a factory call.
 
 ## Scope Compliance
 
@@ -74,7 +74,7 @@ worktrees.
 
 ## Accepted Artifacts
 
-None pending the required P1 correction.
+None pending the narrow required regression-coverage correction.
 
 ## Residual Risks
 
