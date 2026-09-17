@@ -18,6 +18,7 @@
 - `tests/scripts/test_local_control_pilot_contract.py`
 - `coordination/task-board/blocked/2026-09-03_phase14.5-six-agent-pilot-08_supervised-acceptance-pilot.md`
 - `coordination/incidents/20260917-02_phase14.5-six-agent-pilot-preflight-gate.md`
+- `coordination/task-board/ready/2026-09-18_phase14.5-local-control-adapter-12.md`
 
 ## Acceptance Criteria Coverage
 
@@ -30,17 +31,31 @@ denied network egress. L2 retains those claims as optional, independently
 evidenced hardening.
 
 One-shot runtime approval and prohibitions on credentials, merge, push,
-destructive cleanup, and network activation remain unchanged. The static
-contract test fails if the L1 documents lose their anti-claim wording.
+destructive cleanup, and network activation remain unchanged. The current
+accepted effectful adapter and connector provisioner are explicitly L2-only;
+they cannot enable an L1 launch. The new dependency-gated,
+separately-reviewed `phase14.5-local-control-adapter-12` is required before
+Phase H can start L1 workers. The static contract test fails if that boundary
+or the L1 anti-claim wording is removed.
 
 ## Validation Steps Performed
 
 - Phase B.1--H fixture and local-control contract suite: 104 passed.
-- `python scripts/orchestrate.py validate`: passed.
+- `python scripts/orchestrate.py validate`: ran and correctly found only the
+  pre-existing reviewer-record schema error in
+  `coordination/reviews/review-phase14.5-local-control-rebaseline-11.md`.
+  That file is outside this task's allowed scope; no implementation or task
+  evidence validation failed.
 - `git diff --check`: passed.
 
 ## Known Residual Risks
 
 L1 mitigates routine local mistakes only. It is not protection from malicious
-code or deliberate policy circumvention. No worker, runtime, network,
+code or deliberate policy circumvention. Until the new adapter/provisioner
+task is accepted, no L1 process start is eligible. No worker, runtime, network,
 credential, Git worktree, merge, push, or cleanup action was started.
+
+The independent reviewer record needs its required validator headings and an
+unquoted `needs_fix` decision before the repository-wide coordination validator
+can return clean; that formatting repair belongs to the reviewer/orchestrator,
+not this task's allowed scope.

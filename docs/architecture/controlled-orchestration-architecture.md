@@ -113,6 +113,12 @@ scheduler/lease/review evidence. It does not claim to protect against
 malicious code, prompt-injection-directed circumvention, enforced filesystem
 restrictions, independent OS process identity, or denied network egress.
 
+The currently accepted effectful adapter and connector provisioner are L2-only:
+they require platform-enforcement attestations and cannot enable or authorize
+an L1 launch. `phase14.5-local-control-adapter-12`, a separately reviewed L1
+local-control adapter/provisioner task, must be accepted before any L1 one-shot
+approval can start a worker.
+
 ### L2: platform-enforced isolation (optional hardening)
 
 L2 is separate from L1 and is required before claiming enforced restricted
@@ -252,7 +258,8 @@ the following with at least six registered agents:
 | E. Lease and recovery | Heartbeats, fencing epochs, expiry, retry budget, incident routing | Simulated disconnect and late submission recover or block deterministically. |
 | F. Evidence and review queue | Review bundle, validation routing, DONE-only dependency unlock | End-to-end graph reaches review without manual relaying. |
 | G. Operator surface | Dashboard/API and approval queue | Human sees only decisions and exceptions, not relay work. |
-| H. Six-agent pilot | Six actual registered local workers under L1 supervised policy | L1 Six-Agent Acceptance Scenario passes with `best_effort` evidence; optional L2 isolation is separately evidenced. |
+| H. L1 adapter/provisioner | Exact approval-bound local-control launch boundary | Reviewed L1-only fixture contract; no runtime launch. |
+| H. Six-agent pilot | Six actual registered local workers under L1 supervised policy | L1 Six-Agent Acceptance Scenario passes with `best_effort` evidence after the L1 adapter/provisioner is accepted; optional L2 isolation is separately evidenced. |
 | I. Cross-machine expansion | Authenticated transport, threat model, and controlled rollout | Separate design approval and security review. |
 
 ## Explicit Non-Goals

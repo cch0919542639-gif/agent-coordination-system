@@ -37,6 +37,10 @@ writes, independent OS process identity, or denied network egress.
 L2 platform-enforced isolation is optional hardening, not an L1 prerequisite.
 Only an L2 record may assert restricted writes, process identity, or denied
 network egress, and it must independently verify each asserted property.
+The existing accepted effectful adapter and connector provisioner are L2-only:
+they require those attestations and cannot start an L1 worker. Until the
+separately reviewed `phase14.5-local-control-adapter-12` is accepted, an L1
+one-shot approval remains preflight evidence only and cannot enable a launch.
 
 ## Supervised acceptance procedure
 
@@ -44,10 +48,11 @@ network egress, and it must independently verify each asserted property.
    review targets; verify hashes and expiry immediately before each launch
    boundary.
 2. Run deterministic fake-clock evidence first: six lease identities, acknowledgement and heartbeat evidence, a fenced lease-expiry retry, and retry exhaustion that routes exactly one incident and approval-queue projection.
-3. Only after preflight passes, a separately approved local-control adapter may
-   start at most the six approved workers in allocated worktrees. It must reject
-   any request not exactly bound to identity, manifest, approval, worktree,
-   fixed runtime/argv, timeout/stop handling, and run window.
+3. Only after `phase14.5-local-control-adapter-12` is accepted and preflight
+   passes, its separately approved local-control adapter may start at most the
+   six approved workers in allocated worktrees. It must reject any request not
+   exactly bound to identity, manifest, approval, worktree, fixed runtime/argv,
+   timeout/stop handling, and run window. Before that acceptance, do not launch.
 4. Collect safe references only: dispatch, acknowledgement, lease, review-queue, incident, validation, and delivery. Never record prompts, source bodies, credentials, raw logs, transcripts, or absolute paths.
 5. Verify all seven architecture conditions: eight-task mixed graph; worker
    context/acknowledgement/lease/review evidence; one dependency unlock;

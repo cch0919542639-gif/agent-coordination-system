@@ -20,7 +20,8 @@ reviews, and delivery reports remain the authoritative lifecycle evidence.
 | 8 | `phase14.5-evidence-review-06` | F. Evidence and review queue | `phase14.5-lease-recovery-05` | platform | Read-only review bundle and DONE-only unlock end-to-end tests. |
 | 9 | `phase14.5-operator-surface-07` | G. Operator surface | `phase14.5-evidence-review-06` | platform/docs | JSON projections and approval-queue contract tests. |
 | 10 | `phase14.5-local-control-rebaseline-11` | H. L1 local-control rebaseline | `phase14.5-connector-provision-10` | architecture/docs | Reviewed L1/L2 terminology and anti-claim contract. |
-| 11 | `phase14.5-six-agent-pilot-08` | H. Six-agent pilot | `phase14.5-local-control-rebaseline-11` | test/operations | Independently reviewed supervised L1 acceptance run for six real registered local workers, labelled `best_effort`. |
+| 11 | `phase14.5-local-control-adapter-12` | H. L1 adapter/provisioner | `phase14.5-local-control-rebaseline-11` | platform | Independently reviewed, one-shot approval-bound L1 local-control boundary; no sandbox claim. |
+| 12 | `phase14.5-six-agent-pilot-08` | H. Six-agent pilot | `phase14.5-local-control-adapter-12` | test/operations | Independently reviewed supervised L1 acceptance run for six real registered local workers, labelled `best_effort`. |
 
 ## Dispatch Boundaries
 
@@ -34,9 +35,11 @@ reviews, and delivery reports remain the authoritative lifecycle evidence.
 - `phase14.5-launcher-09` may start one runtime only with the separate recorded
   approval required by its task card and the supervised-launch design.
 - The six-agent pilot is a supervised test protocol, not authorization to launch.
-  Its L1 execution needs a separately recorded one-shot operator approval and
-  six registered local workers. L1 is `best_effort`, not a sandbox or a claim
-  of enforced filesystem/network isolation. L2 platform enforcement remains
+  Its L1 execution needs an accepted `phase14.5-local-control-adapter-12`, a
+  separately recorded one-shot operator approval, and six registered local
+  workers. The existing effectful adapter and connector provisioner are L2-only
+  and cannot start L1 workers. L1 is `best_effort`, not a sandbox or a claim of
+  enforced filesystem/network isolation. L2 platform enforcement remains
   optional hardening with separate evidence requirements.
 - Phase I cross-machine expansion is deliberately unscheduled. It requires a
   separate design approval and security review after Phase H is accepted.
