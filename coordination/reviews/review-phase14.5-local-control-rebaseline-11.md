@@ -1,66 +1,76 @@
 # Independent Review: phase14.5-local-control-rebaseline-11
 
-- Reviewer: `CODEX_INDEPENDENT_REVIEWER_07`
-- Reviewed commit: `f0709a1`
-- Decision: `needs_fix`
+- Review ID: review-phase14.5-local-control-rebaseline-11
+- Reviewer: CODEX_INDEPENDENT_REVIEWER_07
+- Task ID: phase14.5-local-control-rebaseline-11
+- Phase: phase14.5-local-control
+- Decision: accepted
+- Reviewed At: 2026-09-18
 
-## Required Change
+## Summary
 
-### P1 — L1 is documented as launchable, but the reviewed Phase H gate still requires L2 enforcement
+Accepted after independent re-review of `f0709a1` plus the P1 correction in
+`99ac8be`. The rebaseline now truthfully separates the current L2-only
+boundary from the future L1 local-control boundary; it neither weakens L2 nor
+claims a currently executable L1 launch path.
 
-The rebaseline correctly says that L2 is optional, but the only reviewed
-Phase H preflight remains L2-only:
+## Findings
 
-- `tests/scripts/test_six_agent_pilot_preflight.py` requires six records with
-  `enforcement_verified is True` and accepts an adapter only when its
-  `enforcement_capability` is `sandboxed_one_shot`.
-- The accepted implementation that this fixture mirrors,
-  `scripts/connector_provision.py`, requires six attestations asserting
-  restricted writes, process identity, and denied network egress; its
-  `scripts/effectful_adapter.py` requires the same attestation before invoking
-  the injected process factory.
-- Yet the revised pilot protocol says that, after preflight, a local-control
-  adapter may start six L1 workers, while also saying L2 is not an L1
-  prerequisite.
+- The original P1 is resolved. Architecture, protocol, task map, and Phase H
+  card explicitly identify the accepted effectful adapter and connector
+  provisioner as L2-only, requiring platform-enforcement attestations and
+  unable to enable or authorize L1 launch.
+- `phase14.5-local-control-adapter-12` is a narrowly scoped, independently
+  reviewable `READY` task. It depends on this rebaseline; it permits only the
+  new local-control adapter/provisioner, focused tests, contract, and
+  coordination evidence. Its acceptance requires exact one-shot binding,
+  `best_effort` evidence only, fake process boundaries, and unchanged L2
+  components.
+- The Phase H card now depends on task 12 and denies any L1 launch until that
+  task is independently accepted and an exact recorded approval exists.
+- The strengthened deterministic documentation contract requires the task-12
+  dependency and L2-only wording in architecture, protocol, Phase H card, and
+  task map. It prevents the prior mismatch from returning.
+- Exact one-shot approval and prohibitions on credential access, merge, push,
+  destructive cleanup, and network activation remain explicit. No script in
+  the existing L2 adapter/provisioner was changed by `99ac8be`.
 
-This leaves no reviewed or executable L1 path and can mislead an operator into
-believing an L1 one-shot approval is sufficient. The task forbids changing
-`scripts/**`, so do not weaken the existing L2 gate here. Instead, make the
-architecture, task map, pilot protocol, and Phase H card explicit that the
-current adapter/provisioner are L2-only and cannot start an L1 pilot. Add a
-dependency-gated, separately reviewed L1 local-control adapter/provisioner
-implementation task before the live pilot, or otherwise remove the claim that
-the present preflight can launch L1 workers. Its eventual contract must retain
-the exact one-shot approval and all critical-action prohibitions while emitting
-only `best_effort` evidence.
+## Scope Compliance
 
-The new static test checks terminology only; add a deterministic documentation
-contract that prevents the L1 protocol/card/task map from presenting the
-existing enforced preflight as an L1 launch path.
+The rebaseline submission changes only permitted documentation, coordination,
+and test paths. The P1 correction adds one permitted task card and changes no
+`scripts/**`, service, source, database, cloud, or profile path. Review work
+changes this review record only.
 
-## Validation
+## Validation Check
 
-- `pytest -p no:cacheprovider --basetemp D:\\codex work\\Temp\\local-control-review` over local-control, Phase B.1--H affected suites: **95 passed**.
-- `D:\\codex work\\.venv\\Scripts\\python.exe scripts/orchestrate.py validate`: passed.
-- `git diff --check f0709a1^ f0709a1`: passed.
-- Scope check: all 13 changed files are within the task card's `allowed_scope`;
-  no forbidden implementation, service, database, cloud, or profile path was
-  changed.
+- Affected Phase B.1--H fixture suite, with isolated pytest base temp:
+  **95 passed**.
+- `D:\\codex work\\.venv\\Scripts\\python.exe scripts/orchestrate.py validate`:
+  passed after this schema-normalized review record.
+- `git diff --check f0709a1^ f0709a1` and `git diff --check 99ac8be^ 99ac8be`:
+  passed.
+- Diff inspection confirms `99ac8be` did not modify either L2 implementation
+  (`scripts/effectful_adapter.py`, `scripts/connector_provision.py`).
 
-## Verified Strengths
+## Required Changes
 
-- The durable `2026-09-18` decision accurately defines L1 as `best_effort`
-  local controlled collaboration and reserves enforced restricted writes,
-  process identity, and network-egress denial for L2.
-- Architecture, protocol, Phase H card, task map, incident, and progress record
-  consistently retain exact one-shot approval and prohibit credential access,
-  merge, push, destructive cleanup, and unapproved network/runtime activation.
-- The added contract test correctly guards the principal anti-claim wording;
-  it is insufficient only for the implementation-path mismatch above.
+None.
 
-## Residual Risk
+## Accepted Artifacts
 
-Until the P1 correction is made, the documents' L1 default and the available
-reviewed runtime boundary disagree. No live pilot should be dispatched or
-approved from this submission; the existing fail-closed L2 implementation
-continues to deny rather than create an unsafe launch.
+- `DECISIONS.md`, `PLAN.md`, and `PROGRESS.md`
+- `docs/architecture/controlled-orchestration-architecture.md`
+- `docs/operations/phase14.5-controlled-orchestration-task-map.md`
+- `docs/operations/phase14.5-six-agent-pilot-protocol.md`
+- `coordination/task-board/ready/2026-09-18_phase14.5-local-control-adapter-12.md`
+- `coordination/task-board/blocked/2026-09-03_phase14.5-six-agent-pilot-08_supervised-acceptance-pilot.md`
+- `tests/scripts/test_local_control_pilot_contract.py`
+
+## Residual Risks
+
+L1 remains `best_effort` local coordination and is not a defense against
+malicious code or deliberate policy circumvention. No L1 process start is
+eligible until task 12 is accepted and a separate, exact one-shot approval is
+recorded. L2 remains optional and is still required for any enforced isolation
+claim.
