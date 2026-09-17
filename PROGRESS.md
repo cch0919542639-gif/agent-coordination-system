@@ -90,6 +90,9 @@ the documentation-only `phase14.5-04` supervised-launch design task.
 - `phase14.5-connector-provision-10` is independently accepted: it validates
   six exact in-memory connector bindings and emits one privacy-bounded incident
   when platform enforcement is unavailable. It creates no runtime or connector.
+- The L1 local-control rebaseline and its separate adapter/provision boundary
+  are independently accepted. L1 now has an explicit best-effort six-worker
+  path, while L2 sandbox claims remain separately gated; no live pilot has run.
 - The operator approved a Phase H rebaseline: L1 local controlled collaboration
   is the default acceptance path, with `best_effort` evidence only. L2
   platform-enforced isolation remains optional hardening and is required before
