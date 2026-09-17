@@ -4,27 +4,20 @@
 - Task ID: `phase14.5-local-control-adapter-12`
 - Phase: `phase14.5-local-control`
 - Reviewer: `CODEX_INDEPENDENT_REVIEWER_08`
-- Reviewed commits: `ee8d1e7`, `c160e20`
+- Reviewed commits: `ee8d1e7`, `c160e20`, `529c248`
 - Reviewed At: 2026-09-18
-- Decision: needs_fix
+- Decision: accepted
 
 ## Summary
 
-The P1 implementation flaw is fixed: every submitted record now has to be
-the exact projection of its distinct approval binding before a factory call.
-One narrow test-coverage correction remains: the committed regression test
-only changes a nonselected grant, rather than covering the requested
-nonselected worktree and additional binding fields.
+The P1 implementation flaw and the P2 regression gap are fixed. Every
+submitted record must be the exact projection of its distinct approval binding
+before a factory call, and permanent tests cover the requested nonselected
+worktree plus task/run/approval/reference mutations.
 
 ## Required Changes
 
-1. **P2 — expand the repository regression to the required nonselected
-   fields.** `tests/scripts/test_local_control_adapter.py` exercises a
-   nonselected `grant_id` alteration only. Add factory-free denials for a
-   nonselected cross-wired `worktree_ref` and representative other binding
-   fields (at minimum task/run/approval plus one scheduler/lease/review or
-   digest reference). The implementation correctly denies these in independent
-   re-review, but the requested deterministic regression coverage is absent.
+None.
 
 ## Findings
 
@@ -49,15 +42,20 @@ nonselected worktree and additional binding fields.
   task/run/approval field and all twelve binding fields match; and all records
   carry the `best_effort` and process-tree-stop markers. The factory remains
   unreachable if any one record differs.
+- The P2 regression is fixed in
+  `test_every_non_selected_record_binding_field_denies_before_factory`.
+  Nonselected grant, worktree, task, run, approval, and scheduler mutations
+  each return `deny_unbound_approval`, make zero factory calls, and do not
+  appear in the returned evidence.
 
 ## Validation Check
 
-- Focused L1 adapter/provisioner and L1 contract tests: **11 passed**.
+- Focused L1 adapter/provisioner and L1 contract tests: **12 passed**.
 - Affected Phase B.1--H fixture suite with isolated pytest base temp:
-  **114 passed**.
+  **115 passed**.
 - `D:\\codex work\\.venv\\Scripts\\python.exe scripts/orchestrate.py validate`:
   passed.
-- `git diff ee8d1e7 c160e20 --check`: passed.
+- `git diff ee8d1e7 529c248 --check`: passed.
 - L2 unchanged check: passed.
 - Negative API/claim scan found only allowed policy literals; no operational
   runtime, network, credential, Git, worktree, persistence, or CLI API.
@@ -74,7 +72,12 @@ worktrees.
 
 ## Accepted Artifacts
 
-None pending the narrow required regression-coverage correction.
+- `scripts/local_control_adapter.py`
+- `scripts/local_control_provision.py`
+- `tests/scripts/test_local_control_adapter.py`
+- `tests/scripts/test_local_control_provision.py`
+- `docs/operations/phase14.5-local-control-adapter-contract.md`
+- `coordination/delivery/phase14.5-local-control-adapter-12-delivery-report.md`
 
 ## Residual Risks
 
