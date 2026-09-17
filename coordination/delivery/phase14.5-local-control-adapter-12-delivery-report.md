@@ -38,14 +38,19 @@ stop marker against the current approval before it can call its fake factory.
 A non-selected cross-wired grant regression proves the denial is redacted and
 does not call the factory.
 
+The re-review requested direct coverage beyond the grant field. A compact
+loop now mutates a non-selected record's worktree, task, run, approval, and
+scheduler reference independently; each path returns the terminal redacted
+denial without a factory call.
+
 The L2-only adapter and provisioner were not changed. No runtime, connector,
 network, credential, Git worktree, merge, push, or cleanup operation was made.
 
 ## Validation Steps Performed
 
 - `py_compile scripts/local_control_adapter.py scripts/local_control_provision.py` — passed.
-- Focused L1 tests plus L1 contract — 11 passed after the review fix.
-- Affected Phase B.1–H fixture regression suite — 119 passed after the review fix.
+- Focused L1 tests plus L1 contract — 12 passed after the re-review fix.
+- Affected Phase B.1–H fixture regression suite — 120 passed after the re-review fix.
 - Negative API/anti-claim source scan — no matches.
 - `python scripts/orchestrate.py validate` — passed.
 - `git diff --check` — passed.

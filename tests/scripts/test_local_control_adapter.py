@@ -81,6 +81,15 @@ def test_cross_wired_non_selected_record_never_calls_factory_or_leaks_it():
     result, calls, _ = invoke(request, source, records)
     assert result["decision"] == "deny_unbound_approval" and not calls
     assert records[1]["grant_id"] not in repr(result)
+
+
+def test_every_non_selected_record_binding_field_denies_before_factory():
+    for key, value in (("worktree_ref", "worktrees/pilot/other"), ("task_id", "other-task"), ("run_id", "other-run"), ("approval_id", "other-approval"), ("scheduler_ref", "coordination/scheduler/other")):
+        request, source, records = inputs()
+        records[1][key] = value
+        result, calls, _ = invoke(request, source, records)
+        assert result["decision"] == "deny_unbound_approval" and not calls
+        assert value not in repr(result)
     request, source, records = inputs(); records[0]["extra"] = True
     result, calls, _ = invoke(request, source, records)
     assert result["decision"] == "deny_unbound_approval" and not calls

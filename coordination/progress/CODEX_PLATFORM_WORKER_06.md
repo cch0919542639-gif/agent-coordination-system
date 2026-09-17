@@ -8,7 +8,7 @@
 
 ## Current Step
 
-Resubmitted after fixing the independent review's all-six record binding finding.
+Resubmitted with complete non-selected record binding coverage.
 
 ## Changes So Far
 
@@ -17,6 +17,8 @@ Resubmitted after fixing the independent review's all-six record binding finding
 - Added L1 contract and deterministic denial, timeout, redaction, and L2-separation tests.
 - Returning from review to verify every provision record against the current approval before a fake process call.
 - Every one of the six records now must exactly match its approval binding before any injected factory call.
+- Returning from re-review to cover non-selected task/run/approval/worktree/reference mutations.
+- Added compact no-factory regressions for non-selected worktree, task, run, approval, and scheduler reference changes.
 
 ## Blocker Status
 
