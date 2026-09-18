@@ -53,11 +53,13 @@ one-shot approval remains preflight evidence only and cannot enable a launch.
    review targets; verify hashes and expiry immediately before each launch
    boundary.
 2. Run deterministic fake-clock evidence first: six lease identities, acknowledgement and heartbeat evidence, a fenced lease-expiry retry, and retry exhaustion that routes exactly one incident and approval-queue projection.
-3. Only after `phase14.5-local-control-adapter-12` is accepted and preflight
-   passes, its separately approved local-control adapter may start at most the
-   six approved workers in allocated worktrees. It must reject any request not
-   exactly bound to identity, manifest, approval, worktree, fixed runtime/argv,
-   timeout/stop handling, and run window. Before that acceptance, do not launch.
+3. Only after `phase14.5-local-control-adapter-12`, the OpenCode executor,
+   and the reviewed live runner are accepted and preflight passes, the
+   separately approved local-control adapter may start at most the six approved
+   workers in allocated worktrees. The live runner uses only its pinned
+   PowerShell wrapper and must reject any request not exactly bound to identity,
+   manifest, approval, worktree, fixed runtime/argv, timeout/stop handling, and
+   run window. Before those acceptances, do not launch.
 4. Collect safe references only: dispatch, acknowledgement, lease, review-queue, incident, validation, and delivery. Never record prompts, source bodies, credentials, raw logs, transcripts, or absolute paths.
 5. Verify all seven architecture conditions: eight-task mixed graph; worker
    context/acknowledgement/lease/review evidence; one dependency unlock;

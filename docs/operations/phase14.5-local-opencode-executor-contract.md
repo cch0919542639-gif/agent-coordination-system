@@ -33,3 +33,19 @@ This module has no CLI or real spawn implementation. Tests use fake spawn and
 fake process objects only. A future live call still needs a concrete one-shot
 operator approval and the Phase H protocol; it cannot claim denied network
 egress or any sandbox enforcement.
+
+## Reviewed live runner
+
+`local_opencode_live_runner.py` is the separate, minimal L1 live seam. It
+accepts the same already-validated request, approval, record set, and opaque
+caller-supplied environment as the executor, plus the exact reviewed launcher
+mapping. That mapping pins the system PowerShell executable and the recorded
+OpenCode `.ps1` wrapper; it invokes only `-NoProfile -NonInteractive -File`
+with the approved argv, no shell, no inherited environment, and no output
+capture. The absolute launcher paths are inputs only and never appear in a
+result or evidence record.
+
+The runner consumes the run through the executor before the first Popen call.
+On an approved timeout it invokes only the fixed task-tree termination command
+for that child PID. Tests inject every Popen call. This is still `best_effort`
+local control, not a sandbox or a claim of host enforcement.
