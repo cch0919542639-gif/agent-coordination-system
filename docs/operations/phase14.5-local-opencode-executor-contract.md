@@ -39,11 +39,12 @@ egress or any sandbox enforcement.
 `local_opencode_live_runner.py` is the separate, minimal L1 live seam. It
 accepts the same already-validated request, approval, record set, and opaque
 caller-supplied environment as the executor, plus the exact reviewed launcher
-mapping. That mapping pins the system PowerShell executable and the recorded
-OpenCode `.ps1` wrapper; it invokes only `-NoProfile -NonInteractive -File`
-with the approved argv, no shell, no inherited environment, and no output
-capture. The absolute launcher paths are inputs only and never appear in a
-result or evidence record.
+mapping. That mapping pins the system PowerShell executable, request
+approval/run IDs, and its absolute OpenCode `.ps1` input against one opaque
+SHA-256 wrapper-path digest. The raw wrapper path is not held in source; it
+invokes only `-NoProfile -NonInteractive -File` with the approved argv, no
+shell, no inherited environment, and no output capture. The absolute launcher
+path is input-only and never appears in a result or evidence record.
 
 The runner consumes the run through the executor before the first Popen call.
 On an approved timeout it invokes only the fixed task-tree termination command

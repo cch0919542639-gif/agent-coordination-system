@@ -3,12 +3,12 @@
 - Agent: CODEX_PLATFORM_WORKER_09
 - Active Task: phase14.5-local-opencode-live-runner-15
 - Phase: phase14.5-phase-h-live-runner
-- Status: REVIEW
+- Status: REVIEW (fix submitted)
 - Last Updated: 2026-09-18
 
 ## Current Step
 
-Submitted the reviewed, injected-Popen L1 live runner boundary.
+Corrected the review finding and resubmitted the injected-Popen L1 live runner.
 
 ## Changes So Far
 
@@ -17,6 +17,8 @@ Submitted the reviewed, injected-Popen L1 live runner boundary.
   consume-before-start, opaque environment, and redacted-result checks.
 - Added fake-Popen-only validation for launcher provenance, denials, and the
   matching timeout tree-stop command; 124 affected fixture tests pass.
+- Removed the user-specific source-held wrapper path; the path is now an
+  input-only, request/run-bound provenance value with a canonical digest.
 
 ## Blocker Status
 

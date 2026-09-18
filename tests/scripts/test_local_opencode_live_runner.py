@@ -6,7 +6,8 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 from local_control_provision import provision_local_workers
-from local_opencode_live_runner import PINNED_LAUNCHER, run_live_opencode_once
+import local_opencode_live_runner as runner
+from local_opencode_live_runner import PINNED_LAUNCHER, _wrapper_digest, run_live_opencode_once
 
 
 NOW = datetime(2026, 9, 18, 8, 0, tzinfo=timezone.utc)
@@ -40,20 +41,29 @@ def inputs():
     return request, source, records
 
 
+def launcher_for(request):
+    return {**PINNED_LAUNCHER, "wrapper_path": r"C:\pilot\approved\opencode.ps1", "approval_id": request["approval_id"], "run_id": request["run_id"]}
+
+
 def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, environment=None):
     request, source, records = request or inputs()[0], source or inputs()[1], records or inputs()[2]
     calls, child = [], child or FakeChild()
     def popen(command, **kwargs):
         calls.append((command, kwargs))
         return FakeChild() if command[0].endswith("taskkill.exe") else child
-    result = run_live_opencode_once(request, source, records, launcher or deepcopy(PINNED_LAUNCHER), now=NOW, consumed_run_ids=consumed if consumed is not None else set(), popen=popen, provider_environment=environment or {"APPDATA": "C:\\Users\\pilot"})
+    original = runner.PINNED_WRAPPER_PATH_DIGEST
+    runner.PINNED_WRAPPER_PATH_DIGEST = _wrapper_digest(r"C:\pilot\approved\opencode.ps1")
+    try:
+        result = run_live_opencode_once(request, source, records, launcher or launcher_for(request), now=NOW, consumed_run_ids=consumed if consumed is not None else set(), popen=popen, provider_environment=environment or {"APPDATA": "C:\\Users\\pilot"})
+    finally:
+        runner.PINNED_WRAPPER_PATH_DIGEST = original
     return result, calls
 
 
 def test_pinned_wrapper_is_the_only_shell_free_command_and_result_is_redacted():
     result, calls = invoke()
     command, kwargs = calls[0]
-    assert command[:5] == (PINNED_LAUNCHER["powershell_path"], "-NoProfile", "-NonInteractive", "-File", PINNED_LAUNCHER["wrapper_path"])
+    assert command[:5] == (PINNED_LAUNCHER["powershell_path"], "-NoProfile", "-NonInteractive", "-File", r"C:\pilot\approved\opencode.ps1")
     assert command[-2:] == ("run", "restricted")
     assert kwargs["cwd"] == "worktrees/pilot/agent-01" and kwargs["env"] == {"APPDATA": "C:\\Users\\pilot"}
     assert kwargs["shell"] is False and kwargs["stdout"] is kwargs["stderr"]
@@ -61,9 +71,10 @@ def test_pinned_wrapper_is_the_only_shell_free_command_and_result_is_redacted():
 
 
 def test_malformed_or_changed_launcher_never_calls_popen():
-    for mutation in ({"wrapper_path": "relative.ps1"}, {"wrapper_path": PINNED_LAUNCHER["wrapper_path"] + "/.."}, {"powershell_path": "C:\\other.exe"}, {"extra": "x"}):
-        launcher = deepcopy(PINNED_LAUNCHER); launcher.update(mutation)
-        result, calls = invoke(launcher=launcher)
+    request, _, _ = inputs()
+    for mutation in ({"wrapper_path": "relative.ps1"}, {"wrapper_path": r"C:\pilot\approved\opencode.ps1\.."}, {"powershell_path": "C:\\other.exe"}, {"approval_id": "wrong"}, {"extra": "x"}):
+        record = launcher_for(request); record.update(mutation)
+        result, calls = invoke(launcher=record)
         assert result["decision"] == "deny_invalid_launcher" and calls == []
 
 
@@ -93,3 +104,4 @@ def test_source_has_only_the_constrained_popen_boundary():
     source = Path(__file__).resolve().parents[2].joinpath("scripts", "local_opencode_live_runner.py").read_text(encoding="utf-8")
     for token in ("os.environ", "getenv", "socket", "requests", "urllib", "Path(", "shell=True", "git "):
         assert token not in source
+    assert "Users\\angel" not in source and "OPENCODE_WRAPPER" not in source

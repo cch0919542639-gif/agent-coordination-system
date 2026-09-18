@@ -19,9 +19,11 @@
 The runner reuses the accepted executor's exact approval, six-record binding,
 pre-spawn consumption, opaque environment, timeout, and redacted-result
 boundary. Before that boundary can invoke injected Popen, it requires the
-exact pinned system-PowerShell and recorded OpenCode wrapper mapping. The
-command is fixed to `-NoProfile -NonInteractive -File` plus approved argv;
-it has no shell, host-environment inheritance, or output capture.
+exact pinned system-PowerShell and a request/run-bound OpenCode wrapper
+provenance mapping. The raw absolute wrapper path remains input-only; source
+contains no user-specific wrapper path. The command is fixed to `-NoProfile
+-NonInteractive -File` plus approved argv; it has no shell, host-environment
+inheritance, or output capture.
 
 Every test injects fake Popen. Launcher mutation, relative/cross-wired path,
 expired/replayed/cross-wired approval, and unsafe environment inputs make zero
