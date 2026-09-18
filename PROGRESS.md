@@ -97,6 +97,9 @@ the documentation-only `phase14.5-04` supervised-launch design task.
   is the default acceptance path, with `best_effort` evidence only. L2
   platform-enforced isolation remains optional hardening and is required before
   any claim of enforced filesystem, process-identity, or network isolation.
+- `phase14.5-local-opencode-executor-13` is independently accepted: it adds a
+  fake-tested, one-shot, no-shell local OpenCode executor with an empty child
+  environment. A real process start still needs a current exact approval.
 
 ## 2026-09-06 Next Dispatch Gate
 
