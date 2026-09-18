@@ -45,14 +45,14 @@ def launcher_for(request):
     return {**PINNED_LAUNCHER, "wrapper_path": r"C:\pilot\approved\opencode.ps1", "approval_id": request["approval_id"], "run_id": request["run_id"]}
 
 
-def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, environment=None):
+def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, environment=None, pinned_digest=None):
     request, source, records = request or inputs()[0], source or inputs()[1], records or inputs()[2]
     calls, child = [], child or FakeChild()
     def popen(command, **kwargs):
         calls.append((command, kwargs))
         return FakeChild() if command[0].endswith("taskkill.exe") else child
     original = runner.PINNED_WRAPPER_PATH_DIGEST
-    runner.PINNED_WRAPPER_PATH_DIGEST = _wrapper_digest(r"C:\pilot\approved\opencode.ps1")
+    runner.PINNED_WRAPPER_PATH_DIGEST = pinned_digest or _wrapper_digest(r"C:\pilot\approved\opencode.ps1")
     try:
         result = run_live_opencode_once(request, source, records, launcher or launcher_for(request), now=NOW, consumed_run_ids=consumed if consumed is not None else set(), popen=popen, provider_environment=environment or {"APPDATA": "C:\\Users\\pilot"})
     finally:
@@ -76,6 +76,13 @@ def test_malformed_or_changed_launcher_never_calls_popen():
         record = launcher_for(request); record.update(mutation)
         result, calls = invoke(launcher=record)
         assert result["decision"] == "deny_invalid_launcher" and calls == []
+
+
+def test_mismatched_wrapper_digest_never_calls_popen():
+    request, _, _ = inputs()
+    record = launcher_for(request)
+    result, calls = invoke(launcher=record, pinned_digest="0" * 64)
+    assert result["decision"] == "deny_invalid_launcher" and calls == []
 
 
 def test_invalid_expired_replayed_or_cross_wired_input_never_calls_popen():

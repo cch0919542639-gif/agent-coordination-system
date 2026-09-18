@@ -19,6 +19,7 @@ Corrected the review finding and resubmitted the injected-Popen L1 live runner.
   matching timeout tree-stop command; 124 affected fixture tests pass.
 - Removed the user-specific source-held wrapper path; the path is now an
   input-only, request/run-bound provenance value with a canonical digest.
+- Added an isolated fake-Popen denial for a wrapper-path digest mismatch.
 
 ## Blocker Status
 

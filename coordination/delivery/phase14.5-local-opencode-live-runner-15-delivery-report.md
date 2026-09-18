@@ -32,6 +32,9 @@ fake child PID. Results expose only existing safe IDs and terminal status;
 they do not expose launcher paths, argv, environment values, output,
 credentials, prompts, source, or transcripts.
 
+The fake-Popen suite also isolates a mismatched wrapper-path digest while all
+other launcher fields remain valid; it denies before Popen.
+
 ## Validation Steps Performed
 
 - `py_compile scripts/local_opencode_live_runner.py` — passed.
