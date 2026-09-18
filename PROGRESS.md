@@ -105,6 +105,10 @@ the documentation-only `phase14.5-04` supervised-launch design task.
   caller-supplied safe provider-configuration roots to OpenCode. Credentials
   remain opaque and are neither read nor recorded; a real process start still
   requires an accepted live runner and exact current run evidence.
+- `phase14.5-local-opencode-live-runner-15` is independently accepted: its
+  fixed, no-shell PowerShell wrapper runner accepts only provenance-bound
+  input and an already validated exact request. It remains L1 best-effort;
+  no real six-worker run has been prepared or started.
 
 ## 2026-09-06 Next Dispatch Gate
 
