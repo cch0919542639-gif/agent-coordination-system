@@ -22,8 +22,13 @@ manifest/allocation digests. Unknown fields, malformed values, mismatched
 run/task IDs, expired windows, duplicate identities, and unsafe references
 deny the preflight.
 
-The approval must state that credential access, merge, push, destructive
-cleanup, and network activation are not approved by this pilot. Each worker
+The default approval must state that credential access, merge, push,
+destructive cleanup, and network activation are not approved by this pilot.
+The operator may enable one exact network/provider exception for the approved
+run only: local OpenCode may use caller-supplied existing provider
+configuration roots to contact its configured model service. The approval
+contains only named environment keys, never values, credentials, or endpoints;
+all other network and credential behavior remains prohibited. Each worker
 record must exactly bind one approved agent ID to its corresponding worktree,
 runtime/argv allowlist, timeout, and stop authority; missing, duplicate, or
 cross-wired provenance denies. Every allocated worktree reference must be a

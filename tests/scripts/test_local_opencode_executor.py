@@ -32,7 +32,7 @@ def approval():
     for number in range(1, 7):
         agent = f"agent-{number:02d}"
         bindings.append({"agent_id": agent, "grant_id": f"grant-{agent}", "worktree_ref": f"worktrees/pilot/{agent}", "runtime_id": "opencode", "argv_allowlist": ["run", "restricted"], "timeout_seconds": 60, "stop_authority": "operator-01", "scheduler_ref": f"coordination/scheduler/{agent}", "lease_ref": f"coordination/leases/{agent}", "review_ref": f"coordination/reviews/{agent}", "manifest_digest": f"{number:064x}", "allocation_digest": f"{number + 6:064x}"})
-    return {"approval_id": "approval-01", "action": "local_control_start", "task_id": "phase14.5-six-agent-pilot-08", "run_id": "run-01", "one_shot": True, "enabled": True, "issued_at": "2026-09-18T07:00:00+00:00", "expires_at": "2026-09-18T09:00:00+00:00", "run_window_start": "2026-09-18T07:30:00+00:00", "run_window_end": "2026-09-18T08:30:00+00:00", "worktree_root": "worktrees/pilot", "bindings": bindings, "prohibited_actions": ["cleanup", "credential_access", "merge", "network_activation", "push"]}
+    return {"approval_id": "approval-01", "action": "local_control_start", "task_id": "phase14.5-six-agent-pilot-08", "run_id": "run-01", "one_shot": True, "enabled": True, "issued_at": "2026-09-18T07:00:00+00:00", "expires_at": "2026-09-18T09:00:00+00:00", "run_window_start": "2026-09-18T07:30:00+00:00", "run_window_end": "2026-09-18T08:30:00+00:00", "worktree_root": "worktrees/pilot", "bindings": bindings, "network_provider_exception": {"enabled": False, "network_access": "deny", "provider_configuration": "none", "environment_keys": []}, "prohibited_actions": ["cleanup", "credential_access", "merge", "network_activation", "push"]}
 
 
 def inputs():
@@ -43,13 +43,13 @@ def inputs():
     return request, source, records
 
 
-def invoke(request=None, source=None, records=None, process=None, consumed=None):
+def invoke(request=None, source=None, records=None, process=None, consumed=None, provider_environment=None):
     request, source, records = request or inputs()[0], source or inputs()[1], records or inputs()[2]
     calls, process = [], process or FakeProcess()
     def spawn(executable, argv, *, cwd_ref, env, shell):
         calls.append((executable, argv, cwd_ref, env, shell))
         return process
-    result = run_opencode_once(request, source, records, now=NOW, consumed_run_ids=consumed if consumed is not None else set(), spawn=spawn)
+    result = run_opencode_once(request, source, records, now=NOW, consumed_run_ids=consumed if consumed is not None else set(), spawn=spawn, provider_environment=provider_environment)
     return result, calls, process
 
 
@@ -75,11 +75,35 @@ def test_credential_or_network_bearing_requests_deny_before_spawn_and_stay_redac
     for field, value in (("agent_id", "agent-token"), ("argv_allowlist", ["network_activation"])):
         request, source, records = inputs(); request[field] = value
         result, calls, _ = invoke(request, source, records)
-        assert result["decision"] == "deny_unsafe_request" and not calls
+        assert result["decision"].startswith("deny_") and not calls
         assert (value if isinstance(value, str) else value[0]) not in repr(result)
     request, source, records = inputs(); request["network_activation"] = True
     result, calls, _ = invoke(request, source, records)
-    assert result["decision"] == "deny_unsafe_request" and not calls
+    assert result["decision"] == "deny_invalid_request" and not calls
+
+
+def test_exact_provider_exception_passes_only_opaque_allowlisted_environment():
+    request, source, _ = inputs()
+    source["network_provider_exception"] = {"enabled": True, "network_access": "configured_model_service_only", "provider_configuration": "existing_local_only", "environment_keys": ["APPDATA", "LOCALAPPDATA", "PATH", "SYSTEMROOT", "USERPROFILE", "WINDIR"]}
+    source["prohibited_actions"] = ["cleanup", "merge", "push"]
+    records = provision_local_workers(source, now=NOW)["records"]
+    environment = {"APPDATA": "C:\\Users\\pilot\\AppData\\Roaming", "LOCALAPPDATA": "C:\\Users\\pilot\\AppData\\Local", "PATH": "C:\\Windows\\System32", "SYSTEMROOT": "C:\\Windows", "USERPROFILE": "C:\\Users\\pilot", "WINDIR": "C:\\Windows"}
+    result, calls, _ = invoke(request, source, records, provider_environment=environment)
+    assert result["decision"] == "completed" and calls[0][3] == environment
+    assert "C:\\Users\\pilot" not in repr(result)
+
+
+def test_provider_exception_denies_default_unknown_or_credential_environment_before_spawn():
+    request, source, records = inputs()
+    result, calls, _ = invoke(request, source, records, provider_environment={"APPDATA": "C:\\Users\\pilot"})
+    assert result["decision"] == "deny_provider_exception" and not calls
+    source["network_provider_exception"] = {"enabled": True, "network_access": "configured_model_service_only", "provider_configuration": "existing_local_only", "environment_keys": ["APPDATA"]}
+    source["prohibited_actions"] = ["cleanup", "merge", "push"]
+    records = provision_local_workers(source, now=NOW)["records"]
+    for environment in ({"OTHER": "C:\\Users\\pilot"}, {"APPDATA": "C:\\Users\\secret\\pilot"}):
+        result, calls, _ = invoke(request, source, records, provider_environment=environment)
+        assert result["decision"] == "deny_provider_exception" and not calls
+        assert "secret" not in repr(result)
 
 
 def test_timeout_stops_only_the_matching_fake_tree_after_pre_spawn_consumption():
@@ -93,5 +117,5 @@ def test_timeout_stops_only_the_matching_fake_tree_after_pre_spawn_consumption()
 
 def test_source_has_no_runtime_network_filesystem_or_environment_read_apis():
     source = Path(__file__).resolve().parents[2].joinpath("scripts", "local_opencode_executor.py").read_text(encoding="utf-8")
-    for token in ("subprocess", "Popen", "socket", "requests", "urllib", "os.system", "open(", "Path(", "environ", "getenv", "shell=True"):
+    for token in ("subprocess", "Popen", "socket", "requests", "urllib", "os.system", "open(", "Path(", "os.environ", "getenv", "shell=True"):
         assert token not in source

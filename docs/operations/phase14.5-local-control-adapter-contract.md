@@ -11,8 +11,13 @@ One exact, enabled, unexpired, one-shot approval must bind
 exactly six distinct bindings. Each binding contains one agent and grant, a
 component-safe child worktree, a fixed safe runtime and argv allowlist, bounded
 timeout, stop authority, and scheduler, lease, review, manifest, and allocation
-references. The approval's prohibited actions are exactly credential access,
-merge, push, cleanup, and network activation.
+references. By default, the approval's prohibited actions are exactly
+credential access, merge, push, cleanup, and network activation. A separate
+exact `network_provider_exception` may instead be enabled for one approved
+run. It allows only existing local provider configuration and the configured
+model service, binds an explicit sorted subset of `APPDATA`, `LOCALAPPDATA`,
+`PATH`, `SYSTEMROOT`, `USERPROFILE`, and `WINDIR`, and leaves cleanup, merge,
+and push prohibited. It does not contain a credential or endpoint.
 
 Unknown fields, expiry, unsafe references, duplicate identities/grants/worktrees,
 cross-root worktrees, malformed fixed arguments, or consumed runs deny before

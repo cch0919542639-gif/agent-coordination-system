@@ -15,9 +15,12 @@ approved argv tokens to its injected spawn function.
 
 The run ID is consumed before spawn. Invalid, expired, consumed, cross-wired,
 credential-bearing, or network-activating input returns a redacted denial
-before spawn. No shell is requested. The child environment is an empty mapping;
-no parent environment, credential-like variable, or user configuration root is
-read, copied, logged, or returned.
+before spawn. No shell is requested. The default child environment is empty.
+Only an enabled, exact `network_provider_exception` can pass a caller-supplied
+mapping whose keys exactly equal its approved system/user configuration-root
+allowlist. Values are validated only at this boundary, then passed opaquely:
+they are never read from the host, serialized, returned, logged, or persisted.
+Unknown keys and credential-like values deny before spawn.
 
 ## Completion and stop
 

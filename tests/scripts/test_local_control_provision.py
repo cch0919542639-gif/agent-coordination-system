@@ -16,7 +16,7 @@ def approval():
     for number in range(1, 7):
         agent = f"agent-{number:02d}"
         bindings.append({"agent_id": agent, "grant_id": f"grant-{agent}", "worktree_ref": f"worktrees/pilot/{agent}", "runtime_id": "opencode", "argv_allowlist": ["run", "restricted"], "timeout_seconds": 60, "stop_authority": "operator-01", "scheduler_ref": f"coordination/scheduler/{agent}", "lease_ref": f"coordination/leases/{agent}", "review_ref": f"coordination/reviews/{agent}", "manifest_digest": f"{number:064x}", "allocation_digest": f"{number + 6:064x}"})
-    return {"approval_id": "approval-01", "action": "local_control_start", "task_id": "phase14.5-six-agent-pilot-08", "run_id": "run-01", "one_shot": True, "enabled": True, "issued_at": "2026-09-18T07:00:00+00:00", "expires_at": "2026-09-18T09:00:00+00:00", "run_window_start": "2026-09-18T07:30:00+00:00", "run_window_end": "2026-09-18T08:30:00+00:00", "worktree_root": "worktrees/pilot", "bindings": bindings, "prohibited_actions": ["cleanup", "credential_access", "merge", "network_activation", "push"]}
+    return {"approval_id": "approval-01", "action": "local_control_start", "task_id": "phase14.5-six-agent-pilot-08", "run_id": "run-01", "one_shot": True, "enabled": True, "issued_at": "2026-09-18T07:00:00+00:00", "expires_at": "2026-09-18T09:00:00+00:00", "run_window_start": "2026-09-18T07:30:00+00:00", "run_window_end": "2026-09-18T08:30:00+00:00", "worktree_root": "worktrees/pilot", "bindings": bindings, "network_provider_exception": {"enabled": False, "network_access": "deny", "provider_configuration": "none", "environment_keys": []}, "prohibited_actions": ["cleanup", "credential_access", "merge", "network_activation", "push"]}
 
 
 def test_exact_six_binding_records_are_deterministic_best_effort_only():
@@ -42,6 +42,15 @@ def test_bad_approval_duplicate_or_unsafe_binding_fails_closed():
 
 def test_expired_or_cross_root_approval_never_returns_records():
     bad = approval(); bad["run_window_end"] = "2026-09-18T08:00:00+00:00"
+    assert provision_local_workers(bad, now=NOW) == {"decision": "deny_invalid_approval"}
+
+
+def test_network_provider_exception_is_default_deny_or_exactly_bound():
+    bad = approval(); bad["network_provider_exception"] = {"enabled": True, "network_access": "configured_model_service_only", "provider_configuration": "existing_local_only", "environment_keys": ["APPDATA"]}
+    assert provision_local_workers(bad, now=NOW) == {"decision": "deny_invalid_approval"}
+    bad["prohibited_actions"] = ["cleanup", "merge", "push"]
+    assert provision_local_workers(bad, now=NOW)["decision"] == "provisioned_best_effort_no_runtime"
+    bad["network_provider_exception"]["environment_keys"] = ["APPDATA", "UNKNOWN"]
     assert provision_local_workers(bad, now=NOW) == {"decision": "deny_invalid_approval"}
     bad = approval(); bad["bindings"][0]["worktree_ref"] = "worktrees/other/agent-01"
     assert provision_local_workers(bad, now=NOW) == {"decision": "deny_invalid_approval"}

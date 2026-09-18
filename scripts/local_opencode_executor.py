@@ -11,7 +11,7 @@ from local_control_provision import validate_approval
 
 LOCAL_EXECUTABLES = {"opencode": "opencode.exe"}
 SAFE_RESULT_KEYS = ("task_id", "run_id", "approval_id", "agent_id", "grant_id", "runtime_id", "timeout_seconds")
-FORBIDDEN_WORDS = ("api_key", "authorization", "bearer", "credential", "password", "secret", "token", "network")
+FORBIDDEN_WORDS = ("api_key", "authorization", "bearer", "credential", "password", "secret", "token")
 
 
 class Process(Protocol):
@@ -22,7 +22,7 @@ class Process(Protocol):
 Spawn = Callable[..., Process]
 
 
-def run_opencode_once(request: object, approval: object, records: object, *, now: datetime, consumed_run_ids: set[str], spawn: Spawn) -> dict[str, object]:
+def run_opencode_once(request: object, approval: object, records: object, *, now: datetime, consumed_run_ids: set[str], spawn: Spawn, provider_environment: object = None) -> dict[str, object]:
     """Consume one exact L1 run before one injected, shell-free spawn."""
     if _unsafe(request) or _unsafe(records):
         return _result("deny_unsafe_request", request)
@@ -35,13 +35,16 @@ def run_opencode_once(request: object, approval: object, records: object, *, now
         return _result("deny_consumed_approval", request)
     if not validate_approval(approval, now=now) or not _bound(request, approval, records):
         return _result("deny_unbound_approval", request)
+    environment = _child_environment(approval, provider_environment)
+    if environment is None:
+        return _result("deny_provider_exception", request)
     consumed_run_ids.add(str(request["run_id"]))
     try:
         process = spawn(
             LOCAL_EXECUTABLES[str(request["runtime_id"])],
             tuple(request["argv_allowlist"]),
             cwd_ref=str(request["worktree_ref"]),
-            env={},
+            env=environment,
             shell=False,
         )
         code = process.wait(timeout=int(request["timeout_seconds"]))
@@ -54,6 +57,22 @@ def run_opencode_once(request: object, approval: object, records: object, *, now
     except Exception:
         return _result("stopped_safety_signal", request)
     return _result("completed" if code == 0 else "stopped_nonzero_exit", request)
+
+
+def _child_environment(approval: object, supplied: object) -> dict[str, str] | None:
+    if not isinstance(approval, Mapping):
+        return None
+    exception = approval.get("network_provider_exception")
+    if exception is None:
+        return {} if supplied is None else None
+    if not isinstance(exception, Mapping) or exception.get("enabled") is not True:
+        return {} if supplied is None else None
+    keys = exception.get("environment_keys")
+    if not isinstance(keys, list) or not isinstance(supplied, Mapping) or set(supplied) != set(keys):
+        return None
+    if not all(isinstance(key, str) and isinstance(value, str) and 1 <= len(value) <= 1024 and not _unsafe(value) and "\x00" not in value and "\n" not in value and "\r" not in value for key, value in supplied.items()):
+        return None
+    return dict(supplied)
 
 
 def _unsafe(value: object) -> bool:
