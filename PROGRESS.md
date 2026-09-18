@@ -109,6 +109,9 @@ the documentation-only `phase14.5-04` supervised-launch design task.
   fixed, no-shell PowerShell wrapper runner accepts only provenance-bound
   input and an already validated exact request. It remains L1 best-effort;
   no real six-worker run has been prepared or started.
+- `phase14.5-six-worker-preflight-16` is independently accepted: six clean,
+  detached worktrees are pinned to the reviewed runner commit and a
+  privacy-bounded preflight record is available. No OpenCode run has started.
 
 ## 2026-09-06 Next Dispatch Gate
 
