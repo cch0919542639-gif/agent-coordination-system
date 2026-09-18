@@ -43,6 +43,13 @@ def inputs():
     return request, source, records
 
 
+def enabled_inputs():
+    request, source, _ = inputs()
+    source["network_provider_exception"] = {"enabled": True, "network_access": "configured_model_service_only", "provider_configuration": "existing_local_only", "environment_keys": ["APPDATA"]}
+    source["prohibited_actions"] = ["cleanup", "merge", "push"]
+    return request, source, provision_local_workers(source, now=NOW)["records"], {"APPDATA": "C:\\Users\\pilot"}
+
+
 def invoke(request=None, source=None, records=None, process=None, consumed=None, provider_environment=None):
     request, source, records = request or inputs()[0], source or inputs()[1], records or inputs()[2]
     calls, process = [], process or FakeProcess()
@@ -83,11 +90,7 @@ def test_credential_or_network_bearing_requests_deny_before_spawn_and_stay_redac
 
 
 def test_exact_provider_exception_passes_only_opaque_allowlisted_environment():
-    request, source, _ = inputs()
-    source["network_provider_exception"] = {"enabled": True, "network_access": "configured_model_service_only", "provider_configuration": "existing_local_only", "environment_keys": ["APPDATA", "LOCALAPPDATA", "PATH", "SYSTEMROOT", "USERPROFILE", "WINDIR"]}
-    source["prohibited_actions"] = ["cleanup", "merge", "push"]
-    records = provision_local_workers(source, now=NOW)["records"]
-    environment = {"APPDATA": "C:\\Users\\pilot\\AppData\\Roaming", "LOCALAPPDATA": "C:\\Users\\pilot\\AppData\\Local", "PATH": "C:\\Windows\\System32", "SYSTEMROOT": "C:\\Windows", "USERPROFILE": "C:\\Users\\pilot", "WINDIR": "C:\\Windows"}
+    request, source, records, environment = enabled_inputs()
     result, calls, _ = invoke(request, source, records, provider_environment=environment)
     assert result["decision"] == "completed" and calls[0][3] == environment
     assert "C:\\Users\\pilot" not in repr(result)
@@ -97,13 +100,33 @@ def test_provider_exception_denies_default_unknown_or_credential_environment_bef
     request, source, records = inputs()
     result, calls, _ = invoke(request, source, records, provider_environment={"APPDATA": "C:\\Users\\pilot"})
     assert result["decision"] == "deny_provider_exception" and not calls
-    source["network_provider_exception"] = {"enabled": True, "network_access": "configured_model_service_only", "provider_configuration": "existing_local_only", "environment_keys": ["APPDATA"]}
-    source["prohibited_actions"] = ["cleanup", "merge", "push"]
-    records = provision_local_workers(source, now=NOW)["records"]
+    request, source, records, _ = enabled_inputs()
     for environment in ({"OTHER": "C:\\Users\\pilot"}, {"APPDATA": "C:\\Users\\secret\\pilot"}):
         result, calls, _ = invoke(request, source, records, provider_environment=environment)
         assert result["decision"] == "deny_provider_exception" and not calls
         assert "secret" not in repr(result)
+
+
+def test_enabled_exception_stale_replayed_and_cross_wired_records_never_spawn_or_leak_environment():
+    request, source, records, environment = enabled_inputs()
+    source["expires_at"] = "2026-09-18T08:00:00+00:00"
+    result, calls, _ = invoke(request, source, records, provider_environment=environment)
+    assert result["decision"] == "deny_unbound_approval" and not calls and environment["APPDATA"] not in repr(result)
+    request, source, records, environment = enabled_inputs()
+    result, calls, _ = invoke(request, source, records, consumed={"run-01"}, provider_environment=environment)
+    assert result["decision"] == "deny_consumed_approval" and not calls and environment["APPDATA"] not in repr(result)
+    request, source, records, environment = enabled_inputs()
+    records[1]["grant_id"] = records[2]["grant_id"]
+    result, calls, _ = invoke(request, source, records, provider_environment=environment)
+    assert result["decision"] == "deny_unbound_approval" and not calls and environment["APPDATA"] not in repr(result)
+
+
+def test_provider_exception_denies_credential_like_environment_key_without_leak():
+    request, source, records, _ = enabled_inputs()
+    environment = {"API_KEY": "private-provider-value"}
+    result, calls, _ = invoke(request, source, records, provider_environment=environment)
+    assert result["decision"] == "deny_provider_exception" and not calls
+    assert "API_KEY" not in repr(result) and "private-provider-value" not in repr(result)
 
 
 def test_timeout_stops_only_the_matching_fake_tree_after_pre_spawn_consumption():

@@ -35,13 +35,17 @@ worktree, Git, merge, push, or cleanup action occurred.
   mapping only when its keys exactly match that approved subset. It rejects
   unknown or credential-like content before fake spawn and never returns,
   serializes, logs, or persists values.
+- The enabled-exception tests separately prove zero fake spawns for expired,
+  consumed, and six-record cross-wired inputs, plus a credential-like `API_KEY`
+  caller mapping; every denial remains redacted.
 - Focused tests and L1 contracts document the exception without a credential,
   endpoint, absolute path, prompt, source, output, or transcript.
 
 ## Validation Steps Performed
 
 - `py_compile scripts/local_control_provision.py scripts/local_opencode_executor.py` — passed.
-- Affected Phase B.1--H fixture suite — 117 passed.
+- Focused provision/executor tests — 14 passed.
+- Affected Phase B.1--H fixture suite — 119 passed.
 - `scripts/orchestrate.py validate` — passed.
 - `git diff --check` — passed.
 
