@@ -100,6 +100,11 @@ the documentation-only `phase14.5-04` supervised-launch design task.
 - `phase14.5-local-opencode-executor-13` is independently accepted: it adds a
   fake-tested, one-shot, no-shell local OpenCode executor with an empty child
   environment. A real process start still needs a current exact approval.
+- `phase14.5-opencode-network-credential-exception-14` is independently
+  accepted: a precise, enabled-and-unexpired one-shot exception can pass only
+  caller-supplied safe provider-configuration roots to OpenCode. Credentials
+  remain opaque and are neither read nor recorded; a real process start still
+  requires an accepted live runner and exact current run evidence.
 
 ## 2026-09-06 Next Dispatch Gate
 
