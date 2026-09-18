@@ -112,6 +112,9 @@ the documentation-only `phase14.5-04` supervised-launch design task.
 - `phase14.5-six-worker-preflight-16` is independently accepted: six clean,
   detached worktrees are pinned to the reviewed runner commit and a
   privacy-bounded preflight record is available. No OpenCode run has started.
+- `phase14.5-live-approval-runsheet-17` is independently accepted: the
+  launch-time fields remain explicitly unset, so the draft creates no launch
+  authority and cannot be consumed before a current operator record exists.
 
 ## 2026-09-06 Next Dispatch Gate
 
