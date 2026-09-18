@@ -13,7 +13,8 @@ The live pilot is fail-closed. It may begin only when every preflight input belo
 
 ## Exact approval preflight
 
-The operator must record one enabled, unexpired, one-shot approval bound to
+The launch boundary materializes one enabled, unexpired, one-shot approval ID
+from the exact current draft; a pre-filled ID is not approval evidence. It is bound to
 `phase14.5-six-agent-pilot-08` and its exact run ID. It must name six distinct
 registered local worker identities; the exact project-relative worktree root
 and six allocated worktree references; fixed runtime/argv allowlist,
@@ -34,7 +35,12 @@ runtime/argv allowlist, timeout, and stop authority; missing, duplicate, or
 cross-wired provenance denies. Every allocated worktree reference must be a
 component-safe child of the declared worktree root; an independently safe but
 cross-root path denies. Relative references reject `.` and `..` components at
-every depth. L1 evidence must carry the `best_effort` label and show the fixed
+every depth. Each binding declares a heartbeat interval, missed-heartbeat
+threshold, and finite hard ceiling. The caller-driven supervisor checks the
+matching child after a missed report, safely stops it, and returns one terminal
+incident category without retry. Project context is only the allocated relative
+worktree reference, never a provider configuration root. L1 evidence must
+carry the `best_effort` label and show the fixed
 runtime/argv, process-tree timeout/stop handling, and durable
 scheduler/lease/review evidence. It is not evidence of enforced restricted
 writes, independent OS process identity, or denied network egress.

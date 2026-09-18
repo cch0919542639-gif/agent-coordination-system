@@ -5,7 +5,7 @@ import sys
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
-from local_control_provision import provision_local_workers
+from local_control_provision import materialize_launch_approval, provision_local_workers
 import local_opencode_live_runner as runner
 from local_opencode_live_runner import PINNED_LAUNCHER, _wrapper_digest, run_live_opencode_once
 
@@ -29,8 +29,9 @@ def approval():
     bindings = []
     for number in range(1, 7):
         agent = f"agent-{number:02d}"
-        bindings.append({"agent_id": agent, "grant_id": f"grant-{agent}", "worktree_ref": f"worktrees/pilot/{agent}", "runtime_id": "opencode", "argv_allowlist": ["run", "restricted"], "timeout_seconds": 60, "stop_authority": "operator-01", "scheduler_ref": f"coordination/scheduler/{agent}", "lease_ref": f"coordination/leases/{agent}", "review_ref": f"coordination/reviews/{agent}", "manifest_digest": f"{number:064x}", "allocation_digest": f"{number + 6:064x}"})
-    return {"approval_id": "approval-01", "action": "local_control_start", "task_id": "phase14.5-six-agent-pilot-08", "run_id": "run-01", "one_shot": True, "enabled": True, "issued_at": "2026-09-18T07:00:00+00:00", "expires_at": "2026-09-18T09:00:00+00:00", "run_window_start": "2026-09-18T07:30:00+00:00", "run_window_end": "2026-09-18T08:30:00+00:00", "worktree_root": "worktrees/pilot", "bindings": bindings, "network_provider_exception": {"enabled": True, "network_access": "configured_model_service_only", "provider_configuration": "existing_local_only", "environment_keys": ["APPDATA"]}, "prohibited_actions": ["cleanup", "merge", "push"]}
+        bindings.append({"agent_id": agent, "grant_id": f"grant-{agent}", "worktree_ref": f"worktrees/pilot/{agent}", "runtime_id": "opencode", "argv_allowlist": ["run", "restricted"], "timeout_seconds": 60, "heartbeat_interval_seconds": 5, "missed_heartbeat_threshold": 2, "per_child_hard_ceiling_seconds": 60, "stop_authority": "operator-01", "scheduler_ref": f"coordination/scheduler/{agent}", "lease_ref": f"coordination/leases/{agent}", "review_ref": f"coordination/reviews/{agent}", "manifest_digest": f"{number:064x}", "allocation_digest": f"{number + 6:064x}"})
+    draft = {"action": "local_control_start", "task_id": "phase14.5-six-agent-pilot-08", "run_id": "run-01", "one_shot": True, "enabled": True, "issued_at": "2026-09-18T07:00:00+00:00", "expires_at": "2026-09-18T09:00:00+00:00", "run_window_start": "2026-09-18T07:30:00+00:00", "run_window_end": "2026-09-18T08:30:00+00:00", "worktree_root": "worktrees/pilot", "bindings": bindings, "network_provider_exception": {"enabled": True, "network_access": "configured_model_service_only", "provider_configuration": "existing_local_opaque", "environment_keys": ["OPENCODE_PROJECT_WORKTREE"]}, "prohibited_actions": ["cleanup", "merge", "push"]}
+    return materialize_launch_approval(draft, now=NOW)["approval"]
 
 
 def inputs():
@@ -54,7 +55,7 @@ def invoke(*, child=None, request=None, source=None, records=None, launcher=None
     original = runner.PINNED_WRAPPER_PATH_DIGEST
     runner.PINNED_WRAPPER_PATH_DIGEST = pinned_digest or _wrapper_digest(r"C:\pilot\approved\opencode.ps1")
     try:
-        result = run_live_opencode_once(request, source, records, launcher or launcher_for(request), now=NOW, consumed_run_ids=consumed if consumed is not None else set(), popen=popen, provider_environment=environment or {"APPDATA": "C:\\Users\\pilot"})
+        result = run_live_opencode_once(request, source, records, launcher or launcher_for(request), now=NOW, consumed_run_ids=consumed if consumed is not None else set(), popen=popen, provider_environment=environment or {"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]})
     finally:
         runner.PINNED_WRAPPER_PATH_DIGEST = original
     return result, calls
@@ -65,7 +66,7 @@ def test_pinned_wrapper_is_the_only_shell_free_command_and_result_is_redacted():
     command, kwargs = calls[0]
     assert command[:5] == (PINNED_LAUNCHER["powershell_path"], "-NoProfile", "-NonInteractive", "-File", r"C:\pilot\approved\opencode.ps1")
     assert command[-2:] == ("run", "restricted")
-    assert kwargs["cwd"] == "worktrees/pilot/agent-01" and kwargs["env"] == {"APPDATA": "C:\\Users\\pilot"}
+    assert kwargs["cwd"] == "worktrees/pilot/agent-01" and kwargs["env"] == {"OPENCODE_PROJECT_WORKTREE": "worktrees/pilot/agent-01"}
     assert kwargs["shell"] is False and kwargs["stdout"] is kwargs["stderr"]
     assert "wrapper_path" not in result and "environment" not in result and "C:\\" not in repr(result)
 
@@ -95,7 +96,7 @@ def test_invalid_expired_replayed_or_cross_wired_input_never_calls_popen():
 
 
 def test_unsafe_environment_is_denied_without_popen_or_environment_result():
-    result, calls = invoke(environment={"APPDATA": "token=unsafe"})
+    result, calls = invoke(environment={"OPENCODE_PROJECT_WORKTREE": "worktrees/pilot/agent-02"})
     assert result["decision"] == "deny_provider_exception" and calls == []
     assert "environment" not in result
 

@@ -13,14 +13,17 @@ its matching request, and the enabled unexpired one-shot approval for
 that ID to the fixed local executable `opencode.exe`, and passes only the
 approved argv tokens to its injected spawn function.
 
-The run ID is consumed before spawn. Invalid, expired, consumed, cross-wired,
+The approval ID is materialized only at the immediate launch boundary from the
+exact current draft and launch timestamp; a manually pre-filled ID or changed
+record denies. The run ID is consumed before spawn. Invalid, expired, consumed, cross-wired,
 credential-bearing, or network-activating input returns a redacted denial
 before spawn. No shell is requested. The default child environment is empty.
-Only an enabled, exact `network_provider_exception` can pass a caller-supplied
-mapping whose keys exactly equal its approved system/user configuration-root
-allowlist. Values are validated only at this boundary, then passed opaquely:
-they are never read from the host, serialized, returned, logged, or persisted.
-Unknown keys and credential-like values deny before spawn.
+Only an enabled, exact `network_provider_exception` can pass the one supplied
+project-context mapping: `OPENCODE_PROJECT_WORKTREE` exactly equals the
+allocated relative worktree reference. No arbitrary provider/configuration
+root is forwarded. It is never read from the host, serialized, returned,
+logged, or persisted. Cross-wired, absolute, traversal, or unknown input
+denies before spawn.
 
 ## Completion and stop
 
@@ -28,6 +31,11 @@ The injected process is waited only for the approved bounded timeout. A timeout
 calls only that process's `terminate_tree()` method. Results contain terminal
 category, safe IDs, timeout, and the `best_effort` label—never executable,
 argv, environment, raw output, prompts, source, credentials, or transcripts.
+
+The boundary also supports a finite caller-driven lease check loop: each
+binding declares heartbeat interval, missed-heartbeat threshold, and hard
+ceiling. A missed heartbeat checks the matching child, terminates it, and
+returns one terminal safety category; it never retries by another route.
 
 This module has no CLI or real spawn implementation. Tests use fake spawn and
 fake process objects only. A future live call still needs a concrete one-shot

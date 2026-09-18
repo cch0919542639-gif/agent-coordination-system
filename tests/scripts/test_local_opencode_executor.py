@@ -5,7 +5,7 @@ import sys
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
-from local_control_provision import provision_local_workers
+from local_control_provision import materialize_launch_approval, provision_local_workers
 from local_opencode_executor import run_opencode_once
 
 
@@ -31,8 +31,9 @@ def approval():
     bindings = []
     for number in range(1, 7):
         agent = f"agent-{number:02d}"
-        bindings.append({"agent_id": agent, "grant_id": f"grant-{agent}", "worktree_ref": f"worktrees/pilot/{agent}", "runtime_id": "opencode", "argv_allowlist": ["run", "restricted"], "timeout_seconds": 60, "stop_authority": "operator-01", "scheduler_ref": f"coordination/scheduler/{agent}", "lease_ref": f"coordination/leases/{agent}", "review_ref": f"coordination/reviews/{agent}", "manifest_digest": f"{number:064x}", "allocation_digest": f"{number + 6:064x}"})
-    return {"approval_id": "approval-01", "action": "local_control_start", "task_id": "phase14.5-six-agent-pilot-08", "run_id": "run-01", "one_shot": True, "enabled": True, "issued_at": "2026-09-18T07:00:00+00:00", "expires_at": "2026-09-18T09:00:00+00:00", "run_window_start": "2026-09-18T07:30:00+00:00", "run_window_end": "2026-09-18T08:30:00+00:00", "worktree_root": "worktrees/pilot", "bindings": bindings, "network_provider_exception": {"enabled": False, "network_access": "deny", "provider_configuration": "none", "environment_keys": []}, "prohibited_actions": ["cleanup", "credential_access", "merge", "network_activation", "push"]}
+        bindings.append({"agent_id": agent, "grant_id": f"grant-{agent}", "worktree_ref": f"worktrees/pilot/{agent}", "runtime_id": "opencode", "argv_allowlist": ["run", "restricted"], "timeout_seconds": 60, "heartbeat_interval_seconds": 5, "missed_heartbeat_threshold": 2, "per_child_hard_ceiling_seconds": 60, "stop_authority": "operator-01", "scheduler_ref": f"coordination/scheduler/{agent}", "lease_ref": f"coordination/leases/{agent}", "review_ref": f"coordination/reviews/{agent}", "manifest_digest": f"{number:064x}", "allocation_digest": f"{number + 6:064x}"})
+    draft = {"action": "local_control_start", "task_id": "phase14.5-six-agent-pilot-08", "run_id": "run-01", "one_shot": True, "enabled": True, "issued_at": "2026-09-18T07:00:00+00:00", "expires_at": "2026-09-18T09:00:00+00:00", "run_window_start": "2026-09-18T07:30:00+00:00", "run_window_end": "2026-09-18T08:30:00+00:00", "worktree_root": "worktrees/pilot", "bindings": bindings, "network_provider_exception": {"enabled": False, "network_access": "deny", "provider_configuration": "none", "environment_keys": []}, "prohibited_actions": ["cleanup", "credential_access", "merge", "network_activation", "push"]}
+    return materialize_launch_approval(draft, now=NOW)["approval"]
 
 
 def inputs():
@@ -45,18 +46,21 @@ def inputs():
 
 def enabled_inputs():
     request, source, _ = inputs()
-    source["network_provider_exception"] = {"enabled": True, "network_access": "configured_model_service_only", "provider_configuration": "existing_local_only", "environment_keys": ["APPDATA"]}
+    source["network_provider_exception"] = {"enabled": True, "network_access": "configured_model_service_only", "provider_configuration": "existing_local_opaque", "environment_keys": ["OPENCODE_PROJECT_WORKTREE"]}
     source["prohibited_actions"] = ["cleanup", "merge", "push"]
-    return request, source, provision_local_workers(source, now=NOW)["records"], {"APPDATA": "C:\\Users\\pilot"}
+    draft = {key: value for key, value in source.items() if key not in {"approval_id", "launch_time"}}
+    source = materialize_launch_approval(draft, now=NOW)["approval"]
+    request["approval_id"] = source["approval_id"]
+    return request, source, provision_local_workers(source, now=NOW)["records"], {"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]}
 
 
-def invoke(request=None, source=None, records=None, process=None, consumed=None, provider_environment=None):
+def invoke(request=None, source=None, records=None, process=None, consumed=None, provider_environment=None, supervision_checks=(), health_check=None):
     request, source, records = request or inputs()[0], source or inputs()[1], records or inputs()[2]
     calls, process = [], process or FakeProcess()
     def spawn(executable, argv, *, cwd_ref, env, shell):
         calls.append((executable, argv, cwd_ref, env, shell))
         return process
-    result = run_opencode_once(request, source, records, now=NOW, consumed_run_ids=consumed if consumed is not None else set(), spawn=spawn, provider_environment=provider_environment)
+    result = run_opencode_once(request, source, records, now=NOW, consumed_run_ids=consumed if consumed is not None else set(), spawn=spawn, provider_environment=provider_environment, supervision_checks=supervision_checks, health_check=health_check)
     return result, calls, process
 
 
@@ -93,15 +97,15 @@ def test_exact_provider_exception_passes_only_opaque_allowlisted_environment():
     request, source, records, environment = enabled_inputs()
     result, calls, _ = invoke(request, source, records, provider_environment=environment)
     assert result["decision"] == "completed" and calls[0][3] == environment
-    assert "C:\\Users\\pilot" not in repr(result)
+    assert "OPENCODE_PROJECT_WORKTREE" not in repr(result)
 
 
 def test_provider_exception_denies_default_unknown_or_credential_environment_before_spawn():
     request, source, records = inputs()
-    result, calls, _ = invoke(request, source, records, provider_environment={"APPDATA": "C:\\Users\\pilot"})
+    result, calls, _ = invoke(request, source, records, provider_environment={"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]})
     assert result["decision"] == "deny_provider_exception" and not calls
     request, source, records, _ = enabled_inputs()
-    for environment in ({"OTHER": "C:\\Users\\pilot"}, {"APPDATA": "C:\\Users\\secret\\pilot"}):
+    for environment in ({"OTHER": request["worktree_ref"]}, {"OPENCODE_PROJECT_WORKTREE": "worktrees/pilot/agent-02"}):
         result, calls, _ = invoke(request, source, records, provider_environment=environment)
         assert result["decision"] == "deny_provider_exception" and not calls
         assert "secret" not in repr(result)
@@ -111,14 +115,14 @@ def test_enabled_exception_stale_replayed_and_cross_wired_records_never_spawn_or
     request, source, records, environment = enabled_inputs()
     source["expires_at"] = "2026-09-18T08:00:00+00:00"
     result, calls, _ = invoke(request, source, records, provider_environment=environment)
-    assert result["decision"] == "deny_unbound_approval" and not calls and environment["APPDATA"] not in repr(result)
+    assert result["decision"] == "deny_unbound_approval" and not calls and environment["OPENCODE_PROJECT_WORKTREE"] not in repr(result)
     request, source, records, environment = enabled_inputs()
     result, calls, _ = invoke(request, source, records, consumed={"run-01"}, provider_environment=environment)
-    assert result["decision"] == "deny_consumed_approval" and not calls and environment["APPDATA"] not in repr(result)
+    assert result["decision"] == "deny_consumed_approval" and not calls and environment["OPENCODE_PROJECT_WORKTREE"] not in repr(result)
     request, source, records, environment = enabled_inputs()
     records[1]["grant_id"] = records[2]["grant_id"]
     result, calls, _ = invoke(request, source, records, provider_environment=environment)
-    assert result["decision"] == "deny_unbound_approval" and not calls and environment["APPDATA"] not in repr(result)
+    assert result["decision"] == "deny_unbound_approval" and not calls and environment["OPENCODE_PROJECT_WORKTREE"] not in repr(result)
 
 
 def test_provider_exception_denies_credential_like_environment_key_without_leak():
@@ -136,6 +140,19 @@ def test_timeout_stops_only_the_matching_fake_tree_after_pre_spawn_consumption()
     consumed = set()
     result, _, _ = invoke(process=FakeProcess(timeout=True, stop_fails=True), consumed=consumed)
     assert result["decision"] == "stopped_safety_signal" and consumed == {"run-01"}
+
+
+def test_renewable_lease_supervision_stops_only_missed_or_unhealthy_fake_child():
+    request, source, records = inputs()
+    missed = NOW.replace(second=11)
+    result, calls, process = invoke(request, source, records, supervision_checks=(missed,))
+    assert result["decision"] == "stopped_missed_heartbeat" and calls and process.stopped
+    request, source, records = inputs()
+    result, calls, process = invoke(request, source, records, supervision_checks=(missed,), health_check=lambda _: False)
+    assert result["decision"] == "stopped_health_check" and calls and process.stopped
+    request, source, records = inputs()
+    result, calls, process = invoke(request, source, records, supervision_checks=(NOW.replace(second=9),), health_check=lambda _: True)
+    assert result["decision"] == "completed" and calls and not process.stopped
 
 
 def test_source_has_no_runtime_network_filesystem_or_environment_read_apis():

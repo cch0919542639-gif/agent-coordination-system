@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from datetime import datetime
 from typing import Any, Mapping
 
 
 TASK_ID = "phase14.5-six-agent-pilot-08"
-APPROVAL_FIELDS = frozenset({"approval_id", "action", "task_id", "run_id", "one_shot", "enabled", "issued_at", "expires_at", "run_window_start", "run_window_end", "worktree_root", "bindings", "network_provider_exception", "prohibited_actions"})
-LEGACY_APPROVAL_FIELDS = APPROVAL_FIELDS - {"network_provider_exception"}
-BINDING_FIELDS = frozenset({"agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority", "scheduler_ref", "lease_ref", "review_ref", "manifest_digest", "allocation_digest"})
+APPROVAL_FIELDS = frozenset({"approval_id", "launch_time", "action", "task_id", "run_id", "one_shot", "enabled", "issued_at", "expires_at", "run_window_start", "run_window_end", "worktree_root", "bindings", "network_provider_exception", "prohibited_actions"})
+DRAFT_APPROVAL_FIELDS = APPROVAL_FIELDS - {"approval_id", "launch_time"}
+BINDING_FIELDS = frozenset({"agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "heartbeat_interval_seconds", "missed_heartbeat_threshold", "per_child_hard_ceiling_seconds", "stop_authority", "scheduler_ref", "lease_ref", "review_ref", "manifest_digest", "allocation_digest"})
 PROHIBITED_ACTIONS = ["cleanup", "credential_access", "merge", "network_activation", "push"]
 EXCEPTION_PROHIBITED_ACTIONS = ["cleanup", "merge", "push"]
 NETWORK_EXCEPTION_FIELDS = frozenset({"enabled", "network_access", "provider_configuration", "environment_keys"})
-ALLOWED_ENVIRONMENT_KEYS = ("APPDATA", "LOCALAPPDATA", "PATH", "SYSTEMROOT", "USERPROFILE", "WINDIR")
+PROJECT_CONTEXT_KEY = "OPENCODE_PROJECT_WORKTREE"
 
 
 def provision_local_workers(approval: object, *, now: datetime) -> dict[str, object]:
@@ -30,8 +32,21 @@ def validate_approval(approval: object, *, now: datetime) -> bool:
     return _approval(approval, now)
 
 
+def materialize_launch_approval(draft: object, *, now: datetime) -> dict[str, object]:
+    """Create the sole approval ID at the immediate launch boundary."""
+    if not isinstance(draft, Mapping) or set(draft) != DRAFT_APPROVAL_FIELDS:
+        return {"decision": "deny_invalid_approval"}
+    materialized = dict(draft)
+    materialized["launch_time"] = now.isoformat()
+    payload = json.dumps(materialized, sort_keys=True, separators=(",", ":"))
+    materialized["approval_id"] = "launch-" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:32]
+    if not _approval(materialized, now):
+        return {"decision": "deny_invalid_approval"}
+    return {"decision": "launch_time_approval", "approval": materialized}
+
+
 def _approval(value: object, now: datetime) -> bool:
-    if not isinstance(value, Mapping) or set(value) not in (APPROVAL_FIELDS, LEGACY_APPROVAL_FIELDS):
+    if not isinstance(value, Mapping) or set(value) != APPROVAL_FIELDS:
         return False
     if value.get("action") != "local_control_start" or value.get("task_id") != TASK_ID or value.get("one_shot") is not True or value.get("enabled") is not True:
         return False
@@ -41,10 +56,14 @@ def _approval(value: object, now: datetime) -> bool:
     expected_prohibitions = EXCEPTION_PROHIBITED_ACTIONS if isinstance(exception, Mapping) and exception["enabled"] else PROHIBITED_ACTIONS
     if value.get("prohibited_actions") != expected_prohibitions:
         return False
-    issued, expires, start, end = (_time(value.get(key)) for key in ("issued_at", "expires_at", "run_window_start", "run_window_end"))
-    if now.tzinfo is None or None in (issued, expires, start, end) or not (issued <= start <= now < end <= expires):
+    issued, expires, start, end, launch_time = (_time(value.get(key)) for key in ("issued_at", "expires_at", "run_window_start", "run_window_end", "launch_time"))
+    if now.tzinfo is None or None in (issued, expires, start, end, launch_time) or launch_time != now or not (issued <= start <= now < end <= expires):
         return False
     if not _identifier(value.get("approval_id")) or not _identifier(value.get("run_id")) or not _ref(value.get("worktree_root")):
+        return False
+    draft = {key: item for key, item in value.items() if key not in {"approval_id", "launch_time"}}
+    payload = json.dumps({**draft, "launch_time": str(value["launch_time"])}, sort_keys=True, separators=(",", ":"))
+    if value["approval_id"] != "launch-" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:32]:
         return False
     bindings = value.get("bindings")
     if not isinstance(bindings, list) or len(bindings) != 6 or not all(_binding(item, value["worktree_root"]) for item in bindings):
@@ -61,7 +80,7 @@ def _network_exception(value: object) -> bool:
     if value["enabled"] is False:
         return value.get("network_access") == "deny" and value.get("provider_configuration") == "none" and value.get("environment_keys") == []
     keys = value.get("environment_keys")
-    return value.get("network_access") == "configured_model_service_only" and value.get("provider_configuration") == "existing_local_only" and isinstance(keys, list) and 1 <= len(keys) <= len(ALLOWED_ENVIRONMENT_KEYS) and keys == sorted(keys) and len(set(keys)) == len(keys) and all(key in ALLOWED_ENVIRONMENT_KEYS for key in keys)
+    return value.get("network_access") == "configured_model_service_only" and value.get("provider_configuration") == "existing_local_opaque" and keys == [PROJECT_CONTEXT_KEY]
 
 
 def _binding(value: object, root: str) -> bool:
@@ -72,6 +91,9 @@ def _binding(value: object, root: str) -> bool:
     if not _within_root(value.get("worktree_ref"), root) or not _argv(value.get("argv_allowlist")):
         return False
     if type(value.get("timeout_seconds")) is not int or not 1 <= value["timeout_seconds"] <= 900:
+        return False
+    interval, missed, ceiling = (value.get(key) for key in ("heartbeat_interval_seconds", "missed_heartbeat_threshold", "per_child_hard_ceiling_seconds"))
+    if type(interval) is not int or type(missed) is not int or type(ceiling) is not int or not (1 <= interval <= 60 and 1 <= missed <= 10 and interval * missed <= ceiling <= 900 and value["timeout_seconds"] <= ceiling):
         return False
     return all(_ref(value.get(key)) for key in ("scheduler_ref", "lease_ref", "review_ref")) and all(_digest(value.get(key)) for key in ("manifest_digest", "allocation_digest"))
 
