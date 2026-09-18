@@ -1,0 +1,88 @@
+{
+  "schema_version": "phase14.5-six-worker-preflight-v1",
+  "task_id": "phase14.5-six-worker-preflight-16",
+  "pilot_task_id": "phase14.5-six-agent-pilot-08",
+  "control_level": "best_effort",
+  "authorization_status": "NOT_A_LAUNCH_AUTHORIZATION",
+  "reviewed_commit": "cad70bf7858f3eace5d68c7683feb4cde6c0901b",
+  "worktree_root": "worktrees/phaseh-pilot",
+  "launcher_provenance": {
+    "status": "verified_pinned_wrapper",
+    "path_digest": "e1b87ce69411c64305ebcddf3403b982e1d264af45f5bffbbd505c5c1d00766b"
+  },
+  "run_window_placeholder": {
+    "status": "PENDING_CURRENT_OPERATOR_RECORD",
+    "maximum_duration_seconds": 900,
+    "start": null,
+    "end": null
+  },
+  "fixed_runtime": {
+    "runtime_id": "opencode",
+    "argv_allowlist": ["run", "restricted"],
+    "timeout_seconds": 900,
+    "stop_authority": "phaseh-pilot-operator"
+  },
+  "network_provider_exception": {
+    "status": "PENDING_CURRENT_OPERATOR_RECORD",
+    "permitted_capability": "configured_model_service_only_with_existing_local_provider_configuration",
+    "environment_key_names": []
+  },
+  "bindings": [
+    {
+      "agent_id": "phaseh-pilot-agent-01",
+      "grant_id": "phaseh-pilot-grant-01",
+      "worktree_ref": "worktrees/phaseh-pilot/worker-01",
+      "allocation_digest": "fd6dc33dde8601b7beb9da6d8f36bc19a4ce376111ba12fcf6090f3350ff66b0",
+      "manifest_digest": "8ddb84386ac8af01f1b11cff456747c8d48e075f61b478f46036dbd02bfe1700"
+    },
+    {
+      "agent_id": "phaseh-pilot-agent-02",
+      "grant_id": "phaseh-pilot-grant-02",
+      "worktree_ref": "worktrees/phaseh-pilot/worker-02",
+      "allocation_digest": "53bb1d0a3d4a3717038f2beeb2dcb148c3abe09f1a6c9a9328b1e752e61c91e3",
+      "manifest_digest": "1f3ca6061e639e30eee45673a4710e62fc83d42229ba78873e2238845eaf5e4b"
+    },
+    {
+      "agent_id": "phaseh-pilot-agent-03",
+      "grant_id": "phaseh-pilot-grant-03",
+      "worktree_ref": "worktrees/phaseh-pilot/worker-03",
+      "allocation_digest": "4c41ba4d266396abc60d840939ff0bce77d8296bb1afb53a4c10a0c473509b51",
+      "manifest_digest": "06e1c62c17f868e5a03eeb2ec6f732f96c418ab0c6c3459c6a82c1e91c8665fa"
+    },
+    {
+      "agent_id": "phaseh-pilot-agent-04",
+      "grant_id": "phaseh-pilot-grant-04",
+      "worktree_ref": "worktrees/phaseh-pilot/worker-04",
+      "allocation_digest": "20caf0e6ed005ab2f05398ae5c6c04df48b438613b2642a1a5d8f9bdcba13d6a",
+      "manifest_digest": "d0cbf644ad4ae216a5bbb650634aa0cf0675704d8f79cc4bf6f47bfc14b4a280"
+    },
+    {
+      "agent_id": "phaseh-pilot-agent-05",
+      "grant_id": "phaseh-pilot-grant-05",
+      "worktree_ref": "worktrees/phaseh-pilot/worker-05",
+      "allocation_digest": "fcbcbe039e88c72e396888ed6669e68fe7a7e0aa0453460588e22d2d035ba4fc",
+      "manifest_digest": "74b63edddb1cc719cb284371f920d9e403bfb40efbc34daa8078be7207a7562e"
+    },
+    {
+      "agent_id": "phaseh-pilot-agent-06",
+      "grant_id": "phaseh-pilot-grant-06",
+      "worktree_ref": "worktrees/phaseh-pilot/worker-06",
+      "allocation_digest": "cd8267ee7df644bae79b3fbc5564b0db47ddc35fcecce85d45888b8a42514654",
+      "manifest_digest": "df70a4c0725b762c125c5a33c7c10abdffc508e873d7f2000751d6c4db12a0f0"
+    }
+  ],
+  "verification": {
+    "registered_worktrees": 6,
+    "all_detached": true,
+    "all_pinned_to_reviewed_commit": true,
+    "all_clean": true
+  },
+  "redaction": {
+    "absolute_paths": false,
+    "provider_configuration_values": false,
+    "credentials": false,
+    "prompts": false,
+    "source_bodies": false,
+    "logs": false
+  }
+}
