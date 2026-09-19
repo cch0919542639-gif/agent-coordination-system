@@ -87,6 +87,8 @@ def _wrapper_content_digest(value: str) -> str | None:
 
 def _spawn(popen: Popen, wrapper_path: str, request: Mapping[str, object], state: StartAttestationState, captured: list[tuple[dict[str, object], dict[str, object]]]) -> Spawn:
     def spawn(_: str, argv: tuple[str, ...], *, cwd_ref: str, env: dict[str, str], shell: bool) -> Process:
+        if not _wrapper_path(wrapper_path) or _wrapper_content_digest(wrapper_path) != PINNED_WRAPPER_CONTENT_DIGEST:
+            raise RuntimeError("wrapper changed before spawn")
         child = popen((POWERSHELL, "-NoProfile", "-NonInteractive", "-File", wrapper_path, *argv), cwd=cwd_ref, env=env, shell=shell, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if not _live_child_identity(child):
             raise RuntimeError("child is not live")

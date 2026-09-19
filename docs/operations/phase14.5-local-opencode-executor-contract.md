@@ -52,7 +52,9 @@ approval/run IDs, and an absolute `.ps1` input to the SHA-256 content digest
 of the reviewed project-owned `scripts/opencode_pilot_wrapper.ps1`. The
 wrapper forwards only approved argv to `opencode.exe` and returns its exit
 code. A changed, missing, oversized, malformed, or nonmatching wrapper denies
-before Popen. The raw absolute input path and wrapper source never appear in a
+before Popen. The same strict path and content pin is checked again immediately
+at the injected spawn boundary, so a post-admission replacement also reaches
+no Popen. The raw absolute input path and wrapper source never appear in a
 result or evidence record; invocation remains only
 `-NoProfile -NonInteractive -File` with no shell, inherited environment, or
 output capture.

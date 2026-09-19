@@ -17,7 +17,7 @@
 ## Acceptance Criteria Coverage
 
 - The project-owned wrapper forwards only argv to `opencode.exe` and returns its exit code.
-- The runner accepts only a strict absolute `.ps1` input whose bounded source content matches the fixed SHA-256 pin; missing, changed, oversized, or unsafe content denies before injected Popen.
+- The runner accepts only a strict absolute `.ps1` input whose bounded source content matches the fixed SHA-256 pin, and rechecks it immediately before injected Popen; missing, changed, oversized, unsafe, or post-admission replacement content denies with zero Popen.
 - Safe results remain redacted; wrapper paths, source, child identity, commands, argv, output, credentials, environment values, endpoints, and prompts are absent.
 - Existing approval, one-shot, lease, project-context, start-attestation, concurrency, `shell=False`, and empty-environment boundaries remain covered by fake-Popen tests.
 
@@ -27,6 +27,12 @@
 - `py_compile scripts/local_opencode_live_runner.py`: passed.
 - Static forbidden-API scan: no matches.
 - `git diff --check`: passed.
+
+## Review Follow-up
+
+- P1 closed: the spawn boundary rechecks the same path and content pin. A
+  fake regression replaces the wrapper after initial admission and proves a
+  redacted safety result, zero Popen calls, and no start evidence.
 
 ## Known Residual Risks
 

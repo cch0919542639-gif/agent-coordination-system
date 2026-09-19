@@ -116,6 +116,25 @@ def test_changed_missing_or_unsafe_wrapper_denies_before_popen(tmp_path):
     assert result["decision"] == "deny_invalid_launcher" and calls == []
 
 
+def test_wrapper_replaced_after_admission_denies_at_spawn_before_popen(tmp_path):
+    request, source, records = inputs()
+    wrapper = tmp_path / "opencode_pilot_wrapper.ps1"
+    wrapper.write_bytes(Path(WRAPPER_PATH).read_bytes())
+    original = runner.run_opencode_once
+
+    def replace_then_run(*args, **kwargs):
+        wrapper.write_text("Invoke-WebRequest bad\n", encoding="utf-8")
+        return original(*args, **kwargs)
+
+    runner.run_opencode_once = replace_then_run
+    try:
+        result, calls = invoke(request=request, source=source, records=records, launcher=launcher_for(request, str(wrapper)))
+    finally:
+        runner.run_opencode_once = original
+    assert result["decision"] == "stopped_safety_signal" and calls == []
+    assert "safe_start_attestation" not in result and "concurrency_projection" not in result
+
+
 def test_invalid_expired_replayed_or_cross_wired_input_never_calls_popen():
     request, source, records = inputs()
     expired = deepcopy(source); expired["expires_at"] = "2026-09-18T07:59:00+00:00"

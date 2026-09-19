@@ -64,7 +64,8 @@ one-shot approval remains preflight evidence only and cannot enable a launch.
    separately approved local-control adapter may start at most the six approved
    workers in allocated worktrees. The live runner uses only its reviewed
    project-owned PowerShell wrapper whose source-content digest matches its
-   fixed pin, and must reject any request not exactly bound to identity,
+   fixed pin both at admission and immediately before Popen, and must reject
+   any request not exactly bound to identity,
    manifest, approval, worktree, fixed runtime/argv, timeout/stop handling, and
    run window. The shared pilot admission is consumed once; each of the six
    exact bindings is then fenced and consumed separately before its own launch.

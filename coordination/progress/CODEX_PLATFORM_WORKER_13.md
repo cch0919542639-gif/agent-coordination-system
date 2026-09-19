@@ -8,13 +8,14 @@
 
 ## Current Step
 
-Await independent review of the fake-Popen-only implementation.
+Await independent re-review of the closed P1.
 
 ## Changes So Far
 
 - Added the static project-owned PowerShell wrapper.
 - Replaced the opaque path digest with a bounded SHA-256 source-content pin.
 - Added changed, missing, and unsafe wrapper pre-Popen denial coverage.
+- Review P1: add a second content-pin check at the spawn boundary.
 
 ## Blocker Status
 
@@ -22,4 +23,4 @@ None.
 
 ## Next Step
 
-Address reviewer findings only; do not retry Task 23.
+Address any re-review finding only; do not retry Task 23.
