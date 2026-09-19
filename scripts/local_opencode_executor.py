@@ -23,7 +23,7 @@ Spawn = Callable[..., Process]
 HealthCheck = Callable[[Process], bool]
 
 
-def run_opencode_once(request: object, approval: object, records: object, *, now: datetime, consumed_run_ids: set[str], consumed_binding_tokens: set[str] | None, spawn: Spawn, provider_environment: object = None, heartbeat_at: datetime | None = None, supervision_checks: Iterable[datetime] = (), health_check: HealthCheck | None = None) -> dict[str, object]:
+def run_opencode_once(request: object, approval: object, records: object, *, now: datetime, consumed_run_ids: set[str], spawn: Spawn, provider_environment: object = None, heartbeat_at: datetime | None = None, supervision_checks: Iterable[datetime] = (), health_check: HealthCheck | None = None) -> dict[str, object]:
     """Admit one pilot once, then fence each exact injected child launch."""
     if _unsafe(request) or _unsafe(records):
         return _result("deny_unsafe_request", request)
@@ -37,10 +37,6 @@ def run_opencode_once(request: object, approval: object, records: object, *, now
     environment = _child_environment(approval, request, provider_environment)
     if environment is None:
         return _result("deny_provider_exception", request)
-    if not isinstance(consumed_binding_tokens, set):
-        return _result("deny_invalid_launch_state", request)
-    if not consumed_run_ids and consumed_binding_tokens:
-        return _result("deny_invalid_launch_state", request)
     admission = _pilot_admission_token(approval)
     if admission in consumed_run_ids:
         pass
@@ -49,9 +45,9 @@ def run_opencode_once(request: object, approval: object, records: object, *, now
     else:
         consumed_run_ids.add(admission)
     launch = _binding_launch_token(request)
-    if launch in consumed_binding_tokens:
+    if launch in consumed_run_ids:
         return _result("deny_consumed_binding", request)
-    consumed_binding_tokens.add(launch)
+    consumed_run_ids.add(launch)
     try:
         process = spawn(
             LOCAL_EXECUTABLES[str(request["runtime_id"])],

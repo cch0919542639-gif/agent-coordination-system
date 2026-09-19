@@ -15,7 +15,7 @@ approved argv tokens to its injected spawn function.
 
 The approval ID is materialized only at the immediate launch boundary from the
 exact current draft and launch timestamp; a manually pre-filled ID or changed
-record denies. The exact pilot admission (run plus launch-time approval ID) is consumed once before its first spawn; each of its six exact bindings gets a separately fenced one-time launch token. Invalid, expired, duplicate-binding, second-pilot, cross-wired,
+record denies. One shared one-shot state contains both the exact pilot admission (run plus launch-time approval ID) and all six binding launch markers, so a binding fence cannot be reset independently. Each exact binding gets a separately fenced one-time launch marker. Invalid, expired, duplicate-binding, second-pilot, cross-wired,
 credential-bearing, or network-activating input returns a redacted denial
 before spawn. No shell is requested. The default child environment is empty.
 Only an enabled, exact `network_provider_exception` can pass the one supplied

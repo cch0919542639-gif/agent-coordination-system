@@ -18,12 +18,16 @@
 ## Acceptance Criteria Coverage
 
 - One approval produces one exact admission marker, preserving the same
-  admitted pilot across its six approved binding launches.
+  admitted pilot across its six approved binding launches. Admission and all
+  binding markers now live in one non-detachable state set.
 - Each launch receives a separate token composed only after exact approval,
   request, record, lease, and project-context validation; duplicate and
   cross-wired requests deny before spawn.
 - A populated admission state rejects a different second pilot. Expired,
   foreign, malformed, or missing-state inputs deny without a child boundary.
+- P1 follow-up: a caller cannot replace a detached binding set. Reusing the
+  retained state for the same binding returns `deny_consumed_binding` before
+  fake spawn in both executor and live seams.
 - The live seam forwards the same fenced state to the executor. Fixed wrapper
   provenance, `shell=False`, output suppression, redaction, matching stop,
   no retry/fallback, and L1 `best_effort` terminology remain unchanged.

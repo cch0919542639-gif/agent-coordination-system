@@ -54,13 +54,13 @@ def enabled_inputs():
     return request, source, provision_local_workers(source, now=NOW)["records"], {"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]}
 
 
-def invoke(request=None, source=None, records=None, process=None, consumed=None, binding_tokens=None, provider_environment=None, supervision_checks=(), health_check=None):
+def invoke(request=None, source=None, records=None, process=None, consumed=None, provider_environment=None, supervision_checks=(), health_check=None):
     request, source, records = request or inputs()[0], source or inputs()[1], records or inputs()[2]
     calls, process = [], process or FakeProcess()
     def spawn(executable, argv, *, cwd_ref, env, shell):
         calls.append((executable, argv, cwd_ref, env, shell))
         return process
-    result = run_opencode_once(request, source, records, now=NOW, consumed_run_ids=consumed if consumed is not None else set(), consumed_binding_tokens=binding_tokens if binding_tokens is not None else set(), spawn=spawn, provider_environment=provider_environment, supervision_checks=supervision_checks, health_check=health_check)
+    result = run_opencode_once(request, source, records, now=NOW, consumed_run_ids=consumed if consumed is not None else set(), spawn=spawn, provider_environment=provider_environment, supervision_checks=supervision_checks, health_check=health_check)
     return result, calls, process
 
 
@@ -71,19 +71,13 @@ def test_exact_l1_record_spawns_fixed_opencode_once_with_empty_env_and_no_shell(
     assert set(result) == {"decision", "dry_run", "control_level", "task_id", "run_id", "approval_id", "agent_id", "grant_id", "runtime_id", "timeout_seconds"}
 
 
-def test_invalid_runtime_cross_wiring_expiry_and_invalid_launch_state_never_spawn():
+def test_invalid_runtime_cross_wiring_and_expiry_never_spawn():
     request, source, records = inputs(); request["runtime_id"] = "other"
     assert invoke(request, source, records)[0]["decision"] == "deny_runtime"
     request, source, records = inputs(); records[1]["grant_id"] = records[2]["grant_id"]
     assert invoke(request, source, records)[0]["decision"] == "deny_unbound_approval"
     request, source, records = inputs(); source["expires_at"] = "2026-09-18T08:00:00+00:00"
     assert invoke(request, source, records)[0]["decision"] == "deny_unbound_approval"
-    request, source, records = inputs()
-    result = run_opencode_once(request, source, records, now=NOW, consumed_run_ids=set(), consumed_binding_tokens=None, spawn=lambda *_args, **_kwargs: FakeProcess())
-    calls = []
-    assert result["decision"] == "deny_invalid_launch_state" and not calls
-    result = run_opencode_once(request, source, records, now=NOW, consumed_run_ids=set(), consumed_binding_tokens={"orphan"}, spawn=lambda *_args, **_kwargs: FakeProcess())
-    assert result["decision"] == "deny_invalid_launch_state"
 
 
 def test_credential_or_network_bearing_requests_deny_before_spawn_and_stay_redacted():
@@ -121,9 +115,9 @@ def test_enabled_exception_stale_replayed_and_cross_wired_records_never_spawn_or
     result, calls, _ = invoke(request, source, records, provider_environment=environment)
     assert result["decision"] == "deny_unbound_approval" and not calls and environment["OPENCODE_PROJECT_WORKTREE"] not in repr(result)
     request, source, records, environment = enabled_inputs()
-    consumed, launches = set(), set()
-    invoke(request, source, records, consumed=consumed, binding_tokens=launches, provider_environment=environment)
-    result, calls, _ = invoke(request, source, records, consumed=consumed, binding_tokens=launches, provider_environment=environment)
+    consumed = set()
+    invoke(request, source, records, consumed=consumed, provider_environment=environment)
+    result, calls, _ = invoke(request, source, records, consumed=consumed, provider_environment=environment)
     assert result["decision"] == "deny_consumed_binding" and not calls and environment["OPENCODE_PROJECT_WORKTREE"] not in repr(result)
     request, source, records, environment = enabled_inputs()
     records[1]["grant_id"] = records[2]["grant_id"]
@@ -172,26 +166,29 @@ def test_hard_ceiling_stops_one_fake_child_without_retry_after_consumption():
 def test_one_pilot_admission_fences_all_six_bindings_once_and_denies_replays_before_spawn():
     source = approval()
     records = provision_local_workers(source, now=NOW)["records"]
-    consumed, launches, calls = set(), set(), []
+    consumed, calls = set(), []
     for binding in source["bindings"]:
         request = {"task_id": source["task_id"], "run_id": source["run_id"], "approval_id": source["approval_id"], **{key: binding[key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
-        result, spawned, _ = invoke(request, source, records, consumed=consumed, binding_tokens=launches)
+        result, spawned, _ = invoke(request, source, records, consumed=consumed)
         assert result["decision"] == "completed"
         calls.extend(spawned)
-    assert len(consumed) == 1 and len(launches) == len(calls) == 6
+    assert len(consumed) == len(calls) + 1 == 7
     request = {"task_id": source["task_id"], "run_id": source["run_id"], "approval_id": source["approval_id"], **{key: source["bindings"][0][key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
-    result, spawned, _ = invoke(request, source, records, consumed=consumed, binding_tokens=launches)
+    result, spawned, _ = invoke(request, source, records, consumed=consumed)
     assert result["decision"] == "deny_consumed_binding" and spawned == []
     foreign = deepcopy(request); foreign["agent_id"] = "agent-07"
-    result, spawned, _ = invoke(foreign, source, records, consumed=consumed, binding_tokens=launches)
+    result, spawned, _ = invoke(foreign, source, records, consumed=consumed)
     assert result["decision"] == "deny_unbound_approval" and spawned == []
     second = deepcopy(source); second["run_id"] = "run-02"
     draft = {key: value for key, value in second.items() if key not in {"approval_id", "launch_time"}}
     second = materialize_launch_approval(draft, now=NOW)["approval"]
     second_records = provision_local_workers(second, now=NOW)["records"]
     second_request = {"task_id": second["task_id"], "run_id": second["run_id"], "approval_id": second["approval_id"], **{key: second["bindings"][0][key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
-    result, spawned, _ = invoke(second_request, second, second_records, consumed=consumed, binding_tokens=launches)
+    result, spawned, _ = invoke(second_request, second, second_records, consumed=consumed)
     assert result["decision"] == "deny_consumed_approval" and spawned == []
+    restarted_state = consumed
+    result, spawned, _ = invoke(request, source, records, consumed=restarted_state)
+    assert result["decision"] == "deny_consumed_binding" and spawned == []
 
 
 def test_source_has_no_runtime_network_filesystem_or_environment_read_apis():

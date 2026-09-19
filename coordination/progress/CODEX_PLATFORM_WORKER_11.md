@@ -8,12 +8,12 @@
 
 ## Current Step
 
-Submitted for independent review.
+P1 follow-up submitted for independent re-review.
 
 ## Changes So Far
 
 - Replaced per-child shared run consumption with one exact pilot-admission
-  marker plus six exact binding launch markers.
+  marker plus six exact binding launch markers in one non-detachable set.
 - Added fake-child fan-out coverage: every approved binding launches once;
   duplicate, foreign, stale, cross-wired, missing-state, and second-pilot
   requests deny before a child boundary.
@@ -24,7 +24,7 @@ No implementation blocker.
 
 ## Next Step
 
-Independent review of the submitted fake-child-only repair.
+Independent re-review of the P1 correction.
 
 ## Validation
 
