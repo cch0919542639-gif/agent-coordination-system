@@ -46,7 +46,7 @@ def launcher_for(request):
     return {**PINNED_LAUNCHER, "wrapper_path": r"C:\pilot\approved\opencode.ps1", "approval_id": request["approval_id"], "run_id": request["run_id"]}
 
 
-def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, environment=None, pinned_digest=None):
+def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, binding_tokens=None, environment=None, pinned_digest=None):
     request, source, records = request or inputs()[0], source or inputs()[1], records or inputs()[2]
     calls, child = [], child or FakeChild()
     def popen(command, **kwargs):
@@ -55,7 +55,7 @@ def invoke(*, child=None, request=None, source=None, records=None, launcher=None
     original = runner.PINNED_WRAPPER_PATH_DIGEST
     runner.PINNED_WRAPPER_PATH_DIGEST = pinned_digest or _wrapper_digest(r"C:\pilot\approved\opencode.ps1")
     try:
-        result = run_live_opencode_once(request, source, records, launcher or launcher_for(request), now=NOW, consumed_run_ids=consumed if consumed is not None else set(), popen=popen, provider_environment=environment or {"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]})
+        result = run_live_opencode_once(request, source, records, launcher or launcher_for(request), now=NOW, consumed_run_ids=consumed if consumed is not None else set(), consumed_binding_tokens=binding_tokens if binding_tokens is not None else set(), popen=popen, provider_environment=environment or {"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]})
     finally:
         runner.PINNED_WRAPPER_PATH_DIGEST = original
     return result, calls
@@ -90,8 +90,8 @@ def test_invalid_expired_replayed_or_cross_wired_input_never_calls_popen():
     request, source, records = inputs()
     expired = deepcopy(source); expired["expires_at"] = "2026-09-18T07:59:00+00:00"
     crosswired = deepcopy(request); crosswired["grant_id"] = "grant-agent-02"
-    for bad_request, bad_source, consumed in ((request, expired, set()), (crosswired, source, set()), (request, source, {"run-01"})):
-        result, calls = invoke(request=bad_request, source=bad_source, records=records, consumed=consumed)
+    for bad_request, bad_source in ((request, expired), (crosswired, source)):
+        result, calls = invoke(request=bad_request, source=bad_source, records=records)
         assert result["decision"].startswith("deny_") and calls == []
 
 
@@ -106,6 +106,30 @@ def test_timeout_stops_only_the_matching_process_tree_after_one_launch():
     assert result["decision"] == "stopped_timeout" and len(calls) == 2
     assert calls[1][0][1:] == ("/pid", "4321", "/t", "/f")
     assert calls[1][1]["shell"] is False and calls[1][1]["env"] == {}
+
+
+def test_live_seam_allows_each_exact_binding_once_then_denies_duplicate_or_second_pilot_without_popen():
+    source = approval()
+    records = provision_local_workers(source, now=NOW)["records"]
+    consumed, launches, calls = set(), set(), []
+    for binding in source["bindings"]:
+        request = {"task_id": source["task_id"], "run_id": source["run_id"], "approval_id": source["approval_id"], **{key: binding[key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
+        result, spawned = invoke(request=request, source=source, records=records, consumed=consumed, binding_tokens=launches, environment={"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]})
+        assert result["decision"] == "completed"
+        calls.extend(spawned)
+    assert len(consumed) == 1 and len(launches) == len(calls) == 6
+    binding = source["bindings"][0]
+    request = {"task_id": source["task_id"], "run_id": source["run_id"], "approval_id": source["approval_id"], **{key: binding[key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
+    result, spawned = invoke(request=request, source=source, records=records, consumed=consumed, binding_tokens=launches)
+    assert result["decision"] == "deny_consumed_binding" and spawned == []
+    second = deepcopy(source); second["run_id"] = "run-02"
+    draft = {key: value for key, value in second.items() if key not in {"approval_id", "launch_time"}}
+    second = materialize_launch_approval(draft, now=NOW)["approval"]
+    second_records = provision_local_workers(second, now=NOW)["records"]
+    binding = second["bindings"][0]
+    second_request = {"task_id": second["task_id"], "run_id": second["run_id"], "approval_id": second["approval_id"], **{key: binding[key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
+    result, spawned = invoke(request=second_request, source=second, records=second_records, consumed=consumed, binding_tokens=launches, environment={"OPENCODE_PROJECT_WORKTREE": second_request["worktree_ref"]})
+    assert result["decision"] == "deny_consumed_approval" and spawned == []
 
 
 def test_source_has_only_the_constrained_popen_boundary():

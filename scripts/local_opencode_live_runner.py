@@ -21,12 +21,12 @@ PINNED_WRAPPER_PATH_DIGEST = "e1b87ce69411c64305ebcddf3403b982e1d264af45f5bffbbd
 Popen = Callable[..., object]
 
 
-def run_live_opencode_once(request: object, approval: object, records: object, launcher: object, *, now: datetime, consumed_run_ids: set[str], popen: Popen = subprocess.Popen, provider_environment: object = None) -> dict[str, object]:
+def run_live_opencode_once(request: object, approval: object, records: object, launcher: object, *, now: datetime, consumed_run_ids: set[str], consumed_binding_tokens: set[str] | None, popen: Popen = subprocess.Popen, provider_environment: object = None) -> dict[str, object]:
     """Start one reviewed request through the pinned PowerShell wrapper only."""
     if not _launcher(launcher, request):
         return {"decision": "deny_invalid_launcher", "dry_run": True, "control_level": "best_effort"}
     assert isinstance(launcher, Mapping)
-    return run_opencode_once(request, approval, records, now=now, consumed_run_ids=consumed_run_ids, spawn=_spawn(popen, str(launcher["wrapper_path"])), provider_environment=provider_environment)
+    return run_opencode_once(request, approval, records, now=now, consumed_run_ids=consumed_run_ids, consumed_binding_tokens=consumed_binding_tokens, spawn=_spawn(popen, str(launcher["wrapper_path"])), provider_environment=provider_environment)
 
 
 def _launcher(value: object, request: object) -> bool:

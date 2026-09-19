@@ -15,7 +15,7 @@ approved argv tokens to its injected spawn function.
 
 The approval ID is materialized only at the immediate launch boundary from the
 exact current draft and launch timestamp; a manually pre-filled ID or changed
-record denies. The run ID is consumed before spawn. Invalid, expired, consumed, cross-wired,
+record denies. The exact pilot admission (run plus launch-time approval ID) is consumed once before its first spawn; each of its six exact bindings gets a separately fenced one-time launch token. Invalid, expired, duplicate-binding, second-pilot, cross-wired,
 credential-bearing, or network-activating input returns a redacted denial
 before spawn. No shell is requested. The default child environment is empty.
 Only an enabled, exact `network_provider_exception` can pass the one supplied
@@ -54,7 +54,7 @@ invokes only `-NoProfile -NonInteractive -File` with the approved argv, no
 shell, no inherited environment, and no output capture. The absolute launcher
 path is input-only and never appears in a result or evidence record.
 
-The runner consumes the run through the executor before the first Popen call.
+The runner consumes pilot admission through the executor before the first Popen call, then fences each exact binding independently.
 On an approved timeout it invokes only the fixed task-tree termination command
 for that child PID. Tests inject every Popen call. This is still `best_effort`
 local control, not a sandbox or a claim of host enforcement.

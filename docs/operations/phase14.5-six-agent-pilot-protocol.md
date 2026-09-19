@@ -65,7 +65,10 @@ one-shot approval remains preflight evidence only and cannot enable a launch.
    workers in allocated worktrees. The live runner uses only its pinned
    PowerShell wrapper and must reject any request not exactly bound to identity,
    manifest, approval, worktree, fixed runtime/argv, timeout/stop handling, and
-   run window. Before those acceptances, do not launch.
+   run window. The shared pilot admission is consumed once; each of the six
+   exact bindings is then fenced and consumed separately before its own launch.
+   A duplicate, foreign, stale, or second-pilot request denies before a child
+   boundary. Before those acceptances, do not launch.
 4. Collect safe references only: dispatch, acknowledgement, lease, review-queue, incident, validation, and delivery. Never record prompts, source bodies, credentials, raw logs, transcripts, or absolute paths.
 5. Verify all seven architecture conditions: eight-task mixed graph; worker
    context/acknowledgement/lease/review evidence; one dependency unlock;

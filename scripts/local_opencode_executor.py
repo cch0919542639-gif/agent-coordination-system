@@ -23,8 +23,8 @@ Spawn = Callable[..., Process]
 HealthCheck = Callable[[Process], bool]
 
 
-def run_opencode_once(request: object, approval: object, records: object, *, now: datetime, consumed_run_ids: set[str], spawn: Spawn, provider_environment: object = None, heartbeat_at: datetime | None = None, supervision_checks: Iterable[datetime] = (), health_check: HealthCheck | None = None) -> dict[str, object]:
-    """Consume one exact L1 run before one injected, shell-free spawn."""
+def run_opencode_once(request: object, approval: object, records: object, *, now: datetime, consumed_run_ids: set[str], consumed_binding_tokens: set[str] | None, spawn: Spawn, provider_environment: object = None, heartbeat_at: datetime | None = None, supervision_checks: Iterable[datetime] = (), health_check: HealthCheck | None = None) -> dict[str, object]:
+    """Admit one pilot once, then fence each exact injected child launch."""
     if _unsafe(request) or _unsafe(records):
         return _result("deny_unsafe_request", request)
     if not _request(request):
@@ -32,14 +32,26 @@ def run_opencode_once(request: object, approval: object, records: object, *, now
     assert isinstance(request, Mapping)
     if request["runtime_id"] not in LOCAL_EXECUTABLES:
         return _result("deny_runtime", request)
-    if request["run_id"] in consumed_run_ids:
-        return _result("deny_consumed_approval", request)
     if not validate_approval(approval, now=now) or not _bound(request, approval, _base_records(records)):
         return _result("deny_unbound_approval", request)
     environment = _child_environment(approval, request, provider_environment)
     if environment is None:
         return _result("deny_provider_exception", request)
-    consumed_run_ids.add(str(request["run_id"]))
+    if not isinstance(consumed_binding_tokens, set):
+        return _result("deny_invalid_launch_state", request)
+    if not consumed_run_ids and consumed_binding_tokens:
+        return _result("deny_invalid_launch_state", request)
+    admission = _pilot_admission_token(approval)
+    if admission in consumed_run_ids:
+        pass
+    elif consumed_run_ids:
+        return _result("deny_consumed_approval", request)
+    else:
+        consumed_run_ids.add(admission)
+    launch = _binding_launch_token(request)
+    if launch in consumed_binding_tokens:
+        return _result("deny_consumed_binding", request)
+    consumed_binding_tokens.add(launch)
     try:
         process = spawn(
             LOCAL_EXECUTABLES[str(request["runtime_id"])],
@@ -61,6 +73,15 @@ def run_opencode_once(request: object, approval: object, records: object, *, now
     except Exception:
         return _result("stopped_safety_signal", request)
     return _result("completed" if code == 0 else "stopped_nonzero_exit", request)
+
+
+def _pilot_admission_token(approval: object) -> str:
+    assert isinstance(approval, Mapping)
+    return f"{approval['run_id']}:{approval['approval_id']}"
+
+
+def _binding_launch_token(request: Mapping[str, object]) -> str:
+    return ":".join(str(request[key]) for key in ("approval_id", "agent_id", "grant_id", "worktree_ref"))
 
 
 def supervise_approved_lease(process: Process, request: Mapping[str, object], approval: Mapping[str, object], *, started_at: datetime, heartbeat_at: datetime, checks: Iterable[datetime], health_check: HealthCheck) -> str | None:
