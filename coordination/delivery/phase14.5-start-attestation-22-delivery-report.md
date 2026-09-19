@@ -28,11 +28,16 @@
   no-retry behavior are unchanged.
 - Fake-Popen tests cover failed pre-spawn/Popen paths, started child,
   overlapping started children, timeout stop, and evidence redaction.
+- P1 follow-up: if a caller-owned attestation state rejects registration after
+  Popen returned a live child, the runner invokes the existing exact task-tree
+  stop for that child before returning its redacted safety terminal result.
+  The matching fake regression proves no attestation is emitted and no live
+  child remains.
 
 ## Validation Steps Performed
 
 - `python -m pytest -p no:cacheprovider --basetemp ...` for provision,
-  adapter, executor, and live-runner suites — 35 passed.
+  adapter, executor, and live-runner suites — 36 passed.
 - `py_compile scripts/local_opencode_live_runner.py` — passed.
 - `scripts/orchestrate.py validate` — passed.
 - `git diff --check` — passed.

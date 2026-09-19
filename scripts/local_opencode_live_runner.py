@@ -86,6 +86,15 @@ def _spawn(popen: Popen, wrapper_path: str, request: Mapping[str, object], state
         if not _live_child_identity(child):
             raise RuntimeError("child is not live")
         tree = _ProcessTree(child, popen, state, _binding_digest(request))
+        try:
+            tree.register_start()
+        except Exception:
+            try:
+                tree.terminate_tree()
+            except Exception:
+                pass
+            raise RuntimeError("start registration failed") from None
+        assert tree.start_evidence is not None
         captured.append(tree.start_evidence)
         return tree
     return spawn
@@ -113,7 +122,10 @@ class _ProcessTree:
         self._child, self._popen = child, popen
         self._state, self._binding_digest = state, binding_digest
         self._finished = False
-        self.start_evidence = state.start(binding_digest)
+        self.start_evidence: tuple[dict[str, object], dict[str, object]] | None = None
+
+    def register_start(self) -> None:
+        self.start_evidence = self._state.start(self._binding_digest)
 
     def _finish(self) -> None:
         if not self._finished:

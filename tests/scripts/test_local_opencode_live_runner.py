@@ -8,7 +8,7 @@ from threading import Event, Thread
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 from local_control_provision import materialize_launch_approval, provision_local_workers
 import local_opencode_live_runner as runner
-from local_opencode_live_runner import PINNED_LAUNCHER, StartAttestationState, _wrapper_digest, run_live_opencode_once
+from local_opencode_live_runner import PINNED_LAUNCHER, StartAttestationState, _binding_digest, _wrapper_digest, run_live_opencode_once
 
 
 NOW = datetime(2026, 9, 18, 8, 0, tzinfo=timezone.utc)
@@ -55,14 +55,18 @@ def launcher_for(request):
     return {**PINNED_LAUNCHER, "wrapper_path": r"C:\pilot\approved\opencode.ps1", "approval_id": request["approval_id"], "run_id": request["run_id"]}
 
 
-def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, environment=None, pinned_digest=None, state=None, popen_failure=False):
+def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, environment=None, pinned_digest=None, state=None, popen_failure=False, stop_marks_child=False):
     request, source, records = request or inputs()[0], source or inputs()[1], records or inputs()[2]
     calls, child = [], child or FakeChild()
     def popen(command, **kwargs):
         calls.append((command, kwargs))
         if popen_failure and not command[0].endswith("taskkill.exe"):
             raise RuntimeError("fake Popen failure")
-        return FakeChild() if command[0].endswith("taskkill.exe") else child
+        if command[0].endswith("taskkill.exe"):
+            if stop_marks_child:
+                child.live = False
+            return FakeChild()
+        return child
     original = runner.PINNED_WRAPPER_PATH_DIGEST
     runner.PINNED_WRAPPER_PATH_DIGEST = pinned_digest or _wrapper_digest(r"C:\pilot\approved\opencode.ps1")
     try:
@@ -131,6 +135,17 @@ def test_prespawn_denial_popen_failure_or_nonlive_child_emit_no_start_attestatio
         assert "safe_start_attestation" not in result and "concurrency_projection" not in result
         assert result["decision"].startswith("deny_") or result["decision"] == "stopped_safety_signal"
     assert denied_calls == [] and len(failed_calls) == len(nonlive_calls) == 1
+
+
+def test_start_registration_collision_stops_the_matching_live_child_without_attestation():
+    request, _, _ = inputs()
+    state, child = StartAttestationState(), FakeChild()
+    state.start(_binding_digest(request))
+    result, calls = invoke(state=state, child=child, stop_marks_child=True)
+    assert result["decision"] == "stopped_safety_signal"
+    assert "safe_start_attestation" not in result and "concurrency_projection" not in result
+    assert len(calls) == 2 and calls[1][0][1:] == ("/pid", "4321", "/t", "/f")
+    assert child.live is False
 
 
 def test_shared_state_projects_monotonic_overlapping_live_starts_without_child_identity_leakage():

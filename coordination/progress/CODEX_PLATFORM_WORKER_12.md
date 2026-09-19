@@ -18,6 +18,9 @@ independent review.
   projection held only in caller-owned memory.
 - Added fake-only coverage for pre-spawn denial, Popen failure, non-live
   returned child, successful start, overlap, timeout stop, and redaction.
+- P1 follow-up stops the matching live child if attestation-state registration
+  rejects after Popen; fake coverage proves no attestation and no live child
+  remain.
 
 ## Blocker Status
 
@@ -29,7 +32,7 @@ Await independent review.
 
 ## Validation
 
-- Focused provision/adapter/executor/live-runner suite: 35 passed.
+- Focused provision/adapter/executor/live-runner suite: 36 passed.
 - `py_compile scripts/local_opencode_live_runner.py`, coordination validation,
   and `git diff --check`: passed.
 
