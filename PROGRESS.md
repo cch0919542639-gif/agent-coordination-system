@@ -118,6 +118,9 @@ the documentation-only `phase14.5-04` supervised-launch design task.
 - `phase14.5-lease-supervisor-project-context-18` is independently accepted:
   launch-time IDs, renewable lease supervision, and exact worktree context
   replace guessed total duration and arbitrary configuration roots.
+- `phase14.5-pilot-approval-fanout-20` is independently accepted: one pilot
+  admission fences six exact, independently consumable binding launches;
+  retained-state replay is denied before spawn.
 
 ## 2026-09-06 Next Dispatch Gate
 
