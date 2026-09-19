@@ -1,29 +1,29 @@
 # Progress Report
 
 - Agent: CODEX_PLATFORM_WORKER_08
-- Active Task: phase14.5-opencode-network-credential-exception-14
-- Phase: phase14.5-opencode-network-exception
-- Status: REVIEW
-- Last Updated: 2026-09-18
+- Active Task: phase14.5-runtime-bound-six-worker-pilot-26
+- Phase: phase14.5-phase-h-live-pilot
+- Status: BLOCKED
+- Last Updated: 2026-09-20
 
 ## Current Step
 
-Addressed the independent-review evidence gap and resubmitted the exact
-one-shot provider-network exception.
+Claimed the newly authorized runtime-bound, one-shot Phase H pilot. Current
+work is limited to current preflight and the accepted launch boundary.
 
 ## Changes So Far
 
-- Claimed the assigned task and extended the L1 approval with a default-deny
-  network/provider exception projection.
-- Added an opaque caller-supplied environment boundary and fake-spawn tests.
-- Added enabled-exception zero-spawn coverage for expiry, consumption,
-  six-record cross-wiring, and a credential-like environment key.
-- Ran 119 affected Phase B.1--H tests and coordination validation.
+- Claimed the assigned pilot task.
+- Read the accepted runtime-binding and Phase H launch contracts.
+- No live boundary, provider configuration, credential, or child output has
+  been accessed.
 
 ## Blocker Status
 
-none
+Blocked before admission: the aggregate current-worktree preflight did not
+confirm all six required bindings. No live boundary was reached.
 
 ## Next Step
 
-Wait for re-review; do not execute OpenCode or access provider configuration.
+Wait for orchestrator direction; do not retry, fall back, or seek another
+authority.
