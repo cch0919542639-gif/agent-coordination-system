@@ -99,7 +99,7 @@ def _binding(value: object, root: str) -> bool:
 
 
 def _record(approval: Mapping[str, Any], binding: Mapping[str, Any]) -> dict[str, object]:
-    return {"task_id": TASK_ID, "run_id": approval["run_id"], "approval_id": approval["approval_id"], "agent_id": binding["agent_id"], "grant_id": binding["grant_id"], "worktree_ref": binding["worktree_ref"], "runtime_id": binding["runtime_id"], "argv_allowlist": list(binding["argv_allowlist"]), "timeout_seconds": binding["timeout_seconds"], "stop_authority": binding["stop_authority"], "scheduler_ref": binding["scheduler_ref"], "lease_ref": binding["lease_ref"], "review_ref": binding["review_ref"], "manifest_digest": binding["manifest_digest"], "allocation_digest": binding["allocation_digest"], "control_level": "best_effort", "process_tree_stop_handling": True}
+    return {"task_id": TASK_ID, "run_id": approval["run_id"], "approval_id": approval["approval_id"], "agent_id": binding["agent_id"], "grant_id": binding["grant_id"], "worktree_ref": binding["worktree_ref"], "runtime_id": binding["runtime_id"], "argv_allowlist": list(binding["argv_allowlist"]), "timeout_seconds": binding["timeout_seconds"], "heartbeat_interval_seconds": binding["heartbeat_interval_seconds"], "missed_heartbeat_threshold": binding["missed_heartbeat_threshold"], "per_child_hard_ceiling_seconds": binding["per_child_hard_ceiling_seconds"], "stop_authority": binding["stop_authority"], "scheduler_ref": binding["scheduler_ref"], "lease_ref": binding["lease_ref"], "review_ref": binding["review_ref"], "manifest_digest": binding["manifest_digest"], "allocation_digest": binding["allocation_digest"], "control_level": "best_effort", "process_tree_stop_handling": True}
 
 
 def _time(value: object) -> datetime | None:

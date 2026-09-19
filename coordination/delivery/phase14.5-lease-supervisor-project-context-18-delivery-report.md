@@ -32,19 +32,23 @@
   persisted.
 - Existing shell-free fixed-wrapper, exact six-record, redaction, empty-output,
   one-shot consume-before-spawn, and L1 `best_effort` boundaries remain intact.
+- Follow-up P1 correction projects all three lease values into every durable
+  provision record and exact adapter binding; the hard-ceiling fake-child test
+  proves matching-tree termination, terminal result, consumed approval, and no
+  retry.
 
 ## Validation Steps Performed
 
 - `py_compile` for all three permitted runtime-boundary modules: passed.
-- Focused permitted boundary suite: 30 passed.
-- Affected B.1--H suite: 129 passed.
-- `scripts/orchestrate.py validate`: passed.
+- Focused and affected B.1--H suite: 118 passed.
+- `scripts/orchestrate.py validate`: blocked only by the independent review
+  file's missing required metadata labels; the implementation did not modify
+  that reviewer-owned record.
 - `git diff --check`: passed.
 
 ## Known Residual Risks
 
-Four unrelated `test_worktree_provision.py` cases could not create their test
-Git worktrees because this environment denies writes under `.git/worktrees`.
-They do not exercise this task's code, and no real OpenCode, Popen, network,
-provider, credential, worktree, or Git action was performed by this task.
-L1 remains `best_effort`, not a sandbox.
+The reviewer-owned metadata error must be repaired by the reviewer or
+orchestrator before repository-wide validation can pass. No real OpenCode,
+Popen, network, provider, credential, worktree, or Git action was performed
+by this task. L1 remains `best_effort`, not a sandbox.

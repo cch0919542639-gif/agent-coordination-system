@@ -27,6 +27,7 @@ def test_exact_six_binding_records_are_deterministic_best_effort_only():
     records = result["records"]
     assert len(records) == 6 and {record["agent_id"] for record in records} == {f"agent-{number:02d}" for number in range(1, 7)}
     assert all(record["control_level"] == "best_effort" and record["process_tree_stop_handling"] is True for record in records)
+    assert all((record["heartbeat_interval_seconds"], record["missed_heartbeat_threshold"], record["per_child_hard_ceiling_seconds"]) == (5, 2, 60) for record in records)
     assert not any(key in repr(records).lower() for key in ("credential", "prompt", "transcript", "source"))
 
 

@@ -10,8 +10,8 @@ from local_control_provision import TASK_ID, validate_approval
 
 REQUEST_FIELDS = frozenset({"task_id", "run_id", "approval_id", "agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority"})
 SAFE_KEYS = ("task_id", "run_id", "approval_id", "agent_id", "grant_id", "worktree_ref", "runtime_id", "timeout_seconds", "stop_authority")
-RECORD_FIELDS = frozenset({"task_id", "run_id", "approval_id", "agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority", "scheduler_ref", "lease_ref", "review_ref", "manifest_digest", "allocation_digest", "control_level", "process_tree_stop_handling"})
-RECORD_BINDING_KEYS = ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority", "scheduler_ref", "lease_ref", "review_ref", "manifest_digest", "allocation_digest")
+RECORD_FIELDS = frozenset({"task_id", "run_id", "approval_id", "agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "heartbeat_interval_seconds", "missed_heartbeat_threshold", "per_child_hard_ceiling_seconds", "stop_authority", "scheduler_ref", "lease_ref", "review_ref", "manifest_digest", "allocation_digest", "control_level", "process_tree_stop_handling"})
+RECORD_BINDING_KEYS = ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "heartbeat_interval_seconds", "missed_heartbeat_threshold", "per_child_hard_ceiling_seconds", "stop_authority", "scheduler_ref", "lease_ref", "review_ref", "manifest_digest", "allocation_digest")
 
 
 class Process(Protocol):

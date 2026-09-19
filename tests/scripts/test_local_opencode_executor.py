@@ -155,6 +155,14 @@ def test_renewable_lease_supervision_stops_only_missed_or_unhealthy_fake_child()
     assert result["decision"] == "completed" and calls and not process.stopped
 
 
+def test_hard_ceiling_stops_one_fake_child_without_retry_after_consumption():
+    consumed = set()
+    request, source, records = inputs()
+    result, calls, process = invoke(request, source, records, consumed=consumed, supervision_checks=(NOW.replace(minute=1),))
+    assert result["decision"] == "stopped_hard_ceiling" and calls and process.stopped
+    assert consumed == {"run-01"} and len(calls) == 1
+
+
 def test_source_has_no_runtime_network_filesystem_or_environment_read_apis():
     source = Path(__file__).resolve().parents[2].joinpath("scripts", "local_opencode_executor.py").read_text(encoding="utf-8")
     for token in ("subprocess", "Popen", "socket", "requests", "urllib", "os.system", "open(", "Path(", "os.environ", "getenv", "shell=True"):

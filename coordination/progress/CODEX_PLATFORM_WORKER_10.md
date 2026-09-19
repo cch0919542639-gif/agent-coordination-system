@@ -24,6 +24,6 @@ and the affected legacy fixture now uses launch-time materialization.
 
 ## Next Step
 
-Await independent review. The focused B.1--H suite has 129 passing tests; four
-unrelated worktree-provision tests are blocked by an existing `.git/worktrees`
-permission denial in this environment.
+P1 follow-up is ready for re-review: 118 affected tests pass. Coordination
+validation is blocked only by missing metadata in the reviewer-owned record,
+which this task must not modify.

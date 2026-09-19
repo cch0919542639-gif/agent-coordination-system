@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Callable, Iterable, Mapping, Protocol
 
-from local_control_adapter import SAFE_KEYS, _bound, _request
+from local_control_adapter import RECORD_FIELDS, SAFE_KEYS, _bound, _request
 from local_control_provision import PROJECT_CONTEXT_KEY, validate_approval
 
 
@@ -34,7 +34,7 @@ def run_opencode_once(request: object, approval: object, records: object, *, now
         return _result("deny_runtime", request)
     if request["run_id"] in consumed_run_ids:
         return _result("deny_consumed_approval", request)
-    if not validate_approval(approval, now=now) or not _bound(request, approval, records):
+    if not validate_approval(approval, now=now) or not _bound(request, approval, _base_records(records)):
         return _result("deny_unbound_approval", request)
     environment = _child_environment(approval, request, provider_environment)
     if environment is None:
@@ -87,6 +87,13 @@ def _binding_for(request: Mapping[str, object], approval: object) -> Mapping[str
         return None
     matches = [item for item in approval["bindings"] if isinstance(item, Mapping) and all(item.get(key) == request.get(key) for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority"))]
     return matches[0] if len(matches) == 1 else None
+
+
+def _base_records(records: object) -> object:
+    """Keep the adapter's prior exact projection while records carry leases."""
+    if not isinstance(records, list):
+        return records
+    return [{key: item[key] for key in RECORD_FIELDS} if isinstance(item, Mapping) and set(RECORD_FIELDS) <= set(item) else item for item in records]
 
 
 def _stop(process: Process, decision: str) -> str:
