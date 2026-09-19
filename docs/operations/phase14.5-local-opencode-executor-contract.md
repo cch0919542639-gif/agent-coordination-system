@@ -10,8 +10,8 @@ local control, not a sandbox or a network/filesystem/process-isolation claim.
 validated by the accepted L1 adapter and provisioner: one of six records,
 its matching request, and the enabled unexpired one-shot approval for
 `phase14.5-six-agent-pilot-08`. It accepts only `runtime_id: opencode`, maps
-that ID to the fixed local executable `opencode.exe`, and passes only the
-approved argv tokens to its injected spawn function.
+that ID to the reviewed local `opencode` binding, and passes only the approved
+argv tokens to its injected spawn function.
 
 The approval ID is materialized only at the immediate launch boundary from the
 exact current draft and launch timestamp; a manually pre-filled ID or changed
@@ -49,13 +49,16 @@ accepts the same already-validated request, approval, record set, and opaque
 caller-supplied environment as the executor, plus the exact reviewed launcher
 mapping. That mapping pins the system PowerShell executable, request
 approval/run IDs, and an absolute `.ps1` input to the SHA-256 content digest
-of the reviewed project-owned `scripts/opencode_pilot_wrapper.ps1`. The
-wrapper forwards only approved argv to `opencode.exe` and returns its exit
-code. A changed, missing, oversized, malformed, or nonmatching wrapper denies
-before Popen. The same strict path and content pin is checked again immediately
-at the injected spawn boundary, so a post-admission replacement also reaches
-no Popen. The raw absolute input path and wrapper source never appear in a
-result or evidence record; invocation remains only
+of the reviewed project-owned `scripts/opencode_pilot_wrapper.ps1`. Before
+Popen, the runner checks that the sole local `opencode` command resolution has
+the reviewed SHA-256 content identity. It passes that just-revalidated location
+only as an internal wrapper parameter; the wrapper hashes exactly that supplied
+location immediately before invocation and performs no command lookup. The
+runner repeats both the wrapper and runtime checks immediately before Popen. A changed, missing,
+oversized, malformed, nonmatching, or ambiguous binding denies without a
+fallback or retry. The raw absolute input path, runtime path, wrapper source,
+and runtime command never appear in a result or evidence record; invocation
+remains only
 `-NoProfile -NonInteractive -File` with no shell, inherited environment, or
 output capture.
 

@@ -6,6 +6,7 @@ import ntpath
 import subprocess
 import hashlib
 import json
+import shutil
 import threading
 from datetime import datetime
 from typing import Callable, Mapping
@@ -17,7 +18,8 @@ POWERSHELL = r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
 TASKKILL = r"C:\Windows\System32\taskkill.exe"
 LAUNCHER_FIELDS = frozenset({"runtime_id", "powershell_path", "wrapper_path", "launcher_id", "approval_id", "run_id"})
 PINNED_LAUNCHER = {"runtime_id": "opencode", "powershell_path": POWERSHELL, "launcher_id": "opencode-powershell-wrapper-v1"}
-PINNED_WRAPPER_CONTENT_DIGEST = "aa7ea288a6e44204dff64ddf90f9b1a4b8f55f9ae70837020644b7e6a000c0d5"
+PINNED_WRAPPER_CONTENT_DIGEST = "c16dd5bee4f723e0044f724d2a5bd8e56005175223766d81bd2395660d3667d7"
+PINNED_RUNTIME_CONTENT_DIGEST = "b53b698473bfa46e09487e485a7f1ad5b4881f8a8b319d3619aa251f3be8ae10"
 
 
 Popen = Callable[..., object]
@@ -66,7 +68,7 @@ def _launcher(value: object, request: object) -> bool:
         return False
     if not isinstance(request, Mapping) or any(value.get(key) != request.get(key) for key in ("approval_id", "run_id")):
         return False
-    return all(value.get(key) == expected for key, expected in PINNED_LAUNCHER.items()) and _wrapper_path(value.get("wrapper_path")) and _wrapper_content_digest(str(value["wrapper_path"])) == PINNED_WRAPPER_CONTENT_DIGEST
+    return all(value.get(key) == expected for key, expected in PINNED_LAUNCHER.items()) and _wrapper_path(value.get("wrapper_path")) and _wrapper_content_digest(str(value["wrapper_path"])) == PINNED_WRAPPER_CONTENT_DIGEST and bool(_runtime_path())
 
 
 def _wrapper_path(value: object) -> bool:
@@ -85,11 +87,32 @@ def _wrapper_content_digest(value: str) -> str | None:
     return hashlib.sha256(content).hexdigest() if len(content) <= 1024 else None
 
 
+def _runtime_path() -> str | None:
+    """Resolve only the reviewed command identity; never expose its path."""
+    value = shutil.which("opencode")
+    if value is None or not _executable_path(value):
+        return None
+    try:
+        with open(value, "rb") as runtime:
+            content = runtime.read(16385)
+    except OSError:
+        return None
+    return value if len(content) <= 16384 and hashlib.sha256(content).hexdigest() == PINNED_RUNTIME_CONTENT_DIGEST else None
+
+
+def _executable_path(value: str) -> bool:
+    if not (1 <= len(value) <= 512) or not ntpath.isabs(value) or ntpath.normpath(value) != value:
+        return False
+    drive, _ = ntpath.splitdrive(value)
+    return len(drive) == 2 and drive[0].isalpha() and drive[1] == ":" and value.casefold().endswith(".cmd") and all(part not in {"", ".", ".."} for part in value.split("\\")[1:]) and not any(char in value for char in "\x00\r\n\"'`|;&")
+
+
 def _spawn(popen: Popen, wrapper_path: str, request: Mapping[str, object], state: StartAttestationState, captured: list[tuple[dict[str, object], dict[str, object]]]) -> Spawn:
     def spawn(_: str, argv: tuple[str, ...], *, cwd_ref: str, env: dict[str, str], shell: bool) -> Process:
-        if not _wrapper_path(wrapper_path) or _wrapper_content_digest(wrapper_path) != PINNED_WRAPPER_CONTENT_DIGEST:
-            raise RuntimeError("wrapper changed before spawn")
-        child = popen((POWERSHELL, "-NoProfile", "-NonInteractive", "-File", wrapper_path, *argv), cwd=cwd_ref, env=env, shell=shell, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        runtime_path = _runtime_path()
+        if not _wrapper_path(wrapper_path) or _wrapper_content_digest(wrapper_path) != PINNED_WRAPPER_CONTENT_DIGEST or runtime_path is None:
+            raise RuntimeError("launcher changed before spawn")
+        child = popen((POWERSHELL, "-NoProfile", "-NonInteractive", "-File", wrapper_path, "-RuntimePath", runtime_path, *argv), cwd=cwd_ref, env=env, shell=shell, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if not _live_child_identity(child):
             raise RuntimeError("child is not live")
         tree = _ProcessTree(child, popen, state, _binding_digest(request))

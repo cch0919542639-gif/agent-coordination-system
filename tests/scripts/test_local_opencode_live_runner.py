@@ -56,7 +56,7 @@ def launcher_for(request, wrapper_path=WRAPPER_PATH):
     return {**PINNED_LAUNCHER, "wrapper_path": wrapper_path, "approval_id": request["approval_id"], "run_id": request["run_id"]}
 
 
-def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, environment=None, pinned_digest=None, state=None, popen_failure=False, stop_marks_child=False):
+def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, environment=None, pinned_digest=None, state=None, popen_failure=False, stop_marks_child=False, runtime_path=lambda: r"C:\\runtime\\opencode.cmd"):
     request, source, records = request or inputs()[0], source or inputs()[1], records or inputs()[2]
     calls, child = [], child or FakeChild()
     def popen(command, **kwargs):
@@ -68,25 +68,31 @@ def invoke(*, child=None, request=None, source=None, records=None, launcher=None
                 child.live = False
             return FakeChild()
         return child
-    original = runner.PINNED_WRAPPER_CONTENT_DIGEST
+    original, original_runtime_path = runner.PINNED_WRAPPER_CONTENT_DIGEST, runner._runtime_path
     runner.PINNED_WRAPPER_CONTENT_DIGEST = pinned_digest or _wrapper_content_digest(WRAPPER_PATH)
+    runner._runtime_path = runtime_path
     try:
         result = run_live_opencode_once(request, source, records, launcher or launcher_for(request), now=NOW, consumed_run_ids=consumed if consumed is not None else set(), popen=popen, provider_environment=environment or {"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]}, attestation_state=state)
     finally:
-        runner.PINNED_WRAPPER_CONTENT_DIGEST = original
+        runner.PINNED_WRAPPER_CONTENT_DIGEST, runner._runtime_path = original, original_runtime_path
     return result, calls
 
 
-def test_pinned_wrapper_is_the_only_shell_free_command_and_result_is_redacted():
+def test_pinned_wrapper_receives_internal_runtime_path_with_context_only_environment():
     result, calls = invoke()
     command, kwargs = calls[0]
     assert command[:5] == (PINNED_LAUNCHER["powershell_path"], "-NoProfile", "-NonInteractive", "-File", WRAPPER_PATH)
+    assert command[5] == "-RuntimePath" and command[6].endswith(".cmd")
     assert command[-2:] == ("run", "restricted")
     assert kwargs["cwd"] == "worktrees/pilot/agent-01" and kwargs["env"] == {"OPENCODE_PROJECT_WORKTREE": "worktrees/pilot/agent-01"}
     assert kwargs["shell"] is False and kwargs["stdout"] is kwargs["stderr"]
     assert "wrapper_path" not in result and "environment" not in result and "C:\\" not in repr(result)
     assert result["safe_start_attestation"]["binding_digest"] == result["concurrency_projection"]["binding_digest"]
     assert "4321" not in repr(result) and "worktrees/" not in repr(result)
+
+
+def test_reviewed_wrapper_content_matches_the_fixed_pin():
+    assert _wrapper_content_digest(WRAPPER_PATH) == runner.PINNED_WRAPPER_CONTENT_DIGEST
 
 
 def test_malformed_or_changed_launcher_never_calls_popen():
@@ -102,6 +108,22 @@ def test_mismatched_wrapper_digest_never_calls_popen():
     record = launcher_for(request)
     result, calls = invoke(launcher=record, pinned_digest="0" * 64)
     assert result["decision"] == "deny_invalid_launcher" and calls == []
+
+
+def test_missing_or_changed_runtime_binding_denies_before_popen():
+    for runtime_path in (lambda: None, lambda: ""):
+        result, calls = invoke(runtime_path=runtime_path)
+        assert result["decision"] == "deny_invalid_launcher" and calls == []
+
+
+def test_runtime_binding_requires_the_exact_content_digest(monkeypatch, tmp_path):
+    candidate = tmp_path / "opencode.cmd"
+    candidate.write_bytes(b"reviewed-runtime")
+    monkeypatch.setattr(runner.shutil, "which", lambda _: str(candidate))
+    monkeypatch.setattr(runner, "PINNED_RUNTIME_CONTENT_DIGEST", __import__("hashlib").sha256(candidate.read_bytes()).hexdigest())
+    assert runner._runtime_path() is not None
+    candidate.write_bytes(b"changed-runtime")
+    assert runner._runtime_path() is None
 
 
 def test_changed_missing_or_unsafe_wrapper_denies_before_popen(tmp_path):
@@ -129,6 +151,22 @@ def test_wrapper_replaced_after_admission_denies_at_spawn_before_popen(tmp_path)
     runner.run_opencode_once = replace_then_run
     try:
         result, calls = invoke(request=request, source=source, records=records, launcher=launcher_for(request, str(wrapper)))
+    finally:
+        runner.run_opencode_once = original
+    assert result["decision"] == "stopped_safety_signal" and calls == []
+    assert "safe_start_attestation" not in result and "concurrency_projection" not in result
+
+
+def test_runtime_replaced_after_admission_denies_at_spawn_before_popen():
+    original = runner.run_opencode_once
+
+    def remove_then_run(*args, **kwargs):
+        runner._runtime_path = lambda: None
+        return original(*args, **kwargs)
+
+    runner.run_opencode_once = remove_then_run
+    try:
+        result, calls = invoke()
     finally:
         runner.run_opencode_once = original
     assert result["decision"] == "stopped_safety_signal" and calls == []

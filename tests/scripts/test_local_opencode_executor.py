@@ -64,10 +64,10 @@ def invoke(request=None, source=None, records=None, process=None, consumed=None,
     return result, calls, process
 
 
-def test_exact_l1_record_spawns_fixed_opencode_once_with_empty_env_and_no_shell():
+def test_exact_l1_record_spawns_pinned_opencode_once_with_empty_env_and_no_shell():
     result, calls, _ = invoke()
     assert result["decision"] == "completed"
-    assert calls == [("opencode.exe", ("run", "restricted"), "worktrees/pilot/agent-01", {}, False)]
+    assert calls == [("opencode", ("run", "restricted"), "worktrees/pilot/agent-01", {}, False)]
     assert set(result) == {"decision", "dry_run", "control_level", "task_id", "run_id", "approval_id", "agent_id", "grant_id", "runtime_id", "timeout_seconds"}
 
 

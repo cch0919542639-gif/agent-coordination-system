@@ -9,7 +9,7 @@ from local_control_adapter import RECORD_FIELDS, SAFE_KEYS, _bound, _request
 from local_control_provision import PROJECT_CONTEXT_KEY, validate_approval
 
 
-LOCAL_EXECUTABLES = {"opencode": "opencode.exe"}
+LOCAL_EXECUTABLES = {"opencode": "opencode"}
 SAFE_RESULT_KEYS = ("task_id", "run_id", "approval_id", "agent_id", "grant_id", "runtime_id", "timeout_seconds")
 FORBIDDEN_WORDS = ("api_key", "authorization", "bearer", "credential", "password", "secret", "token")
 
