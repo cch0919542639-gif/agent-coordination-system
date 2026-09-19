@@ -62,8 +62,9 @@ one-shot approval remains preflight evidence only and cannot enable a launch.
 3. Only after `phase14.5-local-control-adapter-12`, the OpenCode executor,
    and the reviewed live runner are accepted and preflight passes, the
    separately approved local-control adapter may start at most the six approved
-   workers in allocated worktrees. The live runner uses only its pinned
-   PowerShell wrapper and must reject any request not exactly bound to identity,
+   workers in allocated worktrees. The live runner uses only its reviewed
+   project-owned PowerShell wrapper whose source-content digest matches its
+   fixed pin, and must reject any request not exactly bound to identity,
    manifest, approval, worktree, fixed runtime/argv, timeout/stop handling, and
    run window. The shared pilot admission is consumed once; each of the six
    exact bindings is then fenced and consumed separately before its own launch.
@@ -91,3 +92,8 @@ one-shot approval is required for any later attempt, and a claim of six child
 starts requires the safe start and concurrency projections above. L1 does not
 claim an enforced filesystem or network boundary. L2 remains optional; it
 requires separate platform enforcement evidence before making any such claim.
+
+Task 23's later fresh attempt was blocked before admission because its
+historical opaque wrapper-path digest had no matching local candidate. Task 24
+replaces that unavailable prerequisite with the independently checkable source
+content pin above; it does not retry Task 23 or authorize another pilot.

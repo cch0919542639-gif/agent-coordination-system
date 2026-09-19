@@ -8,10 +8,11 @@ from threading import Event, Thread
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 from local_control_provision import materialize_launch_approval, provision_local_workers
 import local_opencode_live_runner as runner
-from local_opencode_live_runner import PINNED_LAUNCHER, StartAttestationState, _binding_digest, _wrapper_digest, run_live_opencode_once
+from local_opencode_live_runner import PINNED_LAUNCHER, StartAttestationState, _binding_digest, _wrapper_content_digest, run_live_opencode_once
 
 
 NOW = datetime(2026, 9, 18, 8, 0, tzinfo=timezone.utc)
+WRAPPER_PATH = str(Path(__file__).resolve().parents[2] / "scripts" / "opencode_pilot_wrapper.ps1")
 
 
 class FakeChild:
@@ -51,8 +52,8 @@ def inputs():
     return request, source, records
 
 
-def launcher_for(request):
-    return {**PINNED_LAUNCHER, "wrapper_path": r"C:\pilot\approved\opencode.ps1", "approval_id": request["approval_id"], "run_id": request["run_id"]}
+def launcher_for(request, wrapper_path=WRAPPER_PATH):
+    return {**PINNED_LAUNCHER, "wrapper_path": wrapper_path, "approval_id": request["approval_id"], "run_id": request["run_id"]}
 
 
 def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, environment=None, pinned_digest=None, state=None, popen_failure=False, stop_marks_child=False):
@@ -67,19 +68,19 @@ def invoke(*, child=None, request=None, source=None, records=None, launcher=None
                 child.live = False
             return FakeChild()
         return child
-    original = runner.PINNED_WRAPPER_PATH_DIGEST
-    runner.PINNED_WRAPPER_PATH_DIGEST = pinned_digest or _wrapper_digest(r"C:\pilot\approved\opencode.ps1")
+    original = runner.PINNED_WRAPPER_CONTENT_DIGEST
+    runner.PINNED_WRAPPER_CONTENT_DIGEST = pinned_digest or _wrapper_content_digest(WRAPPER_PATH)
     try:
         result = run_live_opencode_once(request, source, records, launcher or launcher_for(request), now=NOW, consumed_run_ids=consumed if consumed is not None else set(), popen=popen, provider_environment=environment or {"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]}, attestation_state=state)
     finally:
-        runner.PINNED_WRAPPER_PATH_DIGEST = original
+        runner.PINNED_WRAPPER_CONTENT_DIGEST = original
     return result, calls
 
 
 def test_pinned_wrapper_is_the_only_shell_free_command_and_result_is_redacted():
     result, calls = invoke()
     command, kwargs = calls[0]
-    assert command[:5] == (PINNED_LAUNCHER["powershell_path"], "-NoProfile", "-NonInteractive", "-File", r"C:\pilot\approved\opencode.ps1")
+    assert command[:5] == (PINNED_LAUNCHER["powershell_path"], "-NoProfile", "-NonInteractive", "-File", WRAPPER_PATH)
     assert command[-2:] == ("run", "restricted")
     assert kwargs["cwd"] == "worktrees/pilot/agent-01" and kwargs["env"] == {"OPENCODE_PROJECT_WORKTREE": "worktrees/pilot/agent-01"}
     assert kwargs["shell"] is False and kwargs["stdout"] is kwargs["stderr"]
@@ -100,6 +101,18 @@ def test_mismatched_wrapper_digest_never_calls_popen():
     request, _, _ = inputs()
     record = launcher_for(request)
     result, calls = invoke(launcher=record, pinned_digest="0" * 64)
+    assert result["decision"] == "deny_invalid_launcher" and calls == []
+
+
+def test_changed_missing_or_unsafe_wrapper_denies_before_popen(tmp_path):
+    request, _, _ = inputs()
+    changed = tmp_path / "opencode_pilot_wrapper.ps1"
+    changed.write_text("& opencode.exe changed\n", encoding="utf-8")
+    for path in (changed, tmp_path / "missing.ps1"):
+        result, calls = invoke(launcher=launcher_for(request, str(path)))
+        assert result["decision"] == "deny_invalid_launcher" and calls == []
+    changed.write_text("Invoke-WebRequest bad\n", encoding="utf-8")
+    result, calls = invoke(launcher=launcher_for(request, str(changed)))
     assert result["decision"] == "deny_invalid_launcher" and calls == []
 
 

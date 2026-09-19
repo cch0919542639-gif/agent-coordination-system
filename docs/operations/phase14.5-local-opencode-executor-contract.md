@@ -48,11 +48,14 @@ egress or any sandbox enforcement.
 accepts the same already-validated request, approval, record set, and opaque
 caller-supplied environment as the executor, plus the exact reviewed launcher
 mapping. That mapping pins the system PowerShell executable, request
-approval/run IDs, and its absolute OpenCode `.ps1` input against one opaque
-SHA-256 wrapper-path digest. The raw wrapper path is not held in source; it
-invokes only `-NoProfile -NonInteractive -File` with the approved argv, no
-shell, no inherited environment, and no output capture. The absolute launcher
-path is input-only and never appears in a result or evidence record.
+approval/run IDs, and an absolute `.ps1` input to the SHA-256 content digest
+of the reviewed project-owned `scripts/opencode_pilot_wrapper.ps1`. The
+wrapper forwards only approved argv to `opencode.exe` and returns its exit
+code. A changed, missing, oversized, malformed, or nonmatching wrapper denies
+before Popen. The raw absolute input path and wrapper source never appear in a
+result or evidence record; invocation remains only
+`-NoProfile -NonInteractive -File` with no shell, inherited environment, or
+output capture.
 
 The runner consumes pilot admission through the executor before the first Popen call, then fences each exact binding independently.
 On an approved timeout it invokes only the fixed task-tree termination command
