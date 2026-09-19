@@ -1,0 +1,44 @@
+{
+  "schema_version": "phase14.5-live-six-worker-pilot-record-v1",
+  "task_id": "phase14.5-live-six-worker-pilot-retry-21",
+  "control_level": "best_effort",
+  "approval": {
+    "run_id": "phaseh-live-20260919t010636",
+    "approval_id": "launch-ce60eae7cd311a1af2fe5785f4bed5c4",
+    "issued_at": "2026-09-19T01:06:35+00:00",
+    "launch_time": "2026-09-19T01:06:36+00:00",
+    "run_window_end": "2026-09-19T01:21:36+00:00",
+    "one_shot": true,
+    "network_provider_exception": "configured_model_service_only_existing_local_opaque",
+    "environment_key_names": ["OPENCODE_PROJECT_WORKTREE"]
+  },
+  "preflight": {
+    "six_exact_worktrees": "verified_clean_detached_pinned",
+    "reviewed_commit": "cad70bf7858f3eace5d68c7683feb4cde6c0901b",
+    "wrapper_path_digest": "e1b87ce69411c64305ebcddf3403b982e1d264af45f5bffbbd505c5c1d00766b",
+    "lease_policy": {
+      "heartbeat_interval_seconds": 30,
+      "missed_heartbeat_threshold": 2,
+      "per_child_hard_ceiling_seconds": 900,
+      "stop_authority": "phaseh-pilot-supervisor"
+    }
+  },
+  "terminal_records": [
+    {"agent_id": "phaseh-pilot-agent-01", "grant_id": "phaseh-pilot-grant-01", "worktree_ref": "worktrees/phaseh-pilot/worker-01", "decision": "stopped_safety_signal"},
+    {"agent_id": "phaseh-pilot-agent-02", "grant_id": "phaseh-pilot-grant-02", "worktree_ref": "worktrees/phaseh-pilot/worker-02", "decision": "stopped_safety_signal"},
+    {"agent_id": "phaseh-pilot-agent-03", "grant_id": "phaseh-pilot-grant-03", "worktree_ref": "worktrees/phaseh-pilot/worker-03", "decision": "stopped_safety_signal"},
+    {"agent_id": "phaseh-pilot-agent-04", "grant_id": "phaseh-pilot-grant-04", "worktree_ref": "worktrees/phaseh-pilot/worker-04", "decision": "stopped_safety_signal"},
+    {"agent_id": "phaseh-pilot-agent-05", "grant_id": "phaseh-pilot-grant-05", "worktree_ref": "worktrees/phaseh-pilot/worker-05", "decision": "stopped_safety_signal"},
+    {"agent_id": "phaseh-pilot-agent-06", "grant_id": "phaseh-pilot-grant-06", "worktree_ref": "worktrees/phaseh-pilot/worker-06", "decision": "stopped_safety_signal"}
+  ],
+  "redaction": {
+    "credentials": false,
+    "provider_configuration_values": false,
+    "provider_endpoints": false,
+    "prompts": false,
+    "source_bodies": false,
+    "raw_child_output": false,
+    "absolute_paths": false
+  },
+  "recovery": "no_retry_no_fallback_matching_stop_only"
+}
