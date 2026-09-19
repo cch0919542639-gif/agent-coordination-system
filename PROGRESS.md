@@ -115,6 +115,9 @@ the documentation-only `phase14.5-04` supervised-launch design task.
 - `phase14.5-live-approval-runsheet-17` is independently accepted: the
   launch-time fields remain explicitly unset, so the draft creates no launch
   authority and cannot be consumed before a current operator record exists.
+- `phase14.5-lease-supervisor-project-context-18` is independently accepted:
+  launch-time IDs, renewable lease supervision, and exact worktree context
+  replace guessed total duration and arbitrary configuration roots.
 
 ## 2026-09-06 Next Dispatch Gate
 
