@@ -3,7 +3,8 @@
 - Task ID: `phase14.5-live-six-worker-pilot-retry-21`
 - Agent: `CODEX_TEST_OPERATIONS_WORKER_05`
 - Phase: `phase14.5-phase-h-live-pilot`
-- Status: submitted for independent review
+- Status: blocked after independent review; Task 21 approval is consumed and
+  must not be retried.
 
 ## Changed Files
 
@@ -34,11 +35,17 @@
 The runner's privacy-bounded terminal projection does not reveal the internal
 cause of a safety signal. This approval is consumed and cannot be reused.
 
+## Independent Review Outcome
+
+Independent review returned `needs_fix`: `stopped_safety_signal` is correctly
+redacted but does not establish whether a child started.  The record cannot be
+upgraded to a verified live-child attempt.  The approval and all six binding
+tokens remain consumed; this task is closed as blocked rather than retried.
+
 ## Recommended Handoff
 
-Independent review should confirm the one-shot record, six unique terminal
-records, no duplicate binding, preserved redaction, and the decision not to
-diagnose through child output or config inspection.
+Use accepted Task 22's privacy-bounded start attestation in a separately
+approved, fresh pilot packet.  Do not reuse this run, approval, or tokens.
 
 ## Acceptance Criteria Coverage
 
@@ -51,5 +58,6 @@ diagnose through child output or config inspection.
   or provider configuration value was read, output, persisted, or transferred.
 - Error handling without retry: met; each terminal safety result was recorded,
   all worktrees remained clean, and the incident records the no-retry outcome.
-- Safe terminal evidence for independent review: met; the delivery record is
-  privacy-bounded and contains one terminal projection per binding.
+- Safe terminal evidence for independent review: partially met; the delivery
+  record is privacy-bounded and contains one terminal projection per binding,
+  but it does not prove live child starts or overlap.

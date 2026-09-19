@@ -3,13 +3,12 @@
 - Active Task: `phase14.5-start-attestation-22`
 - Agent: `CODEX_PLATFORM_WORKER_12`
 - Phase: `phase14.5-phase-h-attestation`
-- Status: `REVIEW`
+- Status: `DONE`
 - Last Updated: `2026-09-19`
 
 ## Current Step
 
-Submitted safe child-start attestation and launch-overlap projection for
-independent review.
+Accepted after independent review; P1 follow-up closed.
 
 ## Changes So Far
 
@@ -28,7 +27,7 @@ None. This task does not inspect child output or host secrets.
 
 ## Next Step
 
-Await independent review.
+Await the next dependency-eligible dispatch.
 
 ## Validation
 
