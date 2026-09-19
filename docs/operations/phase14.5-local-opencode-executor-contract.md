@@ -58,3 +58,13 @@ The runner consumes pilot admission through the executor before the first Popen 
 On an approved timeout it invokes only the fixed task-tree termination command
 for that child PID. Tests inject every Popen call. This is still `best_effort`
 local control, not a sandbox or a claim of host enforcement.
+
+After constrained Popen returns a currently live child with a valid internal
+identity, the runner may emit a `phase14.5-start-v1` safe start attestation.
+It contains only a deterministic exact-binding digest and monotonic launch
+order. Its paired `phase14.5-concurrency-v1` projection contains only that
+digest, order, overlap count, and prior active binding digests. It never
+contains a PID, path, command, output, environment value, endpoint, or
+credential. Popen failures and returned non-live children emit neither
+projection. A caller shares the in-memory attestation state for the six
+bindings of one pilot; no state is persisted or reused for another pilot.

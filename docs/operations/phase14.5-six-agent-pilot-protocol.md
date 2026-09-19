@@ -70,6 +70,11 @@ one-shot approval remains preflight evidence only and cannot enable a launch.
    A duplicate, foreign, stale, or second-pilot request denies before a child
    boundary. Before those acceptances, do not launch.
 4. Collect safe references only: dispatch, acknowledgement, lease, review-queue, incident, validation, and delivery. Never record prompts, source bodies, credentials, raw logs, transcripts, or absolute paths.
+   A constrained Popen return may additionally produce a safe start attestation
+   and concurrency projection: deterministic binding digests, monotonic launch
+   order, and overlap facts only. A failed Popen or non-live returned child
+   produces neither; this evidence never includes a PID, command, path,
+   output, environment value, endpoint, or credential.
 5. Verify all seven architecture conditions: eight-task mixed graph; worker
    context/acknowledgement/lease/review evidence; one dependency unlock;
    bounded restart and expiry recovery; review queued with merge/push blocked;
@@ -79,8 +84,10 @@ one-shot approval remains preflight evidence only and cannot enable a launch.
 
 ## Current gate
 
-No real pilot has run. Phase H remains at the L1 preflight gate until a
-concrete one-shot approval, six real registered local workers, and supervised
-run evidence exist. L1 does not claim an enforced filesystem or network
-boundary. L2 remains optional; it requires separate platform enforcement
-evidence before making any such claim.
+One prior pilot attempt consumed six bindings and reached only privacy-bounded
+`stopped_safety_signal` terminal results. It is an attempted-but-unattested
+safety stop, not evidence that an OpenCode child started. A fresh exact
+one-shot approval is required for any later attempt, and a claim of six child
+starts requires the safe start and concurrency projections above. L1 does not
+claim an enforced filesystem or network boundary. L2 remains optional; it
+requires separate platform enforcement evidence before making any such claim.

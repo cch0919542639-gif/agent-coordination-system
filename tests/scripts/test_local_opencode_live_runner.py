@@ -2,12 +2,13 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
+from threading import Event, Thread
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 from local_control_provision import materialize_launch_approval, provision_local_workers
 import local_opencode_live_runner as runner
-from local_opencode_live_runner import PINNED_LAUNCHER, _wrapper_digest, run_live_opencode_once
+from local_opencode_live_runner import PINNED_LAUNCHER, StartAttestationState, _wrapper_digest, run_live_opencode_once
 
 
 NOW = datetime(2026, 9, 18, 8, 0, tzinfo=timezone.utc)
@@ -16,10 +17,18 @@ NOW = datetime(2026, 9, 18, 8, 0, tzinfo=timezone.utc)
 class FakeChild:
     pid = 4321
 
-    def __init__(self, *, code=0, timeout=False):
-        self.code, self.timeout = code, timeout
+    def __init__(self, *, code=0, timeout=False, live=True, waiting=None, release=None):
+        self.code, self.timeout, self.live = code, timeout, live
+        self.waiting, self.release = waiting, release
+
+    def poll(self):
+        return None if self.live else self.code
 
     def wait(self, timeout):
+        if self.waiting is not None:
+            self.waiting.set()
+        if self.release is not None:
+            assert self.release.wait(timeout=1)
         if self.timeout:
             raise TimeoutError()
         return self.code
@@ -46,16 +55,18 @@ def launcher_for(request):
     return {**PINNED_LAUNCHER, "wrapper_path": r"C:\pilot\approved\opencode.ps1", "approval_id": request["approval_id"], "run_id": request["run_id"]}
 
 
-def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, environment=None, pinned_digest=None):
+def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, environment=None, pinned_digest=None, state=None, popen_failure=False):
     request, source, records = request or inputs()[0], source or inputs()[1], records or inputs()[2]
     calls, child = [], child or FakeChild()
     def popen(command, **kwargs):
         calls.append((command, kwargs))
+        if popen_failure and not command[0].endswith("taskkill.exe"):
+            raise RuntimeError("fake Popen failure")
         return FakeChild() if command[0].endswith("taskkill.exe") else child
     original = runner.PINNED_WRAPPER_PATH_DIGEST
     runner.PINNED_WRAPPER_PATH_DIGEST = pinned_digest or _wrapper_digest(r"C:\pilot\approved\opencode.ps1")
     try:
-        result = run_live_opencode_once(request, source, records, launcher or launcher_for(request), now=NOW, consumed_run_ids=consumed if consumed is not None else set(), popen=popen, provider_environment=environment or {"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]})
+        result = run_live_opencode_once(request, source, records, launcher or launcher_for(request), now=NOW, consumed_run_ids=consumed if consumed is not None else set(), popen=popen, provider_environment=environment or {"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]}, attestation_state=state)
     finally:
         runner.PINNED_WRAPPER_PATH_DIGEST = original
     return result, calls
@@ -69,6 +80,8 @@ def test_pinned_wrapper_is_the_only_shell_free_command_and_result_is_redacted():
     assert kwargs["cwd"] == "worktrees/pilot/agent-01" and kwargs["env"] == {"OPENCODE_PROJECT_WORKTREE": "worktrees/pilot/agent-01"}
     assert kwargs["shell"] is False and kwargs["stdout"] is kwargs["stderr"]
     assert "wrapper_path" not in result and "environment" not in result and "C:\\" not in repr(result)
+    assert result["safe_start_attestation"]["binding_digest"] == result["concurrency_projection"]["binding_digest"]
+    assert "4321" not in repr(result) and "worktrees/" not in repr(result)
 
 
 def test_malformed_or_changed_launcher_never_calls_popen():
@@ -106,6 +119,44 @@ def test_timeout_stops_only_the_matching_process_tree_after_one_launch():
     assert result["decision"] == "stopped_timeout" and len(calls) == 2
     assert calls[1][0][1:] == ("/pid", "4321", "/t", "/f")
     assert calls[1][1]["shell"] is False and calls[1][1]["env"] == {}
+
+
+def test_prespawn_denial_popen_failure_or_nonlive_child_emit_no_start_attestation():
+    request, _, _ = inputs()
+    bad_launcher = launcher_for(request); bad_launcher["approval_id"] = "wrong"
+    denied, denied_calls = invoke(launcher=bad_launcher)
+    popen_failed, failed_calls = invoke(popen_failure=True)
+    nonlive, nonlive_calls = invoke(child=FakeChild(live=False))
+    for result in (denied, popen_failed, nonlive):
+        assert "safe_start_attestation" not in result and "concurrency_projection" not in result
+        assert result["decision"].startswith("deny_") or result["decision"] == "stopped_safety_signal"
+    assert denied_calls == [] and len(failed_calls) == len(nonlive_calls) == 1
+
+
+def test_shared_state_projects_monotonic_overlapping_live_starts_without_child_identity_leakage():
+    source = approval()
+    records = provision_local_workers(source, now=NOW)["records"]
+    state, consumed, release = StartAttestationState(), set(), Event()
+    entered_one, entered_two = Event(), Event()
+    results = []
+
+    def launch(number, entered):
+        binding = source["bindings"][number]
+        request = {"task_id": source["task_id"], "run_id": source["run_id"], "approval_id": source["approval_id"], **{key: binding[key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
+        results.append(invoke(request=request, source=source, records=records, consumed=consumed, state=state, child=FakeChild(waiting=entered, release=release), environment={"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]})[0])
+
+    first = Thread(target=launch, args=(0, entered_one)); first.start()
+    assert entered_one.wait(timeout=1)
+    second = Thread(target=launch, args=(1, entered_two)); second.start()
+    assert entered_two.wait(timeout=1)
+    release.set(); first.join(timeout=1); second.join(timeout=1)
+    assert not first.is_alive() and not second.is_alive()
+    projected = sorted(results, key=lambda item: item["concurrency_projection"]["launch_order"])
+    first_projection, second_projection = (item["concurrency_projection"] for item in projected)
+    assert first_projection["launch_order"] == 1 and first_projection["overlap_count"] == 0
+    assert second_projection["launch_order"] == 2 and second_projection["overlap_count"] == 1
+    assert second_projection["overlaps_binding_digests"] == (first_projection["binding_digest"],)
+    assert all("4321" not in repr(item) and "worktrees/" not in repr(item) for item in results)
 
 
 def test_live_seam_allows_each_exact_binding_once_then_denies_duplicate_or_second_pilot_without_popen():
