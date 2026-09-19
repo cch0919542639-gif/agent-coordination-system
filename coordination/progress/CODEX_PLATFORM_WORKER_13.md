@@ -3,12 +3,12 @@
 - Active Task: `phase14.5-wrapper-repin-24`
 - Agent: `CODEX_PLATFORM_WORKER_13`
 - Phase: `phase14.5-phase-h-wrapper-recovery`
-- Status: `REVIEW`
+- Status: `DONE`
 - Last Updated: `2026-09-19`
 
 ## Current Step
 
-Await independent re-review of the closed P1.
+Accepted after independent re-review; the P1 is closed.
 
 ## Changes So Far
 
@@ -23,4 +23,4 @@ None.
 
 ## Next Step
 
-Address any re-review finding only; do not retry Task 23.
+Await orchestrator recovery disposition for Task 23.
