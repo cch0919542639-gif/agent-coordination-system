@@ -42,6 +42,18 @@ fake process objects only. A future live call still needs a concrete one-shot
 operator approval and the Phase H protocol; it cannot claim denied network
 egress or any sandbox enforcement.
 
+## Non-secret launch projection
+
+`local_opencode_launch_projection.py` is a pure, no-process preparation seam.
+It validates a current six-binding approval draft against reviewed
+manifest/allocation identities and returns only public binding/request
+identities, a redacted approval draft, the named project-context key, and
+launcher content identities. It never materializes an approval or launch ID,
+emits argv values, raw locations, configuration, environment values, wrapper
+content, credentials, prompts, output, or process identity. A later exact
+operator packet must supply those immediate-boundary inputs without altering
+this projection; the projection neither authorizes nor invokes a pilot.
+
 ## Reviewed live runner
 
 `local_opencode_live_runner.py` is the separate, minimal L1 live seam. It

@@ -11,6 +11,13 @@ provisioning, merge, push, or cleanup.
 
 The live pilot is fail-closed. It may begin only when every preflight input below is recorded, current, and independently checkable. Missing or unverifiable evidence produces an incident and ends the attempt; it is never replaced by a mock, a second route, or an interactive fallback.
 
+Before a separately authorized live admission, the accepted non-secret launch
+projection may freeze six request/binding identities, the approval draft,
+project-context key name, and launcher content identities. It has no approval
+or launch ID and never contains argv values, raw locations, provider
+configuration, environment values, credentials, prompts, source, output, or
+process identity. It is preparation evidence only, not a launch authority.
+
 ## Exact approval preflight
 
 The launch boundary materializes one enabled, unexpired, one-shot approval ID
