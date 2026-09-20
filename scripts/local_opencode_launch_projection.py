@@ -53,8 +53,8 @@ def build_nonsecret_launch_projection(approval_draft: object, reviewed_identitie
     }
 
 
-def validate_nonsecret_launch_projection(value: object) -> bool:
-    """Validate a builder result without consulting host or process state."""
+def validate_nonsecret_launch_projection(value: object, reviewed_identities: object) -> bool:
+    """Validate against the caller's independently reviewed identity map."""
     if not isinstance(value, Mapping) or set(value) != {"decision", "projection"} or value.get("decision") != "projected_nonsecret_no_runtime":
         return False
     projection = value.get("projection")
@@ -71,7 +71,7 @@ def validate_nonsecret_launch_projection(value: object) -> bool:
     if not isinstance(root, str) or len({record["agent_id"] for record in records if isinstance(record, Mapping)}) != 6 or len({record["grant_id"] for record in records if isinstance(record, Mapping)}) != 6 or len({record["worktree_ref"] for record in records if isinstance(record, Mapping)}) != 6 or not all(isinstance(record, Mapping) and _within_root(record["worktree_ref"], root) for record in records):
         return False
     expected_requests = [_request_projection(record) for record in records if isinstance(record, Mapping)]
-    return requests == expected_requests and _launcher_identity(projection.get("launcher_identity")) and not _unsafe(projection)
+    return requests == expected_requests and _reviewed_projection_identities(reviewed_identities, records) and _launcher_identity(projection.get("launcher_identity")) and not _unsafe(projection)
 
 
 def _draft(value: object) -> bool:
@@ -102,6 +102,14 @@ def _reviewed_identities(value: object, draft: object) -> bool:
     expected = {(binding["agent_id"], binding["worktree_ref"], binding["manifest_digest"], binding["allocation_digest"]) for binding in draft["bindings"] if isinstance(binding, Mapping)}
     actual = {(item["agent_id"], item["worktree_ref"], item["manifest_digest"], item["allocation_digest"]) for item in value if isinstance(item, Mapping)}
     return len(expected) == len(actual) == 6 and actual == expected
+
+
+def _reviewed_projection_identities(value: object, records: list[object]) -> bool:
+    if not isinstance(value, list) or len(value) != 6 or not all(isinstance(item, Mapping) and set(item) == REVIEWED_IDENTITY_FIELDS and _identifier(item.get("agent_id")) and _ref(item.get("worktree_ref")) and _digest(item.get("manifest_digest")) and _digest(item.get("allocation_digest")) for item in value):
+        return False
+    actual = {(record.get("agent_id"), record.get("worktree_ref"), record.get("manifest_digest"), record.get("allocation_digest")) for record in records if isinstance(record, Mapping)}
+    expected = {(item["agent_id"], item["worktree_ref"], item["manifest_digest"], item["allocation_digest"]) for item in value if isinstance(item, Mapping)}
+    return len(actual) == len(expected) == 6 and actual == expected
 
 
 def _launcher_identity(value: object) -> bool:

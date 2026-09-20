@@ -52,7 +52,9 @@ launcher content identities. It never materializes an approval or launch ID,
 emits argv values, raw locations, configuration, environment values, wrapper
 content, credentials, prompts, output, or process identity. A later exact
 operator packet must supply those immediate-boundary inputs without altering
-this projection; the projection neither authorizes nor invokes a pilot.
+this projection. The validator also requires the caller to supply the current
+independently reviewed identity map; artifact self-consistency alone is not
+provenance. The projection neither authorizes nor invokes a pilot.
 
 ## Reviewed live runner
 

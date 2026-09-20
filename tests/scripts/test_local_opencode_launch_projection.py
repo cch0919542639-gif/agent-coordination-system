@@ -27,7 +27,7 @@ def launcher():
 def test_projection_is_deterministic_nonsecret_and_runner_shaped_without_a_spawn_seam():
     source = draft()
     result = build_nonsecret_launch_projection(source, reviewed(source), launcher())
-    assert result["decision"] == "projected_nonsecret_no_runtime" and validate_nonsecret_launch_projection(result)
+    assert result["decision"] == "projected_nonsecret_no_runtime" and validate_nonsecret_launch_projection(result, reviewed(source))
     projection = result["projection"]
     assert len(projection["requests"]) == len(projection["binding_records"]) == 6
     assert projection["project_context_key_names"] == ("OPENCODE_PROJECT_WORKTREE",)
@@ -54,7 +54,7 @@ def test_validator_rejects_tampered_output_and_source_has_no_runtime_or_process_
     result = build_nonsecret_launch_projection(source, reviewed(source), launcher())
     tampered = deepcopy(result)
     tampered["projection"]["binding_records"][0]["worktree_ref"] = "worktrees/pilot/agent-02"
-    assert not validate_nonsecret_launch_projection(tampered)
+    assert not validate_nonsecret_launch_projection(tampered, reviewed(source))
     module_source = Path(__file__).resolve().parents[2].joinpath("scripts", "local_opencode_launch_projection.py").read_text(encoding="utf-8")
     for token in ("subprocess", "Popen(", "run_live_opencode_once", "run_opencode_once", "os.environ", "shutil.which", "socket", "urllib"):
         assert token not in module_source
@@ -68,4 +68,15 @@ def test_validator_rejects_a_recomputed_crosswired_worktree_request_against_the_
     record["worktree_ref"] = "worktrees/pilot/agent-99"
     record["binding_id"] = _identity({key: record[key] for key in record if key not in {"binding_id", "control_level", "process_tree_stop_handling"}})
     tampered["projection"]["requests"][0] = _request_projection(record)
-    assert not validate_nonsecret_launch_projection(tampered)
+    assert not validate_nonsecret_launch_projection(tampered, reviewed(source))
+
+
+def test_validator_rejects_a_fully_recomputed_artifact_against_the_independent_reviewed_map():
+    source = draft()
+    result = build_nonsecret_launch_projection(source, reviewed(source), launcher())
+    tampered = deepcopy(result)
+    for record in (tampered["projection"]["binding_records"][0], tampered["projection"]["approval_draft"]["bindings"][0]):
+        record["worktree_ref"] = "worktrees/pilot/agent-99"
+        record["binding_id"] = _identity({key: record[key] for key in record if key not in {"binding_id", "control_level", "process_tree_stop_handling"}})
+    tampered["projection"]["requests"][0] = _request_projection(tampered["projection"]["binding_records"][0])
+    assert not validate_nonsecret_launch_projection(tampered, reviewed(source))

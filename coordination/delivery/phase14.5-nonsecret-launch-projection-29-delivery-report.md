@@ -16,7 +16,7 @@
 
 ## Validation Steps Performed
 
-- Ran 33 focused projection, executor, and live-runner tests with an isolated
+- Ran 34 focused projection, executor, and live-runner tests with an isolated
   basetemp.
 - Ran `py_compile` on all three runner/projection modules.
 - Ran coordination validation and `git diff --check`.
@@ -30,6 +30,8 @@
   inputs without any process or runtime seam.
 - The validator now rejects a component-safe substituted worktree even when
   its dependent binding digest and request are recomputed.
+- Validation requires the external current reviewed identity map, so changing
+  both duplicated artifact records cannot establish stale provenance.
 - It emits no approval or launch identifier, raw location, argv value,
   environment value, provider/configuration data, source, output, endpoint,
   or process identity.

@@ -8,7 +8,7 @@
 
 ## Current Step
 
-Closed the independent-review P1 and resubmitted the projection.
+Closed the re-review provenance P1 and resubmitted the projection.
 
 ## Changes So Far
 
@@ -19,6 +19,8 @@ Closed the independent-review P1 and resubmitted the projection.
 - Updated the runner contract and pilot protocol.
 - Bound projection validation to the independently projected six-record
   worktree/manifest/allocation mapping and added a recomputed cross-wire test.
+- Require validation to receive the current independently reviewed identity
+  map, with a full-artifact recomputation regression.
 
 ## Blocker Status
 

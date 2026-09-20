@@ -43,9 +43,26 @@ bind every projected record to the reviewed identity mapping.  Add a regression
 that recomputes the dependent identity/request values, so it proves the
 provenance guard rather than only detecting an inconsistent digest.
 
+## Re-review of `be560dd`
+
+The fix adds duplicate and root-child checks and makes the immediate record /
+draft copies agree.  It does not bind the projection to an independently
+expected reviewed mapping, so the P1 remains.
+
+The added regression changes only `binding_records[0]`.  A mutation that also
+updates the matching `approval_draft.bindings[0]`, recomputes its `binding_id`,
+and updates the matching request still returns `True` for
+`worktrees/pilot/agent-99`.  All six references remain unique and within the
+root, but the artifact no longer represents the reviewed agent-to-worktree
+mapping.  The validator needs an independently supplied/revalidated reviewed
+identity mapping (or an equivalently verifiable current mapping) at the point
+the projection is accepted; a self-consistency check cannot prove provenance.
+
+Add this complete recomputation case as the regression before resubmitting.
+
 ## Validation Steps Performed
 
-- 32 focused projection, executor, and live-runner tests: passed.
+- 33 focused projection, executor, and live-runner tests: passed.
 - `py_compile` for the three relevant modules: passed.
 - `python scripts/orchestrate.py validate`: passed.
 - `git diff --check`: passed.
