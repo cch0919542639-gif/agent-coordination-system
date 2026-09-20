@@ -8,7 +8,7 @@
 
 ## Current Step
 
-Submitted the pure non-secret projection for independent review.
+Closed the independent-review P1 and resubmitted the projection.
 
 ## Changes So Far
 
@@ -17,6 +17,8 @@ Submitted the pure non-secret projection for independent review.
 - Added fake-only accepted, redaction, malformed, secret-bearing, and
   cross-wired regression coverage.
 - Updated the runner contract and pilot protocol.
+- Bound projection validation to the independently projected six-record
+  worktree/manifest/allocation mapping and added a recomputed cross-wire test.
 
 ## Blocker Status
 
@@ -24,5 +26,5 @@ none
 
 ## Next Step
 
-Wait for independent review; do not modify this task unless it returns
+Wait for independent re-review; do not modify this task unless it returns
 `needs_fix`.

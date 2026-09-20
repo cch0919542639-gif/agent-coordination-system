@@ -4,7 +4,7 @@ import sys
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
-from local_opencode_launch_projection import build_nonsecret_launch_projection, validate_nonsecret_launch_projection
+from local_opencode_launch_projection import _identity, _request_projection, build_nonsecret_launch_projection, validate_nonsecret_launch_projection
 from local_opencode_live_runner import PINNED_LAUNCHER, PINNED_RUNTIME_CONTENT_DIGEST, PINNED_WRAPPER_CONTENT_DIGEST
 
 
@@ -58,3 +58,14 @@ def test_validator_rejects_tampered_output_and_source_has_no_runtime_or_process_
     module_source = Path(__file__).resolve().parents[2].joinpath("scripts", "local_opencode_launch_projection.py").read_text(encoding="utf-8")
     for token in ("subprocess", "Popen(", "run_live_opencode_once", "run_opencode_once", "os.environ", "shutil.which", "socket", "urllib"):
         assert token not in module_source
+
+
+def test_validator_rejects_a_recomputed_crosswired_worktree_request_against_the_reviewed_mapping():
+    source = draft()
+    result = build_nonsecret_launch_projection(source, reviewed(source), launcher())
+    tampered = deepcopy(result)
+    record = tampered["projection"]["binding_records"][0]
+    record["worktree_ref"] = "worktrees/pilot/agent-99"
+    record["binding_id"] = _identity({key: record[key] for key in record if key not in {"binding_id", "control_level", "process_tree_stop_handling"}})
+    tampered["projection"]["requests"][0] = _request_projection(record)
+    assert not validate_nonsecret_launch_projection(tampered)

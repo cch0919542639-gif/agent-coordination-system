@@ -16,7 +16,7 @@
 
 ## Validation Steps Performed
 
-- Ran 32 focused projection, executor, and live-runner tests with an isolated
+- Ran 33 focused projection, executor, and live-runner tests with an isolated
   basetemp.
 - Ran `py_compile` on all three runner/projection modules.
 - Ran coordination validation and `git diff --check`.
@@ -28,6 +28,8 @@
   content identities only.
 - It rejects malformed, secret-bearing, stale, duplicate, and cross-wired
   inputs without any process or runtime seam.
+- The validator now rejects a component-safe substituted worktree even when
+  its dependent binding digest and request are recomputed.
 - It emits no approval or launch identifier, raw location, argv value,
   environment value, provider/configuration data, source, output, endpoint,
   or process identity.
