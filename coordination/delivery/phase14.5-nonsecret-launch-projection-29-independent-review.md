@@ -3,10 +3,10 @@
 - Task ID: `phase14.5-nonsecret-launch-projection-29`
 - Agent: `CODEX_INDEPENDENT_REVIEWER_26`
 - Phase: `phase14.5-phase-h-launch-projection`
-- Status: needs_fix
+- Status: accepted
 - Reviewer: `CODEX_INDEPENDENT_REVIEWER_26`
-- Reviewed implementation: `bf40c3f`
-- Decision: `needs_fix`
+- Reviewed implementation: `1cd117f`
+- Decision: `accepted`
 
 ## Changed Files
 
@@ -22,7 +22,7 @@
 Projection validation remains insufficient until the P1 provenance fix is
 independently re-reviewed.
 
-## Finding
+## Prior Findings
 
 ### P1 — Projection validation accepts recomputed cross-wired bindings
 
@@ -72,3 +72,19 @@ Add this complete recomputation case as the regression before resubmitting.
 The submitted implementation itself remains a pure module with no process,
 CLI, network, provider, credential, or worktree access.  The required fix can
 remain within its existing minimal projection/validation seam.
+
+## Final Re-review of `1cd117f`
+
+Accepted. The validator now requires a caller-supplied independently reviewed
+identity map and compares every projected agent/worktree/manifest/allocation
+tuple against it. The complete-recomputation regression changes both artifact
+copies, its identity, and its request, then correctly denies against the
+unchanged reviewed map. Unique root-child worktree references and the
+request/draft/record consistency checks also hold.
+
+The module remains pure: no runner, process, CLI, provider, credential,
+network, or worktree access was added. It contains only non-secret projection
+identities; it neither materializes approval nor invokes a pilot.
+
+Final checks: 34 focused tests, `py_compile`, coordination validation, and
+`git diff --check` all passed.
