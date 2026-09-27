@@ -3,12 +3,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 import sys
 from threading import Event, Thread
+from tempfile import TemporaryDirectory
+from time import sleep
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 from local_control_provision import materialize_launch_approval, provision_local_workers
 import local_opencode_live_runner as runner
-from local_opencode_live_runner import PINNED_LAUNCHER, StartAttestationState, _binding_digest, _wrapper_content_digest, run_live_opencode_once
+from opencode_live_api import normalize_permission_request
+from local_opencode_live_runner import PINNED_LAUNCHER, StartAttestationState, _binding_digest, _wrapper_content_digest, reply_assigned_permission, run_assigned_task, run_live_opencode_once, session_abort_request, session_create_request, session_prompt_request, session_status_request, supervise_session
 
 
 NOW = datetime(2026, 9, 18, 8, 0, tzinfo=timezone.utc)
@@ -21,9 +24,18 @@ class FakeChild:
     def __init__(self, *, code=0, timeout=False, live=True, waiting=None, release=None):
         self.code, self.timeout, self.live = code, timeout, live
         self.waiting, self.release = waiting, release
+        self.poll_count = 0
 
     def poll(self):
-        return None if self.live else self.code
+        self.poll_count += 1
+        if self.waiting is not None:
+            self.waiting.set()
+            if self.release is not None and not self.release.is_set():
+                return None
+        if not self.live or (not self.timeout and self.poll_count > 1):
+            self.live = False
+            return self.code
+        return None
 
     def wait(self, timeout):
         if self.waiting is not None:
@@ -56,7 +68,13 @@ def launcher_for(request, wrapper_path=WRAPPER_PATH):
     return {**PINNED_LAUNCHER, "wrapper_path": wrapper_path, "approval_id": request["approval_id"], "run_id": request["run_id"]}
 
 
-def invoke(*, child=None, request=None, source=None, records=None, launcher=None, consumed=None, environment=None, pinned_digest=None, state=None, popen_failure=False, stop_marks_child=False, runtime_path=lambda: r"C:\\runtime\\opencode.cmd"):
+class FakeClock:
+    def __init__(self): self.value = 0.0
+    def now(self): return self.value
+    def sleep(self, seconds): self.value += seconds; sleep(0.001)
+
+
+def invoke(*, child=None, request=None, source=None, records=None, launcher=None, state_dir=None, environment=None, pinned_digest=None, state=None, popen_failure=False, stop_marks_child=False, runtime_path=lambda: r"C:\\runtime\\opencode.cmd"):
     request, source, records = request or inputs()[0], source or inputs()[1], records or inputs()[2]
     calls, child = [], child or FakeChild()
     def popen(command, **kwargs):
@@ -72,7 +90,14 @@ def invoke(*, child=None, request=None, source=None, records=None, launcher=None
     runner.PINNED_WRAPPER_CONTENT_DIGEST = pinned_digest or _wrapper_content_digest(WRAPPER_PATH)
     runner._runtime_path = runtime_path
     try:
-        result = run_live_opencode_once(request, source, records, launcher or launcher_for(request), now=NOW, consumed_run_ids=consumed if consumed is not None else set(), popen=popen, provider_environment=environment or {"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]}, attestation_state=state)
+        clock = FakeClock()
+        def execute(path):
+            return run_live_opencode_once(request, source, records, launcher or launcher_for(request), now=NOW, state_dir=path, popen=popen, provider_environment=environment or {"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]}, attestation_state=state, heartbeat=lambda: True, monotonic_clock=clock.now, sleep_fn=clock.sleep)
+        if state_dir is None:
+            with TemporaryDirectory() as temporary:
+                result = execute(temporary)
+        else:
+            result = execute(str(state_dir))
     finally:
         runner.PINNED_WRAPPER_CONTENT_DIGEST, runner._runtime_path = original, original_runtime_path
     return result, calls
@@ -190,7 +215,7 @@ def test_unsafe_environment_is_denied_without_popen_or_environment_result():
 
 def test_timeout_stops_only_the_matching_process_tree_after_one_launch():
     result, calls = invoke(child=FakeChild(timeout=True))
-    assert result["decision"] == "stopped_timeout" and len(calls) == 2
+    assert result["decision"] == "stopped_hard_ceiling" and len(calls) == 2
     assert calls[1][0][1:] == ("/pid", "4321", "/t", "/f")
     assert calls[1][1]["shell"] is False and calls[1][1]["env"] == {}
 
@@ -221,14 +246,14 @@ def test_start_registration_collision_stops_the_matching_live_child_without_atte
 def test_shared_state_projects_monotonic_overlapping_live_starts_without_child_identity_leakage():
     source = approval()
     records = provision_local_workers(source, now=NOW)["records"]
-    state, consumed, release = StartAttestationState(), set(), Event()
+    state, release = StartAttestationState(), Event()
     entered_one, entered_two = Event(), Event()
     results = []
 
     def launch(number, entered):
         binding = source["bindings"][number]
         request = {"task_id": source["task_id"], "run_id": source["run_id"], "approval_id": source["approval_id"], **{key: binding[key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
-        results.append(invoke(request=request, source=source, records=records, consumed=consumed, state=state, child=FakeChild(waiting=entered, release=release), environment={"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]})[0])
+        results.append(invoke(request=request, source=source, records=records, state=state, child=FakeChild(waiting=entered, release=release), environment={"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]})[0])
 
     first = Thread(target=launch, args=(0, entered_one)); first.start()
     assert entered_one.wait(timeout=1)
@@ -244,19 +269,19 @@ def test_shared_state_projects_monotonic_overlapping_live_starts_without_child_i
     assert all("4321" not in repr(item) and "worktrees/" not in repr(item) for item in results)
 
 
-def test_live_seam_allows_each_exact_binding_once_then_denies_duplicate_or_second_pilot_without_popen():
+def test_live_seam_allows_each_exact_binding_once_then_denies_duplicate_or_allows_fresh_approval(tmp_path):
     source = approval()
     records = provision_local_workers(source, now=NOW)["records"]
-    consumed, calls = set(), []
+    calls = []
     for binding in source["bindings"]:
         request = {"task_id": source["task_id"], "run_id": source["run_id"], "approval_id": source["approval_id"], **{key: binding[key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
-        result, spawned = invoke(request=request, source=source, records=records, consumed=consumed, environment={"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]})
+        result, spawned = invoke(request=request, source=source, records=records, state_dir=tmp_path, environment={"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]})
         assert result["decision"] == "completed"
         calls.extend(spawned)
-    assert len(consumed) == len(calls) + 1 == 7
+    assert len(list(tmp_path.glob("*.json"))) == 12
     binding = source["bindings"][0]
     request = {"task_id": source["task_id"], "run_id": source["run_id"], "approval_id": source["approval_id"], **{key: binding[key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
-    result, spawned = invoke(request=request, source=source, records=records, consumed=consumed)
+    result, spawned = invoke(request=request, source=source, records=records, state_dir=tmp_path)
     assert result["decision"] == "deny_consumed_binding" and spawned == []
     second = deepcopy(source); second["run_id"] = "run-02"
     draft = {key: value for key, value in second.items() if key not in {"approval_id", "launch_time"}}
@@ -264,9 +289,9 @@ def test_live_seam_allows_each_exact_binding_once_then_denies_duplicate_or_secon
     second_records = provision_local_workers(second, now=NOW)["records"]
     binding = second["bindings"][0]
     second_request = {"task_id": second["task_id"], "run_id": second["run_id"], "approval_id": second["approval_id"], **{key: binding[key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
-    result, spawned = invoke(request=second_request, source=second, records=second_records, consumed=consumed, environment={"OPENCODE_PROJECT_WORKTREE": second_request["worktree_ref"]})
-    assert result["decision"] == "deny_consumed_approval" and spawned == []
-    result, spawned = invoke(request=request, source=source, records=records, consumed=consumed)
+    result, spawned = invoke(request=second_request, source=second, records=second_records, state_dir=tmp_path, environment={"OPENCODE_PROJECT_WORKTREE": second_request["worktree_ref"]})
+    assert result["decision"] == "completed" and spawned
+    result, spawned = invoke(request=request, source=source, records=records, state_dir=tmp_path)
     assert result["decision"] == "deny_consumed_binding" and spawned == []
 
 
@@ -275,3 +300,110 @@ def test_source_has_only_the_constrained_popen_boundary():
     for token in ("os.environ", "getenv", "socket", "requests", "urllib", "Path(", "shell=True", "git "):
         assert token not in source
     assert "Users\\angel" not in source and "OPENCODE_WRAPPER" not in source
+
+
+def assigned_card(request):
+    return {"task_id": request["task_id"], "owner": request["agent_id"], "status": "IN_PROGRESS", "objective": "Implement the assigned task", "context": "Use only the approved worktree", "constraints": ["Keep scope bounded"], "allowed_scope": ["scripts/example.py"], "forbidden_scope": ["credentials"], "acceptance": ["Focused validation passes"], "validation": ["Run focused tests"]}
+
+
+def test_assigned_task_is_reloaded_owner_checked_and_delivered_after_durable_claim(tmp_path):
+    request, source, records = inputs()
+    events = []
+    def create_session(bound_request, directory):
+        events.append("session")
+        assert bound_request["agent_id"] == request["agent_id"]
+        assert list(tmp_path.glob("*.json"))
+        return {"id": "ses_task49", "directory": directory}
+    def send_prompt(session_id, prompt):
+        events.append("prompt")
+        assert session_id == "ses_task49"
+        assert "Implement the assigned task" in prompt and "worktrees/pilot/" not in prompt
+        return True
+    clock = FakeClock()
+    resolve = lambda bound: {key: bound[key] for key in ("agent_id", "grant_id", "worktree_ref")} | {"directory": r"C:\worktrees\agent-01"}
+    result = run_assigned_task(request, source, records, now=NOW, state_dir=str(tmp_path), task_loader=lambda task_id: assigned_card(request), resolve_worktree=resolve, create_session=create_session, send_prompt=send_prompt, session_state=lambda _: "completed", heartbeat=lambda _: True, abort_session=lambda _: True, monotonic_clock=clock.now, sleep_fn=clock.sleep)
+    assert result["decision"] == "completed" and result["worker_session_id"] == "ses_task49"
+    assert events == ["session", "prompt"]
+    assert len(list(tmp_path.glob("*.json"))) == 3
+    replay = run_assigned_task(request, source, records, now=NOW, state_dir=str(tmp_path), task_loader=lambda task_id: assigned_card(request), resolve_worktree=resolve, create_session=create_session, send_prompt=send_prompt, session_state=lambda _: "completed", heartbeat=lambda _: True, abort_session=lambda _: True, monotonic_clock=clock.now, sleep_fn=clock.sleep)
+    assert replay["decision"] == "deny_consumed_binding" and events == ["session", "prompt"]
+
+
+def test_assigned_task_denies_stale_owner_or_oversized_card_before_side_effect(tmp_path):
+    request, source, records = inputs()
+    calls = []
+    for mutate in (lambda card: card.update(owner="agent-other"), lambda card: card.update(status="READY"), lambda card: card.update(objective="x" * 17000)):
+        def loader(_):
+            card = assigned_card(request); mutate(card); return card
+        result = run_assigned_task(request, source, records, now=NOW, state_dir=str(tmp_path / str(len(calls))), task_loader=loader, resolve_worktree=lambda bound: {key: bound[key] for key in ("agent_id", "grant_id", "worktree_ref")} | {"directory": r"C:\worktrees\agent-01"}, create_session=lambda _bound, directory: calls.append("session") or {"id": "ses_task49", "directory": directory}, send_prompt=lambda *_: calls.append("prompt") or True, session_state=lambda _: "completed", heartbeat=lambda _: True, abort_session=lambda _: True)
+        assert result["decision"] == "deny_stale_or_cross_owner_task"
+    assert calls == []
+
+
+def test_permission_reply_is_bound_to_current_run_and_durable_before_send(tmp_path):
+    request, source, records = inputs()
+    raw = {"id": "per_task49", "sessionID": "ses_task49", "permission": "bash", "patterns": ["git status"], "metadata": {}, "always": []}
+    pending = normalize_permission_request(raw)
+    missing_policy_state = tmp_path / "missing-policy"
+    missing_clock = FakeClock()
+    missing_policy_session = run_assigned_task(request, source, records, now=NOW, state_dir=str(missing_policy_state), task_loader=lambda _: assigned_card(request), resolve_worktree=lambda bound: {key: bound[key] for key in ("agent_id", "grant_id", "worktree_ref")} | {"directory": r"C:\worktrees\agent-01"}, create_session=lambda _bound, directory: {"id": "ses_task49", "directory": directory}, send_prompt=lambda *_: True, session_state=lambda _: "completed", heartbeat=lambda _: True, abort_session=lambda _: True, monotonic_clock=missing_clock.now, sleep_fn=missing_clock.sleep)
+    missing_binding = missing_policy_session["worker_session_binding"]
+    missing_policy = {key: request[key] for key in ("task_id", "run_id", "approval_id", "agent_id", "grant_id")} | {"permissions": [{"action": pending["action"], "resource_digest": pending["resource_digest"]}]}
+    missing_calls = []
+    missing_result = reply_assigned_permission(request, source, records, now=NOW, state_dir=str(missing_policy_state), origin="http://127.0.0.1:4096", session_binding=missing_binding, permission_binding={**missing_binding, **pending}, task_permission_policy=missing_policy, fetch=lambda _: missing_calls.append("fetch") or [raw], send=lambda _: missing_calls.append("send") or True)
+    assert missing_result["decision"] == "deny_unbound_permission" and missing_calls == []
+    card = assigned_card(request)
+    card["permission_policy"] = [{"action": pending["action"], "resource_digest": pending["resource_digest"]}]
+    clock = FakeClock()
+    session = run_assigned_task(request, source, records, now=NOW, state_dir=str(tmp_path), task_loader=lambda _: card, resolve_worktree=lambda bound: {key: bound[key] for key in ("agent_id", "grant_id", "worktree_ref")} | {"directory": r"C:\worktrees\agent-01"}, create_session=lambda _bound, directory: {"id": "ses_task49", "directory": directory}, send_prompt=lambda *_: True, session_state=lambda _: "completed", heartbeat=lambda _: True, abort_session=lambda _: True, monotonic_clock=clock.now, sleep_fn=clock.sleep)
+    session_binding = session["worker_session_binding"]
+    policy = {key: request[key] for key in ("task_id", "run_id", "approval_id", "agent_id", "grant_id")} | {"permissions": card["permission_policy"]}
+    permission_binding = {**session_binding, **pending}
+    sent, fetches = [], []
+    fetch = lambda origin: fetches.append(origin) or [raw]
+    send = lambda payload: sent.append(payload) or True
+    kwargs = {"now": NOW, "state_dir": str(tmp_path), "origin": "http://127.0.0.1:4096", "session_binding": session_binding, "permission_binding": permission_binding, "task_permission_policy": policy, "fetch": fetch, "send": send}
+    foreign_binding = {**session_binding, "session_id": "ses_foreign"}
+    foreign_permission = {**permission_binding, "session_id": "ses_foreign"}
+    foreign = reply_assigned_permission(request, source, records, **{**kwargs, "session_binding": foreign_binding, "permission_binding": foreign_permission})
+    assert foreign["decision"] == "deny_unbound_permission" and fetches == [] and sent == []
+    mismatched_policy = {**policy, "permissions": [{"action": "bash", "resource_digest": "0" * 64}]}
+    mismatch = reply_assigned_permission(request, source, records, **{**kwargs, "task_permission_policy": mismatched_policy})
+    assert mismatch["decision"] == "deny_unbound_permission" and fetches == [] and sent == []
+    outside = reply_assigned_permission(request, source, records, **{**kwargs, "origin": "http://localhost:4096"})
+    assert outside["decision"] == "deny_invalid_permission" and fetches == [] and sent == []
+    unapproved = {**pending, "resource_digest": "0" * 64}
+    denied = reply_assigned_permission(request, source, records, **{**kwargs, "permission_binding": {**session_binding, **unapproved}})
+    assert denied["decision"] == "deny_unapproved_permission" and fetches == [] and sent == []
+    result = reply_assigned_permission(request, source, records, **kwargs)
+    assert result["decision"] == "approved_once" and len(sent) == 1
+    assert list(tmp_path.glob("*.json"))
+    replay = reply_assigned_permission(request, source, records, **kwargs)
+    assert replay["decision"] == "deny_consumed_permission" and len(sent) == 1
+
+
+def test_v11832_session_routes_are_built_for_loopback_and_exact_directory():
+    origin = "http://127.0.0.1:4096"
+    created = session_create_request(origin, r"C:\worktrees\agent-01")
+    assert created == {"method": "POST", "url": f"{origin}/session?directory=C%3A%5Cworktrees%5Cagent-01", "json": {}}
+    prompt = session_prompt_request(origin, "ses_task49", "bounded assigned task")
+    assert prompt == {"method": "POST", "url": f"{origin}/session/ses_task49/prompt_async", "json": {"parts": [{"type": "text", "text": "bounded assigned task"}]}}
+    assert session_status_request(origin) == {"method": "GET", "url": f"{origin}/session/status"}
+    assert session_abort_request(origin, "ses_task49") == {"method": "POST", "url": f"{origin}/session/ses_task49/abort"}
+    assert session_create_request("http://localhost:4096", r"C:\worktrees\agent-01") is None
+    assert session_create_request(origin, "relative/worktree") is None
+    assert session_prompt_request(origin, "ses/other", "prompt") is None
+    assert session_prompt_request(origin, "ses_task49", "x" * (16 * 1024 + 1)) is None
+    assert session_prompt_request(origin, "ses_task49", "authorization: Bearer private-value") is None
+
+
+def test_session_supervisor_uses_elapsed_heartbeat_and_aborts_only_its_session():
+    request, source, _ = inputs()
+    binding = source["bindings"][0]
+    clock, aborted, heartbeats = FakeClock(), [], []
+    result = supervise_session("ses_task49", request, binding, started_at=0.0, session_state=lambda _: "running", heartbeat=lambda session: heartbeats.append(session) or False, abort_session=lambda session: aborted.append(session) or True, monotonic_clock=clock.now, sleep_fn=clock.sleep)
+    assert result["decision"] == "stopped_missed_heartbeat"
+    assert aborted == ["ses_task49"] and set(heartbeats) == {"ses_task49"}
+    clock, aborted = FakeClock(), []
+    result = supervise_session("ses_task49", request, binding, started_at=0.0, session_state=lambda _: "running", heartbeat=lambda _: True, abort_session=lambda session: aborted.append(session) or True, monotonic_clock=clock.now, sleep_fn=clock.sleep)
+    assert result["decision"] == "stopped_hard_ceiling" and aborted == ["ses_task49"]

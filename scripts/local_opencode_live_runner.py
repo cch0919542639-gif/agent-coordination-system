@@ -6,12 +6,20 @@ import ntpath
 import subprocess
 import hashlib
 import json
+import re
 import shutil
 import threading
 from datetime import datetime
+from time import monotonic, sleep
 from typing import Callable, Mapping
 
 from local_opencode_executor import Process, Spawn, run_opencode_once
+from local_control_provision import validate_approval
+from local_control_adapter import _bound, _request
+from one_shot_consumption import consume_once, has_claim
+from opencode_live_api import FORBIDDEN_CONTENT, build_task_prompt, select_pending_permission
+from opencode_loopback_permission_adapter import reply_loopback_once
+from local_opencode_executor import _binding_for
 
 
 POWERSHELL = r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
@@ -49,7 +57,7 @@ class StartAttestationState:
             self._active.discard(binding_digest)
 
 
-def run_live_opencode_once(request: object, approval: object, records: object, launcher: object, *, now: datetime, consumed_run_ids: set[str], popen: Popen = subprocess.Popen, provider_environment: object = None, attestation_state: StartAttestationState | None = None) -> dict[str, object]:
+def run_live_opencode_once(request: object, approval: object, records: object, launcher: object, *, now: datetime, state_dir: str, popen: Popen = subprocess.Popen, provider_environment: object = None, attestation_state: StartAttestationState | None = None, heartbeat: Callable[[], bool] | None = None, health_check: Callable[[Process], bool] | None = None, monotonic_clock: Callable[[], float] | None = None, sleep_fn: Callable[[float], None] | None = None) -> dict[str, object]:
     """Start one reviewed request through the pinned PowerShell wrapper only."""
     if not _launcher(launcher, request):
         return {"decision": "deny_invalid_launcher", "dry_run": True, "control_level": "best_effort"}
@@ -57,10 +65,274 @@ def run_live_opencode_once(request: object, approval: object, records: object, l
     if not isinstance(request, Mapping):
         return {"decision": "deny_invalid_request", "dry_run": True, "control_level": "best_effort"}
     captured: list[tuple[dict[str, object], dict[str, object]]] = []
-    result = run_opencode_once(request, approval, records, now=now, consumed_run_ids=consumed_run_ids, spawn=_spawn(popen, str(launcher["wrapper_path"]), request, attestation_state or StartAttestationState(), captured), provider_environment=provider_environment)
+    executor_options: dict[str, object] = {"heartbeat": heartbeat}
+    if health_check is not None:
+        executor_options["health_check"] = health_check
+    if monotonic_clock is not None:
+        executor_options["monotonic_clock"] = monotonic_clock
+    if sleep_fn is not None:
+        executor_options["sleep_fn"] = sleep_fn
+    result = run_opencode_once(request, approval, records, now=now, state_dir=state_dir, spawn=_spawn(popen, str(launcher["wrapper_path"]), request, attestation_state or StartAttestationState(), captured), provider_environment=provider_environment, **executor_options)
     if captured:
         result["safe_start_attestation"], result["concurrency_projection"] = captured[0]
     return result
+
+
+TASK_CARD_FIELDS = frozenset({"task_id", "owner", "status", "objective", "context", "constraints", "allowed_scope", "forbidden_scope", "acceptance", "validation"})
+CreateSession = Callable[[Mapping[str, object], str], object]
+SendPrompt = Callable[[str, str], bool]
+TaskLoader = Callable[[str], object]
+WorktreeResolver = Callable[[Mapping[str, object]], object]
+SessionState = Callable[[str], str]
+SessionHeartbeat = Callable[[str], bool]
+AbortSession = Callable[[str], bool]
+
+
+def session_create_request(origin: object, directory: object) -> dict[str, object] | None:
+    """Build the v1.18.32 POST /session request routed to one absolute worktree."""
+    if not _loopback_origin(origin) or not isinstance(directory, str) or not ntpath.isabs(directory) or ntpath.normpath(directory) != directory or any(char in directory for char in "\x00\r\n"):
+        return None
+    return {"method": "POST", "url": f"{origin}/session?directory={_url_component(directory)}", "json": {}}
+
+
+def session_prompt_request(origin: object, session_id: object, prompt: object) -> dict[str, object] | None:
+    """Build the v1.18.32 async prompt request; this function performs no I/O."""
+    if not _loopback_origin(origin) or not _safe_api_id(session_id, "ses") or not isinstance(prompt, str) or not prompt.strip() or len(prompt.encode("utf-8")) > 16 * 1024 or FORBIDDEN_CONTENT.search(prompt):
+        return None
+    return {"method": "POST", "url": f"{origin}/session/{session_id}/prompt_async", "json": {"parts": [{"type": "text", "text": prompt}]}}
+
+
+def session_status_request(origin: object) -> dict[str, object] | None:
+    if not _loopback_origin(origin):
+        return None
+    return {"method": "GET", "url": f"{origin}/session/status"}
+
+
+def session_abort_request(origin: object, session_id: object) -> dict[str, object] | None:
+    if not _loopback_origin(origin) or not _safe_api_id(session_id, "ses"):
+        return None
+    return {"method": "POST", "url": f"{origin}/session/{session_id}/abort"}
+
+
+def run_assigned_task(request: object, approval: object, records: object, *, now: datetime, state_dir: str, task_loader: TaskLoader, resolve_worktree: WorktreeResolver, create_session: CreateSession, send_prompt: SendPrompt, session_state: SessionState, heartbeat: SessionHeartbeat, abort_session: AbortSession, monotonic_clock: Callable[[], float] = monotonic, sleep_fn: Callable[[float], None] = sleep, poll_interval: float = 0.25) -> dict[str, object]:
+    """Reload an assigned card, send it to one pinned session, then supervise it."""
+    if not isinstance(request, Mapping) or not isinstance(approval, Mapping) or not validate_approval(approval, now=now) or _binding_for(request, approval) is None or not _request(request) or not _bound(request, approval, records):
+        return _safe_stop("deny_unbound_approval", request)
+    if not all(callable(value) for value in (task_loader, resolve_worktree, create_session, send_prompt, session_state, heartbeat, abort_session, monotonic_clock, sleep_fn)) or type(poll_interval) not in (int, float) or not 0 < poll_interval <= 1:
+        return _safe_stop("deny_supervision_unavailable", request)
+    try:
+        card = task_loader(str(request["task_id"]))
+    except Exception:
+        return _safe_stop("deny_task_unavailable", request)
+    prompt = _assigned_prompt(card, request)
+    if prompt is None:
+        return _safe_stop("deny_stale_or_cross_owner_task", request)
+    permissions = _task_permission_policy(card)
+    if permissions is None:
+        return _safe_stop("deny_stale_or_cross_owner_task", request)
+    try:
+        resolution = resolve_worktree(request)
+    except Exception:
+        resolution = None
+    if not isinstance(resolution, Mapping) or set(resolution) != {"agent_id", "grant_id", "worktree_ref", "directory"} or any(resolution.get(key) != request.get(key) for key in ("agent_id", "grant_id", "worktree_ref")):
+        return _safe_stop("deny_unpinned_worktree", request)
+    directory = resolution.get("directory")
+    if not isinstance(directory, str) or not ntpath.isabs(directory) or ntpath.normpath(directory) != directory or any(char in directory for char in "\x00\r\n"):
+        return _safe_stop("deny_unpinned_worktree", request)
+    identity = {key: str(request[key]) for key in ("task_id", "run_id", "approval_id", "agent_id", "grant_id", "worktree_ref")}
+    if not consume_once(state_dir, "binding", identity):
+        return _safe_stop("deny_consumed_binding", request)
+    if not consume_once(state_dir, "approval", identity):
+        return _safe_stop("deny_consumed_approval", request)
+    started_at = monotonic_clock()
+    try:
+        session = create_session(request, directory)
+    except Exception:
+        session = None
+    if not isinstance(session, Mapping) or set(session) != {"id", "directory"} or session.get("directory") != directory or not _safe_api_id(session.get("id"), "ses"):
+        return _safe_stop("stopped_session_creation", request)
+    session_id = str(session["id"])
+    session_identity = _session_claim_identity(request, session_id, permissions)
+    if not consume_once(state_dir, "session", session_identity):
+        return _stop_session_result("stopped_session_binding", request, session_id, abort_session)
+    binding = _binding_for(request, approval)
+    assert binding is not None
+    if monotonic_clock() - started_at >= min(int(binding["timeout_seconds"]), int(binding["per_child_hard_ceiling_seconds"])):
+        reason = "stopped_timeout" if int(binding["timeout_seconds"]) < int(binding["per_child_hard_ceiling_seconds"]) else "stopped_hard_ceiling"
+        return _stop_session_result(reason, request, session_id, abort_session)
+    try:
+        delivered = send_prompt(session_id, prompt)
+    except Exception:
+        delivered = False
+    if delivered is not True:
+        return _stop_session_result("stopped_task_delivery", request, session_id, abort_session)
+    return supervise_session(session_id, request, binding, started_at=started_at, session_state=session_state, heartbeat=heartbeat, abort_session=abort_session, monotonic_clock=monotonic_clock, sleep_fn=sleep_fn, poll_interval=poll_interval)
+
+
+def supervise_session(session_id: str, request: Mapping[str, object], binding: Mapping[str, object], *, started_at: float, session_state: SessionState, heartbeat: SessionHeartbeat, abort_session: AbortSession, monotonic_clock: Callable[[], float], sleep_fn: Callable[[float], None], poll_interval: float = 0.25) -> dict[str, object]:
+    """Supervise an asynchronous OpenCode session against monotonic lease deadlines."""
+    if not _safe_api_id(session_id, "ses") or type(poll_interval) not in (int, float) or not 0 < poll_interval <= 1:
+        return _stop_session_result("stopped_invalid_supervision", request, session_id, abort_session)
+    interval = int(binding["heartbeat_interval_seconds"])
+    missed = int(binding["missed_heartbeat_threshold"])
+    timeout = int(binding["timeout_seconds"])
+    ceiling = int(binding["per_child_hard_ceiling_seconds"])
+    stop_after = min(timeout, ceiling)
+    stop_reason = "stopped_timeout" if timeout < ceiling else "stopped_hard_ceiling"
+    last_heartbeat = started_at
+    next_heartbeat = started_at + interval
+    while True:
+        current = monotonic_clock()
+        if current < started_at:
+            return _stop_session_result("stopped_invalid_supervision", request, session_id, abort_session)
+        if current - started_at >= stop_after:
+            return _stop_session_result(stop_reason, request, session_id, abort_session)
+        try:
+            state = session_state(session_id)
+        except Exception:
+            state = "unavailable"
+        if state == "completed":
+            return _session_result("completed", request, session_id)
+        if state == "failed":
+            return _session_result("stopped_worker_failed", request, session_id)
+        if state != "running":
+            return _stop_session_result("stopped_session_state_unavailable", request, session_id, abort_session)
+        if current >= next_heartbeat:
+            try:
+                if heartbeat(session_id):
+                    last_heartbeat = current
+            except Exception:
+                pass
+            next_heartbeat = current + interval
+        if current - last_heartbeat >= interval * missed:
+            return _stop_session_result("stopped_missed_heartbeat", request, session_id, abort_session)
+        sleep_fn(min(poll_interval, max(0.0, min(next_heartbeat, started_at + stop_after) - current)))
+
+
+def reply_assigned_permission(request: object, approval: object, records: object, *, now: datetime, state_dir: str, origin: object, session_binding: object, permission_binding: object, task_permission_policy: object, fetch: Callable[[str], object], send: Callable[[dict[str, object]], bool]) -> dict[str, object]:
+    """Durably fence an exact current permission before its injected one-time reply."""
+    if not isinstance(request, Mapping) or not isinstance(approval, Mapping) or not validate_approval(approval, now=now) or not _binding_for(request, approval) or not _request(request) or not _bound(request, approval, records):
+        return _safe_stop("deny_unbound_approval", request)
+    session_fields = {"task_id", "run_id", "approval_id", "agent_id", "grant_id", "session_id"}
+    permission_fields = session_fields | {"permission_id", "action", "resource_digest"}
+    if not isinstance(session_binding, Mapping) or set(session_binding) != session_fields or not isinstance(permission_binding, Mapping) or set(permission_binding) != permission_fields:
+        return _safe_stop("deny_unbound_permission", request)
+    policy_fields = {"task_id", "run_id", "approval_id", "agent_id", "grant_id", "permissions"}
+    if not isinstance(task_permission_policy, Mapping) or set(task_permission_policy) != policy_fields or any(task_permission_policy.get(key) != request.get(key) for key in ("task_id", "run_id", "approval_id", "agent_id", "grant_id")):
+        return _safe_stop("deny_unbound_permission", request)
+    permissions = task_permission_policy.get("permissions")
+    if not _valid_permission_policy(permissions) or not permissions:
+        return _safe_stop("deny_unbound_permission", request)
+    if any(session_binding.get(key) != request.get(key) for key in ("task_id", "run_id", "approval_id", "agent_id", "grant_id")) or permission_binding.get("session_id") != session_binding.get("session_id") or any(permission_binding.get(key) != session_binding.get(key) for key in session_fields):
+        return _safe_stop("deny_unbound_permission", request)
+    session_id, permission_id = session_binding.get("session_id"), permission_binding.get("permission_id")
+    action, resource_digest = permission_binding.get("action"), permission_binding.get("resource_digest")
+    if not _safe_api_id(session_id, "ses") or not _safe_api_id(permission_id, "per") or not _safe_permission_action(action) or not _safe_digest(resource_digest) or not _loopback_origin(origin) or not callable(fetch) or not callable(send):
+        return _safe_stop("deny_invalid_permission", request)
+    session_identity = _session_claim_identity(session_binding, str(session_id), permissions)
+    if not has_claim(state_dir, "session", session_identity):
+        return _safe_stop("deny_unbound_permission", request)
+    if not any(item["action"] == action and item["resource_digest"] == resource_digest for item in permissions):
+        return _safe_stop("deny_unapproved_permission", request)
+    try:
+        pending = select_pending_permission(fetch(origin), session_id, permission_id)
+    except Exception:
+        pending = None
+    if pending is None or pending["action"] != action or pending["resource_digest"] != resource_digest:
+        return _safe_stop("deny_invalid_permission", request)
+    identity = {key: str(request[key]) for key in ("task_id", "run_id", "approval_id", "agent_id", "grant_id")}
+    identity.update({"session_id": session_id, "permission_id": permission_id})
+    if not consume_once(state_dir, "permission", identity):
+        return _safe_stop("deny_consumed_permission", request)
+    binding = {**identity, "action": action, "resource_digest": resource_digest}
+    result = reply_loopback_once(origin, binding, consumed=set(), fetch=fetch, send=send)
+    safe = {"decision": result.get("decision", "stopped_safety_signal"), "task_id": request["task_id"], "run_id": request["run_id"], "agent_id": request["agent_id"], "grant_id": request["grant_id"]}
+    return safe
+
+
+def _assigned_prompt(card: object, request: Mapping[str, object]) -> str | None:
+    if not isinstance(card, Mapping) or set(card) not in (TASK_CARD_FIELDS, TASK_CARD_FIELDS | {"permission_policy"}) or card.get("task_id") != request.get("task_id") or card.get("owner") != request.get("agent_id") or card.get("status") != "IN_PROGRESS":
+        return None
+    fields = {key: card[key] for key in TASK_CARD_FIELDS if key not in {"owner", "status"}}
+    return build_task_prompt(fields)
+
+
+def _task_permission_policy(card: object) -> list[dict[str, str]] | None:
+    if not isinstance(card, Mapping):
+        return None
+    policy = card.get("permission_policy", [])
+    if not _valid_permission_policy(policy):
+        return None
+    return [dict(item) for item in policy]
+
+
+def _valid_permission_policy(value: object) -> bool:
+    if not isinstance(value, list) or len(value) > 64 or any(not isinstance(item, Mapping) or set(item) != {"action", "resource_digest"} or not _safe_permission_action(item.get("action")) or not _safe_digest(item.get("resource_digest")) for item in value):
+        return False
+    pairs = [(item["action"], item["resource_digest"]) for item in value]
+    return len(set(pairs)) == len(pairs)
+
+
+def _session_claim_identity(binding: Mapping[str, object], session_id: str, permissions: list[dict[str, str]]) -> dict[str, str]:
+    canonical = json.dumps(permissions, sort_keys=True, ensure_ascii=True, separators=(",", ":")).encode("ascii")
+    identity = {key: str(binding[key]) for key in ("task_id", "run_id", "approval_id", "agent_id", "grant_id")}
+    return identity | {"session_id": session_id, "permission_policy_digest": hashlib.sha256(canonical).hexdigest()}
+
+
+def _safe_stop(decision: str, request: object) -> dict[str, object]:
+    result: dict[str, object] = {"decision": decision, "dry_run": decision != "completed", "control_level": "best_effort"}
+    if isinstance(request, Mapping):
+        for key in ("task_id", "run_id", "approval_id", "agent_id", "grant_id"):
+            value = request.get(key)
+            if isinstance(value, str) and len(value) <= 128:
+                result[key] = value
+    return result
+
+
+def _session_result(decision: str, request: Mapping[str, object], session_id: str) -> dict[str, object]:
+    result = _safe_stop(decision, request)
+    if _safe_api_id(session_id, "ses"):
+        result["worker_session_id"] = session_id
+        result["worker_session_binding"] = {key: request[key] for key in ("task_id", "run_id", "approval_id", "agent_id", "grant_id")} | {"session_id": session_id}
+    return result
+
+
+def _abort_session(abort_session: AbortSession, session_id: str) -> bool:
+    try:
+        return abort_session(session_id) is True
+    except Exception:
+        return False
+
+
+def _stop_session_result(decision: str, request: Mapping[str, object], session_id: str, abort_session: AbortSession) -> dict[str, object]:
+    return _session_result(decision if _abort_session(abort_session, session_id) else "stopped_safety_signal", request, session_id)
+
+
+def _safe_api_id(value: object, prefix: str) -> bool:
+    if not isinstance(value, str) or not value.startswith(prefix) or len(value) > 256 or re.fullmatch(r"[A-Za-z0-9_.:-]+", value) is None:
+        return False
+    lowered = value.casefold()
+    return not any(word in lowered for word in ("api_key", "authorization", "bearer", "credential", "password", "secret", "token"))
+
+
+def _safe_digest(value: object) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+
+
+def _safe_permission_action(value: object) -> bool:
+    return isinstance(value, str) and 1 <= len(value) <= 128 and re.fullmatch(r"[A-Za-z0-9_.:-]+", value) is not None and not any(word in value.casefold() for word in ("api_key", "authorization", "bearer", "credential", "password", "secret", "token"))
+
+
+def _url_component(value: str) -> str:
+    safe = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
+    return "".join(chr(byte) if byte in safe else f"%{byte:02X}" for byte in value.encode("utf-8"))
+
+
+def _loopback_origin(value: object) -> bool:
+    if not isinstance(value, str) or not value.startswith("http://127.0.0.1:") or value.count(":") != 2:
+        return False
+    port = value.rsplit(":", 1)[1]
+    return port.isascii() and port.isdecimal() and 1 <= int(port) <= 65535
 
 
 def _launcher(value: object, request: object) -> bool:
@@ -167,6 +439,12 @@ class _ProcessTree:
             return self._child.wait(timeout=timeout)  # type: ignore[union-attr,no-any-return]
         finally:
             self._finish()
+
+    def poll(self) -> int | None:
+        result = self._child.poll()  # type: ignore[union-attr]
+        if result is not None:
+            self._finish()
+        return result
 
     def terminate_tree(self) -> None:
         try:

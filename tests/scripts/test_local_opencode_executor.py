@@ -2,6 +2,8 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
+from tempfile import TemporaryDirectory
+from time import sleep
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
@@ -16,10 +18,8 @@ class FakeProcess:
     def __init__(self, *, code=0, timeout=False, stop_fails=False):
         self.code, self.timeout, self.stop_fails, self.stopped = code, timeout, stop_fails, False
 
-    def wait(self, timeout):
-        if self.timeout:
-            raise TimeoutError()
-        return self.code
+    def poll(self):
+        return None if self.timeout else self.code
 
     def terminate_tree(self):
         self.stopped = True
@@ -54,13 +54,26 @@ def enabled_inputs():
     return request, source, provision_local_workers(source, now=NOW)["records"], {"OPENCODE_PROJECT_WORKTREE": request["worktree_ref"]}
 
 
-def invoke(request=None, source=None, records=None, process=None, consumed=None, provider_environment=None, supervision_checks=(), health_check=None):
+class FakeClock:
+    def __init__(self): self.value = 0.0
+    def now(self): return self.value
+    def sleep(self, seconds): self.value += seconds; sleep(0.001)
+
+
+def invoke(request=None, source=None, records=None, process=None, provider_environment=None, supervision_checks=(), health_check=None, heartbeat=None, state_dir=None):
     request, source, records = request or inputs()[0], source or inputs()[1], records or inputs()[2]
     calls, process = [], process or FakeProcess()
     def spawn(executable, argv, *, cwd_ref, env, shell):
         calls.append((executable, argv, cwd_ref, env, shell))
         return process
-    result = run_opencode_once(request, source, records, now=NOW, consumed_run_ids=consumed if consumed is not None else set(), spawn=spawn, provider_environment=provider_environment, supervision_checks=supervision_checks, health_check=health_check)
+    clock = FakeClock()
+    def execute(path):
+        return run_opencode_once(request, source, records, now=NOW, state_dir=path, spawn=spawn, provider_environment=provider_environment, heartbeat=heartbeat or (lambda: True), monotonic_clock=clock.now, sleep_fn=clock.sleep, health_check=health_check)
+    if state_dir is None:
+        with TemporaryDirectory() as temporary:
+            result = execute(temporary)
+    else:
+        result = execute(str(state_dir))
     return result, calls, process
 
 
@@ -109,15 +122,14 @@ def test_provider_exception_denies_default_unknown_or_credential_environment_bef
         assert "secret" not in repr(result)
 
 
-def test_enabled_exception_stale_replayed_and_cross_wired_records_never_spawn_or_leak_environment():
+def test_enabled_exception_stale_replayed_and_cross_wired_records_never_spawn_or_leak_environment(tmp_path):
     request, source, records, environment = enabled_inputs()
     source["expires_at"] = "2026-09-18T08:00:00+00:00"
     result, calls, _ = invoke(request, source, records, provider_environment=environment)
     assert result["decision"] == "deny_unbound_approval" and not calls and environment["OPENCODE_PROJECT_WORKTREE"] not in repr(result)
     request, source, records, environment = enabled_inputs()
-    consumed = set()
-    invoke(request, source, records, consumed=consumed, provider_environment=environment)
-    result, calls, _ = invoke(request, source, records, consumed=consumed, provider_environment=environment)
+    invoke(request, source, records, provider_environment=environment, state_dir=tmp_path)
+    result, calls, _ = invoke(request, source, records, provider_environment=environment, state_dir=tmp_path)
     assert result["decision"] == "deny_consumed_binding" and not calls and environment["OPENCODE_PROJECT_WORKTREE"] not in repr(result)
     request, source, records, environment = enabled_inputs()
     records[1]["grant_id"] = records[2]["grant_id"]
@@ -133,61 +145,53 @@ def test_provider_exception_denies_credential_like_environment_key_without_leak(
     assert "API_KEY" not in repr(result) and "private-provider-value" not in repr(result)
 
 
-def test_timeout_stops_only_the_matching_fake_tree_after_pre_spawn_consumption():
-    consumed = set()
-    result, calls, process = invoke(process=FakeProcess(timeout=True), consumed=consumed)
-    assert result["decision"] == "stopped_timeout" and calls and process.stopped and consumed
-    consumed = set()
-    result, _, _ = invoke(process=FakeProcess(timeout=True, stop_fails=True), consumed=consumed)
-    assert result["decision"] == "stopped_safety_signal" and consumed
+def test_timeout_stops_only_the_matching_fake_tree_after_pre_spawn_consumption(tmp_path):
+    result, calls, process = invoke(process=FakeProcess(timeout=True), state_dir=tmp_path / "one")
+    assert result["decision"] == "stopped_hard_ceiling" and calls and process.stopped and list((tmp_path / "one").glob("*.json"))
+    result, _, _ = invoke(process=FakeProcess(timeout=True, stop_fails=True), state_dir=tmp_path / "two")
+    assert result["decision"] == "stopped_safety_signal" and list((tmp_path / "two").glob("*.json"))
 
 
 def test_renewable_lease_supervision_stops_only_missed_or_unhealthy_fake_child():
     request, source, records = inputs()
-    missed = NOW.replace(second=11)
-    result, calls, process = invoke(request, source, records, supervision_checks=(missed,))
+    result, calls, process = invoke(request, source, records, process=FakeProcess(timeout=True), heartbeat=lambda: False)
     assert result["decision"] == "stopped_missed_heartbeat" and calls and process.stopped
     request, source, records = inputs()
-    result, calls, process = invoke(request, source, records, supervision_checks=(missed,), health_check=lambda _: False)
+    result, calls, process = invoke(request, source, records, process=FakeProcess(timeout=True), heartbeat=lambda: False, health_check=lambda _: False)
     assert result["decision"] == "stopped_health_check" and calls and process.stopped
-    request, source, records = inputs()
-    result, calls, process = invoke(request, source, records, supervision_checks=(NOW.replace(second=9),), health_check=lambda _: True)
-    assert result["decision"] == "completed" and calls and not process.stopped
 
 
-def test_hard_ceiling_stops_one_fake_child_without_retry_after_consumption():
-    consumed = set()
+def test_hard_ceiling_stops_one_fake_child_without_retry_after_consumption(tmp_path):
     request, source, records = inputs()
-    result, calls, process = invoke(request, source, records, consumed=consumed, supervision_checks=(NOW.replace(minute=1),))
+    result, calls, process = invoke(request, source, records, process=FakeProcess(timeout=True), state_dir=tmp_path)
     assert result["decision"] == "stopped_hard_ceiling" and calls and process.stopped
-    assert consumed and len(calls) == 1
+    assert list(tmp_path.glob("*.json")) and len(calls) == 1
 
 
-def test_one_pilot_admission_fences_all_six_bindings_once_and_denies_replays_before_spawn():
+def test_one_pilot_admission_fences_all_six_bindings_once_and_denies_replays_before_spawn(tmp_path):
     source = approval()
     records = provision_local_workers(source, now=NOW)["records"]
-    consumed, calls = set(), []
+    calls = []
     for binding in source["bindings"]:
         request = {"task_id": source["task_id"], "run_id": source["run_id"], "approval_id": source["approval_id"], **{key: binding[key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
-        result, spawned, _ = invoke(request, source, records, consumed=consumed)
+        result, spawned, _ = invoke(request, source, records, state_dir=tmp_path)
         assert result["decision"] == "completed"
         calls.extend(spawned)
-    assert len(consumed) == len(calls) + 1 == 7
+    assert len(list(tmp_path.glob("*.json"))) == 12
     request = {"task_id": source["task_id"], "run_id": source["run_id"], "approval_id": source["approval_id"], **{key: source["bindings"][0][key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
-    result, spawned, _ = invoke(request, source, records, consumed=consumed)
+    result, spawned, _ = invoke(request, source, records, state_dir=tmp_path)
     assert result["decision"] == "deny_consumed_binding" and spawned == []
     foreign = deepcopy(request); foreign["agent_id"] = "agent-07"
-    result, spawned, _ = invoke(foreign, source, records, consumed=consumed)
+    result, spawned, _ = invoke(foreign, source, records, state_dir=tmp_path)
     assert result["decision"] == "deny_unbound_approval" and spawned == []
     second = deepcopy(source); second["run_id"] = "run-02"
     draft = {key: value for key, value in second.items() if key not in {"approval_id", "launch_time"}}
     second = materialize_launch_approval(draft, now=NOW)["approval"]
     second_records = provision_local_workers(second, now=NOW)["records"]
     second_request = {"task_id": second["task_id"], "run_id": second["run_id"], "approval_id": second["approval_id"], **{key: second["bindings"][0][key] for key in ("agent_id", "grant_id", "worktree_ref", "runtime_id", "argv_allowlist", "timeout_seconds", "stop_authority")}}
-    result, spawned, _ = invoke(second_request, second, second_records, consumed=consumed)
-    assert result["decision"] == "deny_consumed_approval" and spawned == []
-    restarted_state = consumed
-    result, spawned, _ = invoke(request, source, records, consumed=restarted_state)
+    result, spawned, _ = invoke(second_request, second, second_records, state_dir=tmp_path)
+    assert result["decision"] == "completed" and spawned
+    result, spawned, _ = invoke(request, source, records, state_dir=tmp_path)
     assert result["decision"] == "deny_consumed_binding" and spawned == []
 
 

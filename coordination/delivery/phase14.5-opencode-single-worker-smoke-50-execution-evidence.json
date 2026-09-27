@@ -1,0 +1,18 @@
+{
+  "schema": "opencode-smoke-evidence-v1",
+  "date": "2026-09-28",
+  "opencode_version": "1.18.32",
+  "request_count": 1,
+  "agent": "plan",
+  "plugins": "disabled",
+  "working_directory": "fresh_temporary_directory",
+  "auto_approve": false,
+  "timeout_seconds": 90,
+  "exit_code": 0,
+  "expected_response_observed": true,
+  "elapsed_seconds": 84.9,
+  "raw_output_retained": false,
+  "stderr_retained": false,
+  "temporary_directory_cleanup": "TemporaryDirectory_context_exited",
+  "repository_diff_snapshot_at_invocation_boundary": "not_captured"
+}

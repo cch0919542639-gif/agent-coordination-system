@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from typing import Callable, Iterable, Mapping, Protocol
+from datetime import datetime
+from time import monotonic, sleep
+from typing import Callable, Mapping, Protocol
 
 from local_control_adapter import RECORD_FIELDS, SAFE_KEYS, _bound, _request
 from local_control_provision import PROJECT_CONTEXT_KEY, validate_approval
+from one_shot_consumption import consume_once
 
 
 LOCAL_EXECUTABLES = {"opencode": "opencode"}
@@ -15,15 +17,18 @@ FORBIDDEN_WORDS = ("api_key", "authorization", "bearer", "credential", "password
 
 
 class Process(Protocol):
-    def wait(self, timeout: int) -> int: ...
+    def poll(self) -> int | None: ...
     def terminate_tree(self) -> None: ...
 
 
 Spawn = Callable[..., Process]
 HealthCheck = Callable[[Process], bool]
+Heartbeat = Callable[[], bool]
+Monotonic = Callable[[], float]
+Sleep = Callable[[float], None]
 
 
-def run_opencode_once(request: object, approval: object, records: object, *, now: datetime, consumed_run_ids: set[str], spawn: Spawn, provider_environment: object = None, heartbeat_at: datetime | None = None, supervision_checks: Iterable[datetime] = (), health_check: HealthCheck | None = None) -> dict[str, object]:
+def run_opencode_once(request: object, approval: object, records: object, *, now: datetime, state_dir: str, spawn: Spawn, provider_environment: object = None, heartbeat: Heartbeat | None = None, health_check: HealthCheck | None = None, monotonic_clock: Monotonic = monotonic, sleep_fn: Sleep = sleep, poll_interval: float = 0.25) -> dict[str, object]:
     """Admit one pilot once, then fence each exact injected child launch."""
     if _unsafe(request) or _unsafe(records):
         return _result("deny_unsafe_request", request)
@@ -37,17 +42,13 @@ def run_opencode_once(request: object, approval: object, records: object, *, now
     environment = _child_environment(approval, request, provider_environment)
     if environment is None:
         return _result("deny_provider_exception", request)
-    admission = _pilot_admission_token(approval)
-    if admission in consumed_run_ids:
-        pass
-    elif consumed_run_ids:
-        return _result("deny_consumed_approval", request)
-    else:
-        consumed_run_ids.add(admission)
-    launch = _binding_launch_token(request)
-    if launch in consumed_run_ids:
+    if heartbeat is None or type(poll_interval) not in (int, float) or not 0 < poll_interval <= 1:
+        return _result("deny_supervision_unavailable", request)
+    binding_identity = {key: str(request[key]) for key in ("task_id", "run_id", "approval_id", "agent_id", "grant_id", "worktree_ref")}
+    if not consume_once(state_dir, "binding", binding_identity):
         return _result("deny_consumed_binding", request)
-    consumed_run_ids.add(launch)
+    if not consume_once(state_dir, "approval", binding_identity):
+        return _result("deny_consumed_approval", request)
     try:
         process = spawn(
             LOCAL_EXECUTABLES[str(request["runtime_id"])],
@@ -56,10 +57,12 @@ def run_opencode_once(request: object, approval: object, records: object, *, now
             env=environment,
             shell=False,
         )
-        supervised = supervise_approved_lease(process, request, approval, started_at=now, heartbeat_at=heartbeat_at or now, checks=supervision_checks, health_check=health_check or (lambda _: True))
+        supervised = supervise_approved_lease(process, request, approval, started_at=monotonic_clock(), heartbeat=heartbeat, health_check=health_check or (lambda _: True), monotonic_clock=monotonic_clock, sleep_fn=sleep_fn, poll_interval=float(poll_interval))
         if supervised is not None:
             return _result(supervised, request)
-        code = process.wait(timeout=int(request["timeout_seconds"]))
+        code = process.poll()
+        if code is None:
+            return _result("stopped_supervision_lost", request)
     except TimeoutError:
         try:
             process.terminate_tree()
@@ -71,32 +74,40 @@ def run_opencode_once(request: object, approval: object, records: object, *, now
     return _result("completed" if code == 0 else "stopped_nonzero_exit", request)
 
 
-def _pilot_admission_token(approval: object) -> str:
-    assert isinstance(approval, Mapping)
-    return f"{approval['run_id']}:{approval['approval_id']}"
-
-
-def _binding_launch_token(request: Mapping[str, object]) -> str:
-    return ":".join(str(request[key]) for key in ("approval_id", "agent_id", "grant_id", "worktree_ref"))
-
-
-def supervise_approved_lease(process: Process, request: Mapping[str, object], approval: Mapping[str, object], *, started_at: datetime, heartbeat_at: datetime, checks: Iterable[datetime], health_check: HealthCheck) -> str | None:
+def supervise_approved_lease(process: Process, request: Mapping[str, object], approval: Mapping[str, object], *, started_at: float, heartbeat: Heartbeat, health_check: HealthCheck, monotonic_clock: Monotonic = monotonic, sleep_fn: Sleep = sleep, poll_interval: float = 0.25) -> str | None:
     binding = _binding_for(request, approval)
-    if binding is None or heartbeat_at < started_at:
+    if binding is None or not callable(heartbeat) or not 0 < poll_interval <= 1:
         return "stopped_invalid_heartbeat"
     interval = int(binding["heartbeat_interval_seconds"])
     missed = int(binding["missed_heartbeat_threshold"])
     ceiling = int(binding["per_child_hard_ceiling_seconds"])
-    for checked_at in checks:
-        if checked_at.tzinfo is None or checked_at < started_at:
-            return "stopped_invalid_supervision"
-        if checked_at - started_at >= timedelta(seconds=ceiling):
-            return _stop(process, "stopped_hard_ceiling")
-        if checked_at - heartbeat_at >= timedelta(seconds=interval * missed):
-            if not health_check(process):
-                return _stop(process, "stopped_health_check")
-            return _stop(process, "stopped_missed_heartbeat")
-    return None
+    timeout = int(request["timeout_seconds"])
+    stop_after = min(timeout, ceiling)
+    stop_reason = "stopped_timeout" if timeout < ceiling else "stopped_hard_ceiling"
+    last_heartbeat = started_at
+    next_heartbeat = started_at + interval
+    while True:
+        current = monotonic_clock()
+        if current < started_at:
+            return _stop(process, "stopped_invalid_supervision")
+        if current - started_at >= stop_after:
+            return _stop(process, stop_reason)
+        if process.poll() is not None:
+            return None
+        if current >= next_heartbeat:
+            try:
+                if heartbeat():
+                    last_heartbeat = current
+            except Exception:
+                pass
+            next_heartbeat = current + interval
+        if current - last_heartbeat >= interval * missed:
+            try:
+                healthy = health_check(process)
+            except Exception:
+                healthy = False
+            return _stop(process, "stopped_missed_heartbeat" if healthy else "stopped_health_check")
+        sleep_fn(min(poll_interval, max(0.0, min(next_heartbeat, started_at + stop_after) - current)))
 
 
 def _binding_for(request: Mapping[str, object], approval: object) -> Mapping[str, object] | None:

@@ -41,6 +41,28 @@
 Finish independent verification of the Phase 14.5 summary before beginning
 the documentation-only `phase14.5-04` supervised-launch design task.
 
+## 2026-09-20 Fresh Phase H Admission
+
+- The operator granted one new exact Phase H pilot authority after Task 29's
+  accepted non-secret launch projection. `phase14.5-fresh-six-worker-pilot-30`
+  is the new, non-retry task packet. Independent review denied admission before
+  approval materialization because the packet lacks a reviewed binding to the
+  protocol-required pilot task identity and one exact run ID. No runtime,
+  provider, credential, network, token, or child process action occurred.
+- `phase14.5-pilot-identity-projection-31` is independently accepted. It binds
+  Task 30 to the required Phase H identity and an unused exact run ID; Task 30
+  is eligible for one current preflight, not a retry or automatic launch.
+- Task 30's one permitted current preflight denied at the aggregate six-binding
+  state gate. It stopped before admission; no approval, token, process,
+  provider, credential, network action, start attestation, or concurrency
+  evidence exists, and no retry or fallback is authorized.
+- `phase14.5-scoped-worktree-preflight-32` is submitted for independent review.
+  Its command-scoped ownership guard handling reports all six bindings current
+  without persisting Git configuration; it has no pilot authority.
+- `phase14.5-scoped-worktree-preflight-32` is independently accepted. The
+  repair validates six bindings with command-scoped ownership trust only; Task
+  30 remains terminally blocked and cannot be retried under its prior authority.
+
 ## 2026-09-03 Orchestration Planning
 
 - The accepted controlled-orchestration architecture is now mapped to Phase
@@ -128,3 +150,47 @@ the documentation-only `phase14.5-04` supervised-launch design task.
   assigned ORCHESTRATOR implementation. Its implementation must preserve the
   no-launch boundary; a real supervised process start still requires separate,
   exact operator approval.
+
+## 2026-09-22 Phase H Task 38
+
+- Task 38's fresh self-contained admission projection passed independent
+  review, then its one permitted current read-only preflight denied at the
+  aggregate worktree-binding gate. The task is terminally blocked; no retry,
+  fallback, approval, token, runtime, process, credential, or network action
+  occurred. Privacy-bounded record and incident evidence are retained.
+
+## 2026-09-27 OpenCode recovery and Task 46
+
+- Installed OpenCode 1.18.32 version and serve help now exit zero after package
+  postinstall repair; the prior CLI startup failure is not a current blocker.
+- Native Windows Desktop automation was observed working. Selecting the worker
+  project was not verified, and no model prompt was sent through that UI.
+- Task 44/45 remain accepted preparation-only adapters. They do not establish a
+  real HTTP transport, fresh launch authority, or successful six-worker pilot.
+- Task 46's reviewed one-spawn loopback schema probe succeeded on 1.18.32 and
+  stopped its server. Independent result review accepted this diagnostic only.
+  Nine probe tests / 17 combined regressions pass. Modern permission reply body
+  differs from the injected controller; referenced request schemas remain to
+  verify. No new pilot ran and Phase H is not complete.
+- Session closed at the user's request (「先收工」). Work is paused pending
+  user resume; closeout reran 17 focused tests, coordination validation and
+  diff whitespace checks successfully. Handoff saved; no commit or push.
+
+## 2026-09-28 Task 49 and OpenCode Connectivity
+
+- Task 49's live API task runner, durable one-shot permission consumption, and
+  exact-session supervision passed independent review and is in `done/`. Its
+  checks passed: 52 focused tests (one Windows symlink skip), module compilation,
+  coordination validation, and whitespace validation. No live API/runtime call
+  was made by Task 49.
+- Task 50 sent one read-only plan-agent OpenCode request from an empty temporary
+  directory with plugins disabled. OpenCode 1.18.32 returned the expected fixed
+  response, exit code 0, in about 84.9 seconds; raw output was discarded.
+- Per the user's 2026-09-28 scope clarification, local acceptance is this one
+  connectivity check; the remaining five agents are intended for other
+  computers. This does not demonstrate task dispatch, permission reply, report
+  callback, automatic redispatch, or a six-agent run.
+- The invocation-boundary repository diff was not captured. The updated Task 50
+  explicitly excludes repository non-mutation from acceptance and does not
+  claim that it was verified. Independent review accepted the revised scope;
+  no second request or six-agent run was made.
