@@ -86,6 +86,7 @@ WorktreeResolver = Callable[[Mapping[str, object]], object]
 SessionState = Callable[[str], str]
 SessionHeartbeat = Callable[[str], bool]
 AbortSession = Callable[[str], bool]
+DeliveryCallback = Callable[[Mapping[str, object], str], object]
 
 
 def session_create_request(origin: object, directory: object) -> dict[str, object] | None:
@@ -114,12 +115,18 @@ def session_abort_request(origin: object, session_id: object) -> dict[str, objec
     return {"method": "POST", "url": f"{origin}/session/{session_id}/abort"}
 
 
-def run_assigned_task(request: object, approval: object, records: object, *, now: datetime, state_dir: str, task_loader: TaskLoader, resolve_worktree: WorktreeResolver, create_session: CreateSession, send_prompt: SendPrompt, session_state: SessionState, heartbeat: SessionHeartbeat, abort_session: AbortSession, monotonic_clock: Callable[[], float] = monotonic, sleep_fn: Callable[[float], None] = sleep, poll_interval: float = 0.25) -> dict[str, object]:
+def run_assigned_task(request: object, approval: object, records: object, *, now: datetime, state_dir: str, task_loader: TaskLoader, resolve_worktree: WorktreeResolver, create_session: CreateSession, send_prompt: SendPrompt, session_state: SessionState, heartbeat: SessionHeartbeat, abort_session: AbortSession, monotonic_clock: Callable[[], float] = monotonic, sleep_fn: Callable[[float], None] = sleep, poll_interval: float = 0.25, delivery_callback: DeliveryCallback | None = None) -> dict[str, object]:
     """Reload an assigned card, send it to one pinned session, then supervise it."""
     if not isinstance(request, Mapping) or not isinstance(approval, Mapping) or not validate_approval(approval, now=now) or _binding_for(request, approval) is None or not _request(request) or not _bound(request, approval, records):
         return _safe_stop("deny_unbound_approval", request)
-    if not all(callable(value) for value in (task_loader, resolve_worktree, create_session, send_prompt, session_state, heartbeat, abort_session, monotonic_clock, sleep_fn)) or type(poll_interval) not in (int, float) or not 0 < poll_interval <= 1:
+    if not all(callable(value) for value in (task_loader, resolve_worktree, create_session, send_prompt, session_state, heartbeat, abort_session, monotonic_clock, sleep_fn)) or (delivery_callback is not None and not callable(delivery_callback)) or type(poll_interval) not in (int, float) or not 0 < poll_interval <= 1:
         return _safe_stop("deny_supervision_unavailable", request)
+    automatic_delivery = False
+    if delivery_callback is None:
+        transport = getattr(session_state, "__self__", None)
+        callbacks = (create_session, send_prompt, session_state, heartbeat, abort_session)
+        if transport is not None and all(getattr(callback, "__self__", None) is transport for callback in callbacks):
+            automatic_delivery = True
     try:
         card = task_loader(str(request["task_id"]))
     except Exception:
@@ -139,6 +146,20 @@ def run_assigned_task(request: object, approval: object, records: object, *, now
     directory = resolution.get("directory")
     if not isinstance(directory, str) or not ntpath.isabs(directory) or ntpath.normpath(directory) != directory or any(char in directory for char in "\x00\r\n"):
         return _safe_stop("deny_unpinned_worktree", request)
+    if automatic_delivery:
+        try:
+            from task_delivery_callback import make_delivery_callback
+            from task_delivery_evidence import capture_snapshot, changed_paths
+
+            initial_snapshot = capture_snapshot(directory, card.get("allowed_scope"))
+
+            def collect_evidence(_: Mapping[str, object], __: str) -> dict[str, list[str]]:
+                final_snapshot = capture_snapshot(directory, card.get("allowed_scope"))
+                return changed_paths(initial_snapshot, final_snapshot)
+
+            delivery_callback = make_delivery_callback(evidence_provider=collect_evidence)
+        except Exception:
+            return _safe_stop("deny_delivery_evidence_unavailable", request)
     identity = {key: str(request[key]) for key in ("task_id", "run_id", "approval_id", "agent_id", "grant_id", "worktree_ref")}
     if not consume_once(state_dir, "binding", identity):
         return _safe_stop("deny_consumed_binding", request)
@@ -166,7 +187,17 @@ def run_assigned_task(request: object, approval: object, records: object, *, now
         delivered = False
     if delivered is not True:
         return _stop_session_result("stopped_task_delivery", request, session_id, abort_session)
-    return supervise_session(session_id, request, binding, started_at=started_at, session_state=session_state, heartbeat=heartbeat, abort_session=abort_session, monotonic_clock=monotonic_clock, sleep_fn=sleep_fn, poll_interval=poll_interval)
+    result = supervise_session(session_id, request, binding, started_at=started_at, session_state=session_state, heartbeat=heartbeat, abort_session=abort_session, monotonic_clock=monotonic_clock, sleep_fn=sleep_fn, poll_interval=poll_interval)
+    if result.get("decision") != "completed" or delivery_callback is None:
+        return result
+    try:
+        submitted = delivery_callback(request, session_id) is True
+    except Exception:
+        submitted = False
+    result["delivery_submission"] = "submitted_for_review" if submitted else "not_submitted"
+    if not submitted:
+        result["decision"] = "completed_delivery_failed"
+    return result
 
 
 def supervise_session(session_id: str, request: Mapping[str, object], binding: Mapping[str, object], *, started_at: float, session_state: SessionState, heartbeat: SessionHeartbeat, abort_session: AbortSession, monotonic_clock: Callable[[], float], sleep_fn: Callable[[float], None], poll_interval: float = 0.25) -> dict[str, object]:

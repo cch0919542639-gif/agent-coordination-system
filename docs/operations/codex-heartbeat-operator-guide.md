@@ -15,10 +15,12 @@ The heartbeat is a **local, bounded check** that:
    project repositories for task-card evidence on remote branches.
 2. Inspects the event ledger for new `review_submitted`, `ready_assigned`,
    or `incident_opened` events.
-3. If new events exist, prints a wake-up summary for the operator to act on.
+3. If new events exist, wakes the lead agent to inspect the repository evidence
+   and apply controller triage. The lead agent pauses and notifies the user only
+   when a human decision is needed or risk is identified.
 4. If no events exist, returns an idle result with no further action.
 
-The heartbeat **never**:
+The monitor command by itself **never**:
 
 - Claims, dispatches, reviews, merges, or pushes tasks.
 - Modifies task-card lifecycle or assignments.
@@ -27,16 +29,19 @@ The heartbeat **never**:
 - Stores credentials, prompts, or source code.
 - Launches agents or invokes subprocesses beyond the bounded Git checks.
 
+The Codex lead-agent heartbeat may record a clear review decision and assign
+dependency-ready work after inspecting the evidence. Assignment does not start a
+worker. The heartbeat must not launch a worker process or publish changes.
+
 ## What Still Requires Human Decisions
 
 The heartbeat surfaces evidence; it does not decide:
 
 | Action | Who Decides |
 |---|---|
-| Review acceptance | Reviewer (ORCHESTRATOR) |
-| Scope changes | Operator |
-| Task reassignment | Operator |
-| Safety escalation | Operator |
+| Human decision or risk escalation | User |
+| Scope or product-intent changes | User |
+| Safe review and capability reassignment | Lead agent (ORCHESTRATOR) |
 | External agent execution | Worker (via registered poller) |
 
 ## Cadence

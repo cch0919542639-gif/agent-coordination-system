@@ -70,8 +70,9 @@ blocker as an incident instead of guessing across a safety or scope boundary.
 ### 5. Verify And Review
 
 Use objective evidence: tests, validation, deliverables, and scope checks.
-Review decides accepted, needs-fix, reassign, or rejected. A chat claim alone
-is never completion.
+Review decides accepted, needs-fix, reassign, rejected, or paused after
+lead-agent human-decision and risk triage. A chat claim alone is never
+completion.
 
 ### 6. Operate Or Release
 

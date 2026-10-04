@@ -38,8 +38,8 @@
 
 ## Next Action
 
-Finish independent verification of the Phase 14.5 summary before beginning
-the documentation-only `phase14.5-04` supervised-launch design task.
+Independently validate the lead-agent triage/automatic redispatch policy update
+before starting another Phase 14.5 task.
 
 ## 2026-09-20 Fresh Phase H Admission
 
@@ -194,3 +194,111 @@ the documentation-only `phase14.5-04` supervised-launch design task.
   explicitly excludes repository non-mutation from acceptance and does not
   claim that it was verified. Independent review accepted the revised scope;
   no second request or six-agent run was made.
+
+## 2026-09-29 Local Supervised Loop
+
+- Task 51 implements the v1.18.32 loopback HTTP callbacks expected by Task 49,
+  with fake-connection coverage only. Six focused tests, compilation,
+  coordination validation, and whitespace validation pass. No server/API,
+  model, prompt, or permission action ran. The task is waiting for independent
+  review.
+- The adapter only reports session completion after observing activity then
+  idle. Report submission, human review, and dependency-safe next-task dispatch
+  remain to be implemented locally; the five remote worker-machine setups are
+  left to the user.
+- Phase H remains incomplete. Any task-bound live run still needs a fresh exact
+  user authorization and current launch packet.
+
+## 2026-09-30 Local Supervised Loop Complete
+
+- Task 51 is independently accepted/DONE. Its strict v1.18.32 loopback HTTP
+  adapter connects the Task 49 callbacks and passes seven fake-transport tests;
+  no live API, server, model, session, or permission call was made.
+- Task 52 is independently accepted/DONE. `orchestrate next` and direct
+  dispatch now fail closed on unresolved or ambiguous dependencies; review
+  continuation requires an accepted review and explicit owner, then assigns
+  at most one ready task without launching a worker.
+- The local report flow is ready for worker-authored delivery evidence:
+  `submit_task.py` moves a completed report into review, a person makes the
+  acceptance decision, and the opt-in `review_task.py --continue-after-accept`
+  command can assign one next task. OpenCode idle does not create a report or
+  accept a review.
+- Final focused validation: 63 passed, 2 skipped; changed modules compiled;
+  coordination validation and `git diff --check` passed. The stale duplicate
+  `phase14.5-bootstrap-01` card in `ready/` is preserved, but its duplicate ID
+  is blocked from planning and dispatch.
+- Five additional worker machines remain for the user to prepare. No live
+  task-bound run was attempted, Phase H remains incomplete, and the current
+  changes remain uncommitted and unpushed.
+
+## 2026-09-30 Task 53 Automatic Delivery Submission
+
+- Task 53 now detects the native same-instance loopback callbacks and requests
+  a bounded task/run-bound final manifest from the worker. After exact session
+  supervision reports completion, it generates a sanitized, unverified-claims
+  delivery report and submits the task to `review/` through the shared
+  submission checks. The submission lifecycle rechecks the exact `in_progress/`
+  state and owner after reading the final message and before report creation;
+  tests cover a task moving to `blocked/` and its owner being removed in that
+  window. Invalid or stale output fails closed.
+- The reviewer still checks actual repository evidence and explicitly accepts
+  or rejects the task. Only an accepted review can request the Task 52
+  one-task continuation. Automatic review acceptance remains a non-goal.
+- Fake-only combined validation: 100 passed, 2 skipped. Module compilation,
+  coordination validation, and `git diff --check` passed. No live API/runtime
+  was called; five remote worker machines remain for the user.
+- Independent review accepted Task 53 after the race fix. The task card is
+  `DONE`; no commit or push was made, and Phase H remains incomplete.
+
+## 2026-09-30 Task 54 Controller-Observed Delivery
+
+- Task 54 removes the worker-authored final JSON manifest. The native runner
+  captures a bounded in-memory snapshot of the assigned `allowed_scope` before
+  the session, compares it after exact supervised completion, and generates
+  the review report from controller-observed added, modified, and deleted
+  paths. It does not persist file contents or hashes.
+- The generated report states that validation output and risk assessment were
+  not collected by the controller, so reviewers must verify them. Human review
+  and the optional accepted-only continuation remain in place.
+- Focused Task 49/51/52/53/54 validation: 112 passed, 3 skipped. Changed
+  modules compiled; coordination validation and `git diff --check` passed.
+  No live OpenCode/API/runtime was used. Independent review accepted Task 54;
+  no continuation was triggered. Five other computers remain for the user,
+  and Phase H is incomplete.
+
+## 2026-10-03 Controller-Triaged Delivery Loop
+
+- The user replaced mandatory human acceptance with lead-agent triage: stop and
+  notify only when a human decision is needed or risk is identified.
+- `review_task.py --controller-triage` records both answers. A clear acceptance
+  moves the task to `done/` and assigns at most one dependency-ready task to the
+  same owner; bounded `needs_fix` or a clear capability reassignment routes
+  work to the selected owner after the review queue is clear; `paused` leaves
+  it in `review/` and prints an escalation notification.
+- Updated the current plan, durable decision log, review protocols, operator
+  docs, validator outcome set, and handoff. Older Task 54 evidence remains a
+  historical record of the policy at that time.
+- No tests, compilation, coordination validation, or live OpenCode/API run was
+  performed for this policy change. No worker launch, commit, or push occurred.
+- Worker assignment still does not start a process. The five other computers
+  remain external, and Phase H remains incomplete.
+
+## 2026-10-04 Task 55: Controller Triage and Repeatable Delivery
+
+- Task 55 is accepted/DONE. The lead agent records human-decision and risk
+  triage; clear acceptance, bounded corrections, and safe reassignment continue
+  without waiting on unrelated review cards. Escalations stay in `review/`.
+- Fixed the correction-loop dead end: delivery callbacks now write immutable
+  run-keyed reports, so a `needs_fix` rerun can submit again while keeping old
+  task-ID-only and prior-run evidence. Repeated reviews also keep separate
+  records, and task feedback links to the newest review.
+- The Coordination API requires its dedicated
+  `COORDINATION_ORCHESTRATOR_REVIEW_KEY`, exact `ORCHESTRATOR` identity, and
+  both triage fields; no key value was provisioned or changed.
+- Focused local fake-only suite: 120 passed, 2 skipped. Six changed modules
+  compiled in memory; coordination validation and `git diff --check` passed.
+  A Starlette/httpx deprecation warning came from the temporary API test setup.
+- No live API/OpenCode/worker, commit, push, merge, or remote-machine action
+  occurred. Five computers remain for the user; Phase H remains incomplete.
+- Next step requires separate authorization to publish or to start a
+  task-bound worker; no dependency-ready Phase 14.5 child task remains.

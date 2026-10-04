@@ -22,8 +22,8 @@ Phase 14.5: six-agent controlled orchestration plane.
 
 ## Non-Goals For Current Milestone
 
-- automatic review acceptance, merge, push, or external agent launch outside a
-  pre-approved, sandboxed connector grant
+- review acceptance without an evidence-based lead-agent triage; merge, push,
+  or external agent launch outside a pre-approved, sandboxed connector grant
 - supervised runtime invocation or mutable launch artifacts without a separate
   one-shot approval and accepted implementation task
 - cross-machine transport or credentials

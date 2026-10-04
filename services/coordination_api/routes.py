@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import os
+import secrets
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 
 from services.coordination_api.repository import (
     close_assignment,
@@ -40,12 +42,13 @@ ALLOWED_INCIDENT_STATUSES = {"claimed", "in_progress", "blocked"}
 ALLOWED_SUBMIT_STATUSES = {"in_progress", "blocked"}
 ALLOWED_HEARTBEAT_STATUSES = {"claimed", "in_progress"}
 
-VALID_REVIEW_DECISIONS = {"accepted", "needs_fix", "reassign", "rejected"}
+VALID_REVIEW_DECISIONS = {"accepted", "needs_fix", "reassign", "rejected", "paused"}
 DECISION_STATUS_MAP = {
     "accepted": "accepted",
     "needs_fix": "in_progress",
     "reassign": "assigned",
     "rejected": "cancelled",
+    "paused": "review",
 }
 
 
@@ -370,10 +373,17 @@ async def submit_for_review(task_id: str, body: dict):
 
 
 @router.post("/tasks/{task_id}/review")
-async def review_task(task_id: str, body: dict):
+async def review_task(task_id: str, body: dict, request: Request):
     reviewer_id = body.get("reviewer_id", "")
     if not reviewer_id:
         raise HTTPException(status_code=400, detail="reviewer_id is required")
+
+    expected_key = os.environ.get("COORDINATION_ORCHESTRATOR_REVIEW_KEY", "")
+    supplied_key = request.headers.get("X-API-Key", "")
+    if not expected_key:
+        raise HTTPException(status_code=503, detail="Orchestrator review key is not configured")
+    if not secrets.compare_digest(supplied_key, expected_key) or reviewer_id != "ORCHESTRATOR":
+        raise HTTPException(status_code=403, detail="Only the authenticated ORCHESTRATOR may review tasks")
 
     decision = body.get("decision", "")
     if not decision:
@@ -383,6 +393,14 @@ async def review_task(task_id: str, body: dict):
             status_code=400,
             detail=f"Invalid decision '{decision}'; must be one of {sorted(VALID_REVIEW_DECISIONS)}",
         )
+
+    human_decision = body.get("human_decision", "")
+    risk = body.get("risk", "")
+    if human_decision not in {"not-needed", "required"} or risk not in {"none", "identified"}:
+        raise HTTPException(status_code=400, detail="human_decision and risk triage results are required")
+    needs_pause = human_decision == "required" or risk == "identified"
+    if (needs_pause and decision != "paused") or (decision == "paused" and not needs_pause):
+        raise HTTPException(status_code=400, detail="Review must pause exactly when a human decision or risk is identified")
 
     task = find_task(task_id)
     if task is None:
@@ -432,6 +450,8 @@ async def review_task(task_id: str, body: dict):
             "findings": body.get("findings", []),
             "required_changes": body.get("required_changes", []),
             "accepted_artifact_ids": accepted_artifact_ids,
+            "human_decision": human_decision,
+            "risk": risk,
         },
     )
 

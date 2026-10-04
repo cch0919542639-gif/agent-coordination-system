@@ -22,7 +22,8 @@ deduplicated event ledger
    | incident_opened -> wake orchestrator triage handler
                     |
                     v
-human decision only for acceptance, reassign, scope, or safety escalation
+lead-agent triage for routine acceptance and correction; human decision only
+when intent is ambiguous or risk is identified
 ```
 
 ## Runtime Contract
@@ -56,7 +57,8 @@ human decision only for acceptance, reassign, scope, or safety escalation
 ## Deliberately Deferred
 
 - direct control of third-party agent processes or paid provider APIs
-- automatic review acceptance, merge, reassign, claim, or deployment
+- review acceptance or reassignment without evidence-based lead-agent triage;
+  merge, claim, or deployment
 - webhooks requiring a public server
 - credentials stored in task cards, event state, or repository files
 

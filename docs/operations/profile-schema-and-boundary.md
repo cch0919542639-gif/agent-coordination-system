@@ -33,7 +33,7 @@ The table below lists every behavior in the current coordination system, identif
 | 21 | Worktree policy (enabled/disabled, path prefix) | `worktree-aware-task-metadata.md` | **Default** / **Profile** | A profile may enable worktree mode and define conventions. |
 | 22 | Machine affinity | `worktree-aware-task-metadata.md:56-66` | **Default** / **Profile** | A profile may require machine pinning. |
 | 23 | Dispatch message format | `dispatch_task.py` | **Core** — not overridable | The dispatch message is part of the orchestration protocol. |
-| 24 | Review outcomes (accepted, needs_fix, reassign, rejected) | `agent-task-execution-protocol.md:268-281` | **Core** — not overridable | Review decisions are part of the engine's control flow. |
+| 24 | Review outcomes (accepted, needs_fix, reassign, rejected, paused) | `agent-task-execution-protocol.md:268-287` | **Core** — not overridable | Review decisions are part of the engine's control flow. |
 | 25 | Validator rules and logic | `validate_coordination_files.py` | **Core** — not overridable | The validation engine's logic is part of the core. Profiles add data, not rules. |
 | 26 | Orchestrator role and authority | `lead-agent-orchestration-protocol.md:20-34` | **Core** — not overridable | The orchestrator's role is a system invariant. |
 
@@ -46,7 +46,7 @@ These are part of the coordination engine's invariant rules:
 1. Task lifecycle state machine (ready -> in_progress -> review -> done + exception states)
 2. Agent execution loop (8 steps)
 3. Dispatch message format and content
-4. Review outcome decisions (accepted, needs_fix, reassign, rejected)
+4. Review outcome decisions (accepted, needs_fix, reassign, rejected, paused)
 5. Validator fundamental logic and data structures
 6. Orchestrator role and authority
 7. The concept of task packets with front matter + body sections

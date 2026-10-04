@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import re
 from pathlib import Path
 
@@ -145,8 +146,24 @@ def progress_file_for(agent_name: str) -> Path:
     return PROGRESS_DIR / f"{agent_name}.md"
 
 
-def delivery_file_for(task_id: str) -> Path:
-    return DELIVERY_DIR / f"{task_id}-delivery-report.md"
+def delivery_file_for(task_id: str, run_id: str | None = None) -> Path:
+    if run_id is None:
+        return DELIVERY_DIR / f"{task_id}-delivery-report.md"
+    run_key = hashlib.sha256(run_id.encode("utf-8")).hexdigest()[:16]
+    return DELIVERY_DIR / f"{task_id}-run-{run_key}-delivery-report.md"
+
+
+def delivery_files_for(task_id: str, directory: Path | None = None) -> list[Path]:
+    reports_dir = DELIVERY_DIR if directory is None else directory
+    legacy = f"{task_id}-delivery-report.md"
+    prefix = f"{task_id}-run-"
+    suffix = "-delivery-report.md"
+    if not reports_dir.is_dir():
+        return []
+    return sorted(
+        path for path in reports_dir.iterdir()
+        if path.is_file() and (path.name == legacy or (path.name.startswith(prefix) and path.name.endswith(suffix)))
+    )
 
 
 def sanitize_slug(value: str) -> str:
@@ -156,3 +173,15 @@ def sanitize_slug(value: str) -> str:
 
 def review_file_for(task_id: str) -> Path:
     return REVIEWS_DIR / f"review-{task_id}.md"
+
+
+def next_review_file_for(task_id: str) -> Path:
+    first = review_file_for(task_id)
+    if not first.exists():
+        return first
+    attempt = 2
+    while True:
+        candidate = first.with_name(f"{first.stem}-{attempt}{first.suffix}")
+        if not candidate.exists():
+            return candidate
+        attempt += 1

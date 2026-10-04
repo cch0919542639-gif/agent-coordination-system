@@ -51,6 +51,11 @@ The lead agent must stop and escalate to the user when:
 - the system cannot choose between conflicting acceptance criteria
 - the phase should be cancelled, significantly delayed, or fundamentally redesigned
 
+For delivery review, the lead agent records two explicit triage results:
+whether a human decision is needed and whether risk is identified. If both are
+clear, it may accept or return bounded corrections and continue dispatch. If
+either requires escalation, it records a paused review and notifies the user.
+
 ## Standard Orchestration Loop
 
 Every lead-agent run should follow the same sequence.

@@ -58,7 +58,7 @@ Use it before, during, and immediately after the first pilot wave.
 - [ ] Confirm the review is based on acceptance criteria, not memory alone.
 - [ ] Confirm scope compliance was checked.
 - [ ] Confirm review outcome is written explicitly.
-- [ ] Confirm `accepted`, `needs_fix`, `reassign`, or `rejected` is recorded clearly.
+- [ ] Confirm the lead agent recorded human-decision and risk triage, then `accepted`, `needs_fix`, `reassign`, `rejected`, or `paused` clearly.
 
 ## Completion Check
 

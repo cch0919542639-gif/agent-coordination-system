@@ -44,16 +44,61 @@ def _scan_all_tasks() -> dict[str, dict]:
             if tid:
                 fm["_file"] = str(path)
                 fm["_state_dir"] = state_dir.name
-                tasks[tid] = fm
+                previous = tasks.get(tid)
+                if previous is None:
+                    tasks[tid] = fm
+                else:
+                    files = list(previous.get("_duplicate_files", [previous.get("_file", "")]))
+                    files.append(str(path))
+                    tasks[tid] = {
+                        "task_id": tid,
+                        "_state_dir": "duplicate",
+                        "_duplicate": True,
+                        "_duplicate_files": files,
+                    }
     return tasks
 
 
 def _dep_satisfied(dep_id: str, tasks: dict[str, dict]) -> bool:
     """A dependency is satisfied when the task exists in done/."""
     dep = tasks.get(dep_id)
-    if dep is None:
+    if dep is None or dep.get("_duplicate"):
         return False
     return dep.get("_state_dir") in ACCEPTED_STATES
+
+
+def _dependencies(fm: dict) -> list[str] | None:
+    """Return a well-formed dependency list, or None when the card is invalid."""
+    dependencies = fm.get("dependencies", [])
+    if not isinstance(dependencies, list):
+        return None
+    if any(not isinstance(dep, str) or not dep.strip() for dep in dependencies):
+        return None
+    return dependencies
+
+
+def dependency_blockers(task_id: str, tasks: dict[str, dict] | None = None) -> list[dict[str, str]]:
+    """Return direct missing or unfinished dependencies for one task."""
+    if tasks is None:
+        tasks = _scan_all_tasks()
+    task = tasks.get(task_id)
+    if task is None:
+        return [{"dependency": task_id, "state": "missing_task"}]
+    if task.get("_duplicate"):
+        return [{"dependency": task_id, "state": "duplicate_task_id"}]
+    dependencies = _dependencies(task)
+    if dependencies is None:
+        return [{"dependency": "<invalid>", "state": "invalid_dependencies"}]
+    blockers: list[dict[str, str]] = []
+    for dependency in dependencies:
+        dep = tasks.get(dependency)
+        if dep is None:
+            blockers.append({"dependency": dependency, "state": "missing"})
+        elif dep.get("_duplicate"):
+            blockers.append({"dependency": dependency, "state": "duplicate_task_id"})
+        elif dep.get("_state_dir") != "done":
+            blockers.append({"dependency": dependency, "state": str(dep.get("_state_dir", "unknown"))})
+    return blockers
 
 
 def _classify_tasks(
@@ -75,12 +120,21 @@ def _classify_tasks(
 
     for tid, fm in sorted(tasks.items()):
         state = fm.get("_state_dir", "")
+        if fm.get("_duplicate"):
+            blocked.append(tid)
+            continue
         if state != "ready":
             continue
 
-        deps = fm.get("dependencies", [])
-        if not isinstance(deps, list):
-            deps = []
+        deps = _dependencies(fm)
+        if deps is None:
+            errors.append({
+                "type": "invalid_dependencies",
+                "task": tid,
+                "message": f"Task `{tid}` has a malformed dependencies field.",
+            })
+            blocked.append(tid)
+            continue
 
         missing = [d for d in deps if d not in tasks]
         if missing:
@@ -135,11 +189,8 @@ def _detect_cycles(tasks: dict[str, dict]) -> tuple[list[dict], set[str]]:
     # Build adjacency only among ready tasks
     graph: dict[str, list[str]] = {}
     for tid in ready_ids:
-        deps = tasks[tid].get("dependencies", [])
-        if isinstance(deps, list):
-            graph[tid] = [d for d in deps if d in ready_ids]
-        else:
-            graph[tid] = []
+        deps = _dependencies(tasks[tid])
+        graph[tid] = [d for d in deps if d in ready_ids] if deps is not None else []
 
     # DFS cycle detection
     WHITE, GRAY, BLACK = 0, 1, 2
@@ -308,7 +359,10 @@ def _format_human(plan: dict) -> str:
             state = fm.get("_state_dir", "?")
             # Find which deps are unsatisfied
             unsatisfied = []
-            if isinstance(deps, list):
+            if fm.get("_duplicate"):
+                files = ", ".join(str(path) for path in fm.get("_duplicate_files", []))
+                unsatisfied.append(f"duplicate task_id ({files})")
+            elif isinstance(deps, list):
                 for d in deps:
                     dep_fm = tasks.get(d)
                     if dep_fm is None:

@@ -108,7 +108,7 @@ Typical commands:
 python scripts/orchestrate.py intake ...
 python scripts/orchestrate.py validate
 python scripts/orchestrate.py dispatch --task-id <task> --owner <agent> --output -
-python scripts/orchestrate.py review --task-id <task> --reviewer orchestrator --decision accepted --summary "<summary>"
+python scripts/orchestrate.py review --task-id <task> --reviewer ORCHESTRATOR --decision accepted --summary "<summary>" --controller-triage --human-decision not-needed --risk none
 python scripts/orchestrate.py next
 ```
 
@@ -150,7 +150,7 @@ Typical commands:
 ```bash
 git pull
 python scripts/orchestrate.py validate
-python scripts/orchestrate.py review --task-id <task> --reviewer <reviewer> --decision accepted --summary "<summary>"
+python scripts/orchestrate.py review --task-id <task> --reviewer ORCHESTRATOR --decision accepted --summary "<summary>" --controller-triage --human-decision not-needed --risk none
 git add .
 git commit -m "Review <task>"
 git push
@@ -267,7 +267,7 @@ Do the work, update progress, submit for review, then push.
 ```bash
 git pull
 python scripts/orchestrate.py validate
-python scripts/orchestrate.py review --task-id phase7-01 --reviewer orchestrator --decision accepted --summary "Task meets acceptance criteria."
+python scripts/orchestrate.py review --task-id phase7-01 --reviewer ORCHESTRATOR --decision accepted --summary "Task meets acceptance criteria." --controller-triage --human-decision not-needed --risk none
 git add .
 git commit -m "Accept phase7-01"
 git push

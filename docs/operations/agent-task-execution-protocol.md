@@ -56,7 +56,7 @@ When in doubt:
 
 ### Rule 5: Review Before Done
 
-An agent may submit work for review, but only the orchestrator or reviewer may mark it accepted and done.
+An agent may submit work for review, but only the lead agent or its designated reviewer may mark it accepted and done. Routine, evidence-backed review does not require human acceptance. The lead agent pauses and notifies the user when a human decision is needed or a risk is identified.
 
 ## Task Lifecycle
 
@@ -266,12 +266,14 @@ If these are missing, the submission is incomplete.
 
 ## Review Outcomes
 
-Reviewer may return one of the following:
+The lead agent records one of the following lifecycle outcomes after explicit
+human-decision and risk triage:
 
 - `accepted`
 - `needs_fix`
 - `reassign`
 - `rejected`
+- `paused`
 
 Meaning:
 
@@ -279,6 +281,15 @@ Meaning:
 - `needs_fix`: original agent should correct specific issues
 - `reassign`: another agent or the orchestrator should continue
 - `rejected`: delivery is not acceptable and should not be integrated
+- `paused`: the lead agent needs a human decision or has identified risk; the task stays in `review/`
+
+For controller-triage reviews, the lead agent records whether a human decision
+is needed and whether risk is identified. If neither applies, it may accept the
+delivery or return bounded corrections to the existing owner and continue
+dispatch immediately for that delivery; unrelated review cards do not block
+continuation. If either applies, it records `paused`, notifies the user, and
+stops dispatch. The lifecycle command rejects decisions that omit controller
+triage.
 
 ## Reassignment Rules
 

@@ -1,6 +1,83 @@
 # Handoff — Phase H
 
-## Current continuation checkpoint — 2026-09-28
+## Current continuation checkpoint — 2026-10-04
+
+This checkpoint supersedes the 2026-10-03 policy-only checkpoint below.
+
+- Task 55 is accepted/DONE. The lead agent records explicit human-decision and
+  risk triage. Clear acceptance, bounded corrections, and safe reassignment can
+  continue without waiting on unrelated review cards; either escalation keeps
+  the task in `review/` and notifies the user.
+- The correction loop now preserves every attempt. Delivery callbacks write
+  immutable reports keyed by a digest of the exact run ID, and legacy task-ID
+  reports remain valid. Repeated controller reviews get separate numbered
+  records; the task card links to the latest correction feedback.
+- Verification: 120 local fake-only tests passed, 2 skipped; six changed Python
+  modules compiled in memory; `scripts/orchestrate.py validate` and
+  `git diff --check` passed. One Starlette/httpx deprecation warning was emitted
+  by the temporary API test dependencies.
+- No live OpenCode worker, API request, credential operation, external-machine
+  action, commit, push, or merge occurred. The dedicated API reviewer key was
+  not provisioned. Five worker computers remain for the user; Phase H remains
+  incomplete.
+- No READY Phase 14.5 task directly depends on Task 55. `orchestrate next`
+  suggests unrelated Phase 7 work, which was not assigned.
+- The branch has no local ahead/behind difference against its currently stored
+  upstream reference. The working tree still contains the prepared but
+  uncommitted Phase 14.5 work and older unrelated artifacts. Do not commit or
+  push without the user's authorization.
+- Next step needs the user's authorization to publish the reviewed local
+  changes for the other computers, or a separate exact authorization for any
+  task-bound worker start. Phase H cannot be claimed complete yet.
+
+
+## Prior continuation checkpoint — 2026-10-03 (superseded)
+
+This checkpoint supersedes the older continuation and next-step notes below.
+
+- Task 49 remains accepted/DONE. Task 50's single OpenCode 1.18.32
+  connectivity request remains the only local live request; do not repeat it.
+- Task 51 is accepted/DONE. It adds the fake-tested, v1.18.32 loopback HTTP
+  callbacks, strict route allowlist, full session-status validation, and
+  exact-session supervision wiring. Seven focused tests pass. No live API,
+  server, model, session, or permission call was made.
+- Task 52 is independently accepted/DONE. Dependency-safe suggestions and
+  direct dispatch are in place, plus an explicit accepted-review continuation
+  that assigns at most one ready task to an explicit owner. It rejects
+  ambiguous duplicate task IDs without changing task history; an old
+  `phase14.5-bootstrap-01` card still exists in both `done/` and `ready/`, and
+  its ID is not dispatchable. Verification: 63 passed, 2 skipped, compilation
+  passed, coordination validation passed, and `git diff --check` passed.
+- Task 53 implements automatic delivery-report creation and submission after
+  the exact supervised session completes. It was independently reviewed and
+  accepted as `DONE`; its original manifest-based design is superseded by Task
+  54 below.
+- Task 54 removes the worker-authored JSON manifest. The native runner captures
+  a bounded in-memory snapshot of task `allowed_scope` before the session and
+  compares it after exact supervised completion. The report lists only
+  controller-observed added, modified, and deleted paths; file contents and
+  hashes are not persisted. Validation outputs and risk assessment are marked
+  as not captured by the controller for reviewer verification. Verification:
+  112 passed, 3 skipped, compilation and coordination validation passed, and
+  `git diff --check` passed. Independent review accepted Task 54 and the card is
+  `DONE`; no continuation or live session was used.
+- The user replaced mandatory human acceptance with lead-agent risk triage.
+  `review_task.py --controller-triage` records explicit human-decision and risk
+  results: a clear acceptance assigns one dependency-ready task; a bounded fix
+  or clear capability reassignment dispatches to its selected owner; either
+  escalation condition records `paused`, leaves the card in `review/`, and
+  notifies the user. The command assigns work
+  but does not launch a worker. Task 54's contrary rule remains historical.
+- This policy update has not yet been validated with tests or coordination
+  checks. No worker, live API, commit, or push was run.
+- Five additional agent machines remain for the user to prepare. No commit or
+  push was made; this checkout contains local uncommitted changes. Do not
+  commit or push without the user's authorization.
+- Phase H remains incomplete. Any real task-bound OpenCode run still needs
+  fresh exact authorization and a current accepted launch packet. The previous
+  connectivity request is not task-run authority.
+
+## Prior continuation checkpoint — 2026-09-28 (superseded)
 
 This section supersedes the 2026-09-27 pause notice and checkpoint below.
 

@@ -137,7 +137,7 @@ Reviewer performs:
 - acceptance check
 - regression check
 - artifact completeness check
-- decision: accept, needs_fix, reassign, blocked, withdrawn
+- decision: accept, needs_fix, reassign, paused, blocked, withdrawn
 
 ## 5. System Principles
 

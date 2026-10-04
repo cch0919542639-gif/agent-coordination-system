@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
 from coordination_common import find_task, save_task
 from profile_resolver import load_profile, ProfileError
 from validate_coordination_files import validate_profile_file, ValidationError
+from wave_planner import dependency_blockers
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
@@ -169,6 +171,49 @@ def build_dispatch_message(
     return "\n".join(lines) + "\n"
 
 
+def assign_ready_task(task_id: str, owner: str) -> tuple[Path, str] | str:
+    """Assign one dependency-ready card without taking work from another owner."""
+    if not isinstance(owner, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", owner) is None:
+        return "invalid continuation owner"
+    try:
+        path, front_matter, body = find_task(task_id)
+    except FileNotFoundError:
+        return f"task `{task_id}` not found"
+    if path.parent.name != "ready":
+        return f"task `{task_id}` is not in ready/"
+    blockers = dependency_blockers(task_id)
+    if blockers:
+        detail = ", ".join(f"{item['dependency']} ({item['state']})" for item in blockers)
+        return f"task `{task_id}` has unresolved dependencies: {detail}"
+    current_owner = str(front_matter.get("owner", "")).strip()
+    if current_owner not in ("", "UNASSIGNED", owner):
+        return f"task `{task_id}` is assigned to `{current_owner}`"
+
+    execution_mode = normalize_optional(str(front_matter.get("execution_mode", "")))
+    branch = normalize_optional(str(front_matter.get("branch", "")))
+    worktree_path = normalize_optional(str(front_matter.get("worktree_path", "")))
+    machine_id = normalize_optional(str(front_matter.get("machine_id", "")))
+    if execution_mode == "WORKTREE" and (not branch or not worktree_path):
+        return f"task `{task_id}` has incomplete WORKTREE provenance"
+    if execution_mode == "REPO_FIRST":
+        branch = None
+        worktree_path = None
+    reviewer = normalize_optional(str(front_matter.get("reviewer", "")))
+    message = build_dispatch_message(
+        task_id,
+        path,
+        owner,
+        reviewer,
+        execution_mode,
+        branch,
+        worktree_path,
+        machine_id,
+    )
+    front_matter["owner"] = owner
+    save_task(path, front_matter, body)
+    return path, message
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Assign or reassign a task owner, optionally update reviewer, and generate a dispatch message.",
@@ -224,6 +269,18 @@ def main() -> int:
         path, front_matter, body = find_task(args.task_id)
     except FileNotFoundError as exc:
         print(str(exc), file=sys.stderr)
+        return 1
+
+    if path.parent.name == "blocked":
+        print(f"Task `{args.task_id}` is blocked; resolve its incident and return it to ready/ before dispatch.", file=sys.stderr)
+        return 1
+    if path.parent.name == "review":
+        print(f"Task `{args.task_id}` is awaiting review; record a review decision before dispatching it again.", file=sys.stderr)
+        return 1
+    blockers = dependency_blockers(args.task_id)
+    if blockers:
+        detail = ", ".join(f"{item['dependency']} ({item['state']})" for item in blockers)
+        print(f"Task `{args.task_id}` cannot be dispatched; unresolved dependencies: {detail}.", file=sys.stderr)
         return 1
 
     if path.parent.name in ("done", "cancelled") and not args.allow_terminal:

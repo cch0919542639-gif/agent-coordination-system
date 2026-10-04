@@ -89,7 +89,7 @@ If you are reviewing:
 ```bash
 git pull
 python scripts/orchestrate.py validate
-python scripts/orchestrate.py review --task-id <task-id> --reviewer <reviewer-name> --decision accepted --summary "<summary>"
+python scripts/orchestrate.py review --task-id <task-id> --reviewer ORCHESTRATOR --decision accepted --summary "<summary>" --controller-triage --human-decision not-needed --risk none
 ```
 
 Then commit and push your changes.

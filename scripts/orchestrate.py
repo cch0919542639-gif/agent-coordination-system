@@ -123,51 +123,62 @@ def build_parser() -> argparse.ArgumentParser:
 
 def run_next(owner: str | None) -> int:
     from coordination_common import list_tasks
+    from wave_planner import plan_waves
 
     review_tasks = list_tasks(("review",))
     if review_tasks:
         path, front_matter = review_tasks[0]
-        print("Next action: review")
-        print(f"Reason: there are {len(review_tasks)} task(s) waiting in review, which should be handled before new dispatch.")
-        print(
-            f"Suggested command: python scripts/orchestrate.py review --task-id {front_matter.get('task_id')} "
-            f"--reviewer orchestrator --decision accepted --summary \"<summary>\""
-        )
+        print("Next action: controller_review")
+        print(f"Reason: there are {len(review_tasks)} task(s) waiting for the lead agent's evidence-based triage.")
+        print("Inspect the task card, delivery report, actual diff, and required validation evidence.")
+        print("If a human decision is needed or any risk is identified, record `paused`; otherwise accept and continue dispatch.")
+        print("The review command assigns work only; it does not launch a worker.")
         print(f"Top review task: {front_matter.get('task_id')} | owner={front_matter.get('owner')} | file={path}")
+        return 0
+
+    ready_tasks = list_tasks(("ready",))
+    eligible_ids = set(plan_waves()["ready"])
+    eligible = [(path, fm) for path, fm in ready_tasks if fm.get("task_id") in eligible_ids]
+    if owner:
+        eligible = [(path, fm) for path, fm in eligible if str(fm.get("owner", "")).strip() in (owner, "UNASSIGNED", "")]
+
+    if eligible:
+        path, front_matter = eligible[0]
+        current_owner = str(front_matter.get("owner", "")).strip()
+        suggested_owner = owner or (current_owner if current_owner not in ("", "UNASSIGNED") else "<agent>")
+        print("Next action: dispatch")
+        print(f"Reason: no review is pending, and `{front_matter.get('task_id')}` has all dependencies completed.")
+        print(
+            f"Suggested command: python scripts/orchestrate.py dispatch --task-id {front_matter.get('task_id')} "
+            f"--owner {suggested_owner}"
+        )
+        print(f"Top eligible task: {front_matter.get('task_id')} | owner={front_matter.get('owner')} | file={path}")
+        return 0
+
+    if owner and eligible_ids:
+        print("Next action: wait_for_owner")
+        print(f"Reason: no dependency-ready task is unassigned or already assigned to `{owner}`.")
+        print("Suggested command: inspect ready task owners or choose another owner explicitly.")
+        return 0
+
+    if ready_tasks:
+        from wave_planner import dependency_blockers
+        path, front_matter = ready_tasks[0]
+        blockers = dependency_blockers(str(front_matter.get("task_id", "")))
+        detail = ", ".join(f"{item['dependency']} ({item['state']})" for item in blockers) or "dependency graph error"
+        print("Next action: resolve_dependencies")
+        print(f"Reason: no ready task has all dependencies in done/. First candidate is waiting on: {detail}.")
+        print(f"Task: {front_matter.get('task_id')} | file={path}")
+        print("Suggested command: inspect the listed dependency cards and correct the task board; dispatch remains disabled.")
         return 0
 
     blocked_tasks = list_tasks(("blocked",))
     if blocked_tasks:
         path, front_matter = blocked_tasks[0]
         print("Next action: unblock")
-        print(f"Reason: there are {len(blocked_tasks)} blocked task(s), which have higher priority than dispatching new work.")
-        print(
-            f"Suggested command: inspect incident(s), then use python scripts/orchestrate.py dispatch --task-id "
-            f"{front_matter.get('task_id')} --owner {front_matter.get('owner')}"
-        )
+        print(f"Reason: {len(blocked_tasks)} task(s) are in blocked/; inspect incident evidence and resolve them.")
         print(f"Top blocked task: {front_matter.get('task_id')} | owner={front_matter.get('owner')} | file={path}")
-        return 0
-
-    ready_tasks = list_tasks(("ready",))
-    if ready_tasks:
-        selected = None
-        if owner:
-            for path, front_matter in ready_tasks:
-                if str(front_matter.get("owner", "")).strip() in (owner, "UNASSIGNED", ""):
-                    selected = (path, front_matter)
-                    break
-        if selected is None:
-            selected = ready_tasks[0]
-        path, front_matter = selected
-        current_owner = str(front_matter.get("owner", "")).strip()
-        suggested_owner = owner or (current_owner if current_owner not in ("", "UNASSIGNED") else "<agent>")
-        print("Next action: dispatch")
-        print(f"Reason: no review or blocked work is pending, and there are {len(ready_tasks)} task(s) in ready.")
-        print(
-            f"Suggested command: python scripts/orchestrate.py dispatch --task-id {front_matter.get('task_id')} "
-            f"--owner {suggested_owner}"
-        )
-        print(f"Top ready task: {front_matter.get('task_id')} | owner={front_matter.get('owner')} | file={path}")
+        print("A blocked task cannot be dispatched; return it to ready/ after its incident is resolved.")
         return 0
 
     print("Next action: idle")

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import yaml
 
+from coordination_common import delivery_files_for
 from profile_resolver import load_profile, ProfileError
 
 
@@ -28,7 +29,7 @@ VALID_TASK_STATUSES = {
     "REASSIGNED",
     "CANCELLED",
 }
-VALID_REVIEW_DECISIONS = {"accepted", "needs_fix", "reassign", "rejected"}
+VALID_REVIEW_DECISIONS = {"accepted", "needs_fix", "reassign", "rejected", "paused"}
 VALID_EXECUTION_MODES = {"REPO_FIRST", "WORKTREE"}
 TASK_REQUIRED_KEYS = {
     "task_id",
@@ -107,7 +108,6 @@ REVIEW_REQUIRED_LABELS = {
     "## Scope Compliance",
     "## Validation Check",
     "## Required Changes",
-    "## Accepted Artifacts",
 }
 
 
@@ -338,6 +338,8 @@ def validate_review_file(path: Path) -> list[ValidationError]:
     errors.extend(
         ValidationError(path, f"missing label `{label}`") for label in has_all_labels(text, REVIEW_REQUIRED_LABELS)
     )
+    if "## Accepted Artifacts" not in text and "## Reviewed Artifacts" not in text:
+        errors.append(ValidationError(path, "missing section `## Reviewed Artifacts` or `## Accepted Artifacts`"))
 
     decision_match = re.search(r"^- Decision:\s*(.+)$", text, re.MULTILINE)
     if decision_match:
@@ -559,8 +561,8 @@ def validate_repo_files() -> list[ValidationError]:
         task_id = str(front_matter.get("task_id", ""))
         if not task_id:
             continue
-        expected_delivery_file = delivery_dir / f"{task_id}-delivery-report.md"
-        if not expected_delivery_file.exists():
+        if not delivery_files_for(task_id, delivery_dir):
+            expected_delivery_file = delivery_dir / f"{task_id}-delivery-report.md"
             errors.append(
                 ValidationError(
                     path,

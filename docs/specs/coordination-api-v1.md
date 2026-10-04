@@ -54,6 +54,13 @@ Clients send the API key via the `X-API-Key` header:
 X-API-Key: sk-agent-1
 ```
 
+The review endpoint additionally requires a dedicated
+`COORDINATION_ORCHESTRATOR_REVIEW_KEY`. Keep this value only on the controller.
+When `COORDINATION_API_KEYS` is configured, include the same key in that
+allowlist too. Review requests fail closed when the dedicated key is absent,
+and all other API keys are denied review access even if they are valid for
+worker endpoints. The body must identify `reviewer_id: "ORCHESTRATOR"`.
+
 ### Response
 
 Invalid or missing key returns `401` with:
@@ -70,7 +77,8 @@ The agent client (`clients/coordination_agent/`) reads `COORDINATION_API_KEY` (s
 
 - Auth is stateless: no sessions, tokens, or cookies.
 - The middleware returns a `JSONResponse` directly rather than raising `HTTPException` to avoid the default error middleware converting 401s to 500s.
-- Future iterations may add per-route granularity or actor-role mapping.
+- Review authorization is bound to the dedicated orchestrator key; a
+  caller-supplied `reviewer_id` alone does not establish reviewer identity.
 
 ## Status Enums
 
@@ -365,8 +373,10 @@ Request body:
 
 ```json
 {
-  "reviewer_id": "orchestrator-01",
+  "reviewer_id": "ORCHESTRATOR",
   "decision": "needs_fix",
+  "human_decision": "not-needed",
+  "risk": "none",
   "summary": "Core flow works but retry handling is incomplete",
   "findings": [
     {
@@ -389,6 +399,10 @@ Behavior:
 - review record is created
 - task status changes according to decision
 - review event is recorded
+- `human_decision` must be `not-needed` or `required`; `risk` must be `none` or `identified`
+- if either escalation is present, only `paused` is accepted and task status remains `review`
+- `paused` is rejected when neither escalation condition is present
+- both triage results are retained in the review event payload
 
 ## 12. Reassign Task
 

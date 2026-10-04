@@ -27,9 +27,9 @@ Pass `scope_compliance` in the review report as either `PASS` or `FAIL`. If scop
 
 | Situation | Decision |
 |---|---|
-| Agent knowingly edited forbidden files | `rejected` |
-| Agent needed a file outside scope but did not escalate | `needs_fix` + require an incident |
-| Scope was genuinely unclear in the task packet | `needs_fix` + patch the scope or reassign |
+| Agent knowingly edited forbidden files | `paused` + notify; record the scope risk |
+| Agent needed a file outside scope but did not escalate | `paused` + notify; record the scope risk |
+| Scope was genuinely unclear in the task packet | `paused` + notify; ask the user to resolve the scope decision |
 
 ## Delivery Evidence Check
 
@@ -61,7 +61,13 @@ Return `accepted` only when **all** of the following are true:
 - delivery evidence covers every acceptance criterion
 - validation notes exist and the validator passes
 - progress report is accurate and up to date
-- no residual risks block merging or continuation
+- no residual risks remain and no human decision is needed
+
+In the Phase 14.5 controller-triage flow, a clear `accepted` decision records
+both triage results and automatically assigns at most one dependency-ready task
+whose card explicitly depends on the accepted task. The lead agent preserves
+that task's owner when assigning the continuation.
+This continuation is per-delivery; unrelated review cards do not block it.
 
 ### `needs_fix`
 
@@ -73,7 +79,9 @@ Return `needs_fix` when the submission is on the right track but has correctable
 - scope compliance is borderline but fixable (e.g. an incident was missing)
 - delivery evidence is present but incomplete
 
-Always list exactly what must be fixed. The original agent should continue.
+Always list exactly what must be fixed. In controller-triage mode, bounded
+corrections are added to the task card and immediately returned to the same
+owner.
 
 ### `reassign`
 
@@ -84,6 +92,9 @@ Return `reassign` when the work should continue with a different agent or the or
 - the agent raised an incident that changes the task direction
 
 Preserve the task ID, add review notes explaining why reassignment is needed, and reference any incident reports.
+In controller-triage mode, the lead agent may select a suitable existing
+owner and return the task to `ready/` when the routing choice is clear and no
+risk or human decision remains.
 
 ### `rejected`
 
@@ -94,7 +105,17 @@ Return `rejected` when the submission cannot be salvaged:
 - delivery evidence is fabricated or misleading
 - the submission does not address the task objective
 
-A rejected task must not continue in its current form. If the work is still needed, create a new task packet with adjusted scope.
+A rejected task must not continue in its current form. The repo-first lifecycle
+CLI does not apply `rejected`; if the work cannot be salvaged, record `paused`
+with `--human-decision required` so the user can decide whether to cancel or
+replace the task. Do not create a replacement packet until that decision is
+clear.
+
+### `paused`
+
+Use `paused` when the delivery needs a human decision or the lead agent
+identifies risk. Keep the task in `review/`, record which condition triggered
+the pause, notify the user, and do not dispatch more work.
 
 ## Decision Triage Flow
 
@@ -106,17 +127,19 @@ Does the submission have the required infrastructure?
 
 Is every changed file within allowed_scope?
   NO -> were forbidden files touched?
-    YES -> rejected
-    NO  -> needs_fix + incident
+    YES -> paused + notify; scope risk
+    NO  -> paused + notify; scope risk
   YES -> check delivery evidence
 
 Does the evidence cover all acceptance criteria?
   NO -> needs_fix
   YES -> check residual risks
 
-Are there blocking risks?
-  YES -> needs_fix or reassign depending on severity
-  NO  -> accepted
+Does the lead agent need a human decision, or is any risk identified?
+  YES -> paused; notify the user and stop dispatch
+  NO  -> acceptance criteria met?
+    YES -> accepted; continue dispatch
+    NO  -> needs_fix; return bounded corrections to the same owner
 ```
 
 ## Writing the Review Report
@@ -128,7 +151,7 @@ Use the template at `coordination/templates/review-report.md`. Include these det
 - **Scope Compliance**: state PASS or FAIL with the evaluation basis
 - **Validation Check**: note whether the validator passed and what manual checks were done
 - **Required Changes**: if `needs_fix` or `reassign`, list each required change
-- **Accepted Artifacts**: list every file or artifact accepted as delivery evidence
+- **Reviewed Artifacts**: list every file or artifact considered as delivery evidence
 
 ## Key References
 

@@ -8,8 +8,10 @@ from time import sleep
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+import coordination_common
 from local_control_provision import materialize_launch_approval, provision_local_workers
 import local_opencode_live_runner as runner
+import submit_task as submit_module
 from opencode_live_api import normalize_permission_request
 from local_opencode_live_runner import PINNED_LAUNCHER, StartAttestationState, _binding_digest, _wrapper_content_digest, reply_assigned_permission, run_assigned_task, run_live_opencode_once, session_abort_request, session_create_request, session_prompt_request, session_status_request, supervise_session
 
@@ -327,6 +329,151 @@ def test_assigned_task_is_reloaded_owner_checked_and_delivered_after_durable_cla
     assert len(list(tmp_path.glob("*.json"))) == 3
     replay = run_assigned_task(request, source, records, now=NOW, state_dir=str(tmp_path), task_loader=lambda task_id: assigned_card(request), resolve_worktree=resolve, create_session=create_session, send_prompt=send_prompt, session_state=lambda _: "completed", heartbeat=lambda _: True, abort_session=lambda _: True, monotonic_clock=clock.now, sleep_fn=clock.sleep)
     assert replay["decision"] == "deny_consumed_binding" and events == ["session", "prompt"]
+
+
+def test_delivery_callback_runs_only_after_supervised_completion(tmp_path):
+    request, source, records = inputs()
+    resolve = lambda bound: {key: bound[key] for key in ("agent_id", "grant_id", "worktree_ref")} | {"directory": r"C:\worktrees\agent-01"}
+    sent_prompts = []
+    callbacks = []
+
+    def run(state, callback, label):
+        clock = FakeClock()
+        return run_assigned_task(
+            request, source, records, now=NOW, state_dir=str(tmp_path / label),
+            task_loader=lambda _: assigned_card(request), resolve_worktree=resolve,
+            create_session=lambda _bound, directory: {"id": "ses_task49", "directory": directory},
+            send_prompt=lambda _, prompt: sent_prompts.append(prompt) or True,
+            session_state=lambda _: state, heartbeat=lambda _: True, abort_session=lambda _: True,
+            monotonic_clock=clock.now, sleep_fn=clock.sleep, delivery_callback=callback,
+        )
+
+    callback = lambda bound, session: callbacks.append((bound["task_id"], bound["run_id"], session)) or True
+    completed = run("completed", callback, "complete")
+    assert completed["decision"] == "completed" and completed["delivery_submission"] == "submitted_for_review"
+    assert callbacks == [(request["task_id"], request["run_id"], "ses_task49")]
+    assert "phase14.5-delivery-v1" not in sent_prompts[0]
+
+    failed = run("failed", callback, "failed")
+    assert failed["decision"] == "stopped_worker_failed" and "delivery_submission" not in failed
+    assert len(callbacks) == 1
+
+    not_submitted = run("completed", lambda *_: False, "submit-failed")
+    assert not_submitted["decision"] == "completed_delivery_failed"
+    assert not_submitted["delivery_submission"] == "not_submitted"
+
+
+def test_loopback_bound_callbacks_submit_controller_observed_changes(monkeypatch, tmp_path):
+    request, source, records = inputs()
+    board = tmp_path / "task-board"
+    active = board / "in_progress"
+    active.mkdir(parents=True)
+    delivery = tmp_path / "delivery"
+    delivery.mkdir()
+    progress = tmp_path / "progress"
+    progress.mkdir()
+    card_path = active / "assigned.md"
+    card_path.write_text(
+        "---\n"
+        f"task_id: {request['task_id']}\n"
+        "phase: phase14.5-local-supervised-loop\n"
+        "status: IN_PROGRESS\n"
+        f"owner: {request['agent_id']}\n"
+        "expected_artifacts:\n"
+        "  - delivery_report\n"
+        "---\n\nTask.\n",
+        encoding="utf-8",
+    )
+    worktree = tmp_path / "worker-worktree"
+    source_file = worktree / "scripts" / "example.py"
+    source_file.parent.mkdir(parents=True)
+    source_file.write_text("before = True\n", encoding="utf-8")
+    monkeypatch.setattr(coordination_common, "TASK_BOARD_DIR", board)
+    monkeypatch.setattr(coordination_common, "DELIVERY_DIR", delivery)
+    monkeypatch.setattr(coordination_common, "PROGRESS_DIR", progress)
+    monkeypatch.setattr(submit_module, "TASK_BOARD_DIR", board)
+
+    class FakeTransport:
+        def __init__(self):
+            self.events = []
+
+        def create_session(self, _request, directory):
+            return {"id": "ses_task49", "directory": directory}
+
+        def send_prompt(self, session_id, prompt):
+            assert session_id == "ses_task49" and "phase14.5-delivery-v1" not in prompt
+            source_file.write_text("after = True\n", encoding="utf-8")
+            return True
+
+        def session_state(self, _session_id):
+            return "completed"
+
+        def heartbeat(self, _session_id):
+            return True
+
+        def abort_session(self, _session_id):
+            return True
+
+        def session_messages(self, session_id):
+            self.events.append(session_id)
+            raise AssertionError("automatic delivery must not read worker-authored report text")
+
+    transport = FakeTransport()
+    result = run_assigned_task(
+        request, source, records, now=NOW, state_dir=str(tmp_path / "state"),
+        task_loader=lambda _: assigned_card(request),
+        resolve_worktree=lambda bound: {key: bound[key] for key in ("agent_id", "grant_id", "worktree_ref")} | {"directory": str(worktree)},
+        create_session=transport.create_session, send_prompt=transport.send_prompt,
+        session_state=transport.session_state, heartbeat=transport.heartbeat,
+        abort_session=transport.abort_session,
+    )
+
+    assert result["decision"] == "completed" and result["delivery_submission"] == "submitted_for_review"
+    assert transport.events == []
+    assert (board / "review" / "assigned.md").exists()
+    report = coordination_common.delivery_file_for(request["task_id"], request["run_id"]).read_text(encoding="utf-8")
+    assert "scripts/example.py" in report and "Controller-observed changed paths" in report
+    assert "did not capture validation command output" in report
+
+
+def test_invalid_allowed_scope_stops_before_session_creation(tmp_path):
+    request, source, records = inputs()
+    worktree = tmp_path / "worker-worktree"
+    worktree.mkdir()
+    calls = []
+
+    class FakeTransport:
+        def create_session(self, _request, directory):
+            calls.append("session")
+            return {"id": "ses_task49", "directory": directory}
+
+        def send_prompt(self, *_args):
+            calls.append("prompt")
+            return True
+
+        def session_state(self, _session_id):
+            return "completed"
+
+        def heartbeat(self, _session_id):
+            return True
+
+        def abort_session(self, _session_id):
+            return True
+
+    transport = FakeTransport()
+    card = assigned_card(request)
+    card["allowed_scope"] = ["../outside.py"]
+    result = run_assigned_task(
+        request, source, records, now=NOW, state_dir=str(tmp_path / "state"),
+        task_loader=lambda _: card,
+        resolve_worktree=lambda bound: {key: bound[key] for key in ("agent_id", "grant_id", "worktree_ref")} | {"directory": str(worktree)},
+        create_session=transport.create_session, send_prompt=transport.send_prompt,
+        session_state=transport.session_state, heartbeat=transport.heartbeat,
+        abort_session=transport.abort_session,
+    )
+
+    assert result["decision"] == "deny_delivery_evidence_unavailable"
+    assert calls == []
 
 
 def test_assigned_task_denies_stale_owner_or_oversized_card_before_side_effect(tmp_path):

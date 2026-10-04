@@ -24,11 +24,16 @@ State whether the task stayed within allowed scope.
 
 Summarize the verification or test review outcome.
 
+## Controller Triage
+
+- Human decision: not-needed / required
+- Risk: none / identified
+
 ## Required Changes
 
 If decision is `needs_fix` or `reassign`, list the required follow-up work.
 
-## Accepted Artifacts
+## Reviewed Artifacts
 
 - path/to/artifact-1
 - path/to/artifact-2

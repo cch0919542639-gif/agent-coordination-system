@@ -45,7 +45,7 @@ python scripts/orchestrate.py next
 - `python scripts/daily_orchestration_summary.py`
 - `python scripts/dispatch_task.py --task-id <task> --owner <agent>`
 - `python scripts/list_review_queue.py`
-- `python scripts/review_task.py --task-id <task> --reviewer <name> --decision <decision> --summary "<text>"`
+- `python scripts/review_task.py --task-id <task> --reviewer ORCHESTRATOR --decision <decision> --summary "<text>" --controller-triage --human-decision <not-needed|required> --risk <none|identified>`
 - `python scripts/complete_task.py --task-id <task>`
 
 ### Shared validation
@@ -57,7 +57,7 @@ python scripts/orchestrate.py next
 - `python scripts/orchestrate.py summary`
 - `python scripts/orchestrate.py intake --phase-id <phase> --objective "<text>" --in-scope "<pattern>" --task '<json>'`
 - `python scripts/orchestrate.py dispatch --task-id <task> --owner <agent> [--reviewer <name>] [--output -]`
-- `python scripts/orchestrate.py review --task-id <task> --reviewer <name> --decision <decision> --summary "<text>"`
+- `python scripts/orchestrate.py review --task-id <task> --reviewer ORCHESTRATOR --decision <decision> --summary "<text>" --controller-triage --human-decision <not-needed|required> --risk <none|identified>`
 
 ### Lead-agent loop (intake → dispatch → review)
 
@@ -223,24 +223,26 @@ For each task in review:
 2. read progress
 3. read delivery artifacts
 4. run validator
-5. decide `accepted`, `needs_fix`, `reassign`, or `rejected`
+5. the lead agent records human-decision and risk triage, then decides
+   `accepted`, `needs_fix`, `reassign`, `rejected`, or `paused`; it pauses and
+   notifies the user only when a human decision is needed or risk is identified
 
 Write the review report and apply the decision:
 
 ```bash
-python scripts/review_task.py --task-id phase3-billing-01 --reviewer orchestrator --decision accepted --summary "Task meets acceptance criteria."
+python scripts/review_task.py --task-id phase3-billing-01 --reviewer ORCHESTRATOR --decision accepted --summary "Task meets acceptance criteria." --controller-triage --human-decision not-needed --risk none
 ```
 
 Equivalent:
 
 ```bash
-python scripts/orchestrate.py review --task-id phase3-billing-01 --reviewer orchestrator --decision accepted --summary "Task meets acceptance criteria."
+python scripts/orchestrate.py review --task-id phase3-billing-01 --reviewer ORCHESTRATOR --decision accepted --summary "Task meets acceptance criteria." --controller-triage --human-decision not-needed --risk none
 ```
 
 Example with findings:
 
 ```bash
-python scripts/review_task.py --task-id phase3-billing-01 --reviewer orchestrator --decision needs_fix --summary "Missing acceptance coverage for retry path." --finding "Delivery report does not reference the retry validation." --required-change "Add retry-path evidence to the delivery report."
+python scripts/review_task.py --task-id phase3-billing-01 --reviewer ORCHESTRATOR --decision needs_fix --summary "Missing acceptance coverage for retry path." --finding "Delivery report does not reference the retry validation." --required-change "Add retry-path evidence to the delivery report." --controller-triage --human-decision not-needed --risk none
 ```
 
 ## 6. Close Accepted Work
@@ -287,7 +289,7 @@ Then later in the same day:
 
 ```bash
 python scripts/daily_orchestration_summary.py
-python scripts/review_task.py --task-id <review-task> --reviewer orchestrator --decision accepted --summary "<summary>"
+python scripts/review_task.py --task-id <review-task> --reviewer ORCHESTRATOR --decision accepted --summary "<summary>" --controller-triage --human-decision not-needed --risk none
 python scripts/complete_task.py --task-id <review-task>
 python scripts/validate_coordination_files.py
 ```
