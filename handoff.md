@@ -17,18 +17,19 @@ This checkpoint supersedes the 2026-10-03 policy-only checkpoint below.
   `git diff --check` passed. One Starlette/httpx deprecation warning was emitted
   by the temporary API test dependencies.
 - No live OpenCode worker, API request, credential operation, external-machine
-  action, commit, push, or merge occurred. The dedicated API reviewer key was
-  not provisioned. Five worker computers remain for the user; Phase H remains
-  incomplete.
+  action, or merge occurred. The dedicated API reviewer key was not provisioned.
+  Five worker computers remain for the user; Phase H remains incomplete.
 - No READY Phase 14.5 task directly depends on Task 55. `orchestrate next`
   suggests unrelated Phase 7 work, which was not assigned.
-- The branch has no local ahead/behind difference against its currently stored
-  upstream reference. The working tree still contains the prepared but
-  uncommitted Phase 14.5 work and older unrelated artifacts. Do not commit or
-  push without the user's authorization.
-- Next step needs the user's authorization to publish the reviewed local
-  changes for the other computers, or a separate exact authorization for any
-  task-bound worker start. Phase H cannot be claimed complete yet.
+- The user authorized publishing the curated Phase 14.5 package. Commit
+  `51b57d8` (`feat(orchestration): complete controller-triaged delivery loop`)
+  is pushed to `origin/agent/orchestrator/phase14.5-controlplane-02`; the other
+  computers can now sync this branch. Pilot/approval projections, pytest
+  temporary directories, and the unrelated Phase 10 card were excluded and
+  remain local.
+- Next step: the user prepares/syncs the other five computers. Any task-bound
+  worker start still needs separate exact authorization and a current accepted
+  launch packet. Phase H cannot be claimed complete yet.
 
 
 ## Prior continuation checkpoint — 2026-10-03 (superseded)

@@ -302,3 +302,9 @@ before starting another Phase 14.5 task.
   occurred. Five computers remain for the user; Phase H remains incomplete.
 - Next step requires separate authorization to publish or to start a
   task-bound worker; no dependency-ready Phase 14.5 child task remains.
+
+## 2026-10-04 Phase 14.5 Handoff Published
+
+- With the user's authorization, the curated Phase 14.5 control-plane package was committed as `51b57d8` (`feat(orchestration): complete controller-triaged delivery loop`) and pushed to `origin/agent/orchestrator/phase14.5-controlplane-02`.
+- The commit contains 58 scoped code, documentation, task-card, delivery, and review files. It excludes pytest temporary directories, pilot/approval projections, and the unrelated Phase 10 card; those local artifacts remain untouched.
+- The five other computers can now sync the branch. No worker or live API was started, and Phase H remains incomplete.
