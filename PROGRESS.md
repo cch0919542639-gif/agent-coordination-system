@@ -22,6 +22,13 @@
   ignores overlap and has a fifteen-minute limit; both legacy cron jobs remain
   paused. Interrupted pilots 02 and 03 are cancelled, superseded by pilot-04.
 
+- Hermes launcher artifacts and evidence are published on GitHub in
+  [draft PR #1](https://github.com/cch0919542639-gif/agent-coordination-system/pull/1),
+  from `codex/hermes-launcher-parity` into the existing controlled-worker source
+  branch. The isolated publication suite passed all 21 tests. Full coordination
+  validation retains nine pre-existing missing labels in the unchanged base
+  external review report; Hermes artifacts pass. Integration review is pending.
+
 ## Active Work
 
 - Integrate the accepted `phase14-local-03` worker branch only after an
