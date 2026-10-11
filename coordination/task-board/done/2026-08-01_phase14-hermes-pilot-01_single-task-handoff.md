@@ -1,7 +1,7 @@
 ---
 task_id: phase14-hermes-pilot-01
 phase: phase14-hermes-controlled-worker-pilot
-status: REVIEW
+status: DONE
 owner: hermes-coordination-pilot
 reviewer: ORCHESTRATOR
 priority: high
