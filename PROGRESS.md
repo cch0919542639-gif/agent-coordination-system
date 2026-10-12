@@ -87,3 +87,15 @@ A fresh GitHub main clone matched the reviewed tree and passed fresh local
 bootstrap/preview; worker/controller source remains provider-tested. Earlier
 PRs1/2 are closed as superseded, with all heads included and branches preserved.
 All schedules remain disabled; credentials/runtime state remain local.
+
+## Session Handoff Publication (2026-10-12)
+
+handoff.md records the accepted main integration,412 passing script tests with2
+explained historical skips, independent review, fresh-main download checks,
+runtime/scheduler limits and the exact clean checkout for resuming work. The
+original D:\codex work directory remains on its earlier source branch with
+pre-existing dirty/untracked work; it must not be broadly staged or reset.
+The user explicitly authorized this handoff commit/push. Only handoff.md and
+this progress section are included; runtime source and other local work are
+unchanged. Publication baseline is8a531ed; the new documentation commit is
+identified by Git history. No new implementation task or model run is started.
