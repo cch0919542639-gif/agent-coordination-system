@@ -94,3 +94,12 @@ final task. The controller stopped at COMPLETED, and replay launched zero
 workers. All worker scope checks were clean. Exact source hashes, reports,
 reviews and sanitized events are in `coordination/evidence/github-download-check-01/`.
 Original runtime state and private transcripts were not published.
+
+## Main integration verification
+
+PR #3 integrated the tested flow into main at bd5c388. The combined scripts
+suite passed412 tests with2 legacy fixture-state skips, and independent
+OpenCode review found no blocker. A fresh GitHub main clone matched the
+reviewed merge tree and passed coordination validation, fresh registrations
+and plan preview. Controller/worker code was unchanged from the prior real
+provider-tested flow; only main command registrations were combined.

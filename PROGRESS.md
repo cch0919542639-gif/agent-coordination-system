@@ -77,3 +77,13 @@ empty and additional29 focused tests passed. Controller/worker source matches
 the actual provider-tested publication; main status and launcher-dry-run remain
 intact. The candidate is prepared for the authorized clean-gate main merge.
 Advisory status-projector legacy progress mismatch alerts remain unchanged.
+
+## Main Integration Complete (2026-10-12)
+
+phase14-main-integration-01 is accepted DONE. [PR #3](https://github.com/cch0919542639-gif/agent-coordination-system/pull/3) merged reviewed candidate c6fd925 into
+main at bd5c388.412 scripts tests passed with2 explained historical fixture
+skips, accepted independent OpenCode review, compilation and full validators.
+A fresh GitHub main clone matched the reviewed tree and passed fresh local
+bootstrap/preview; worker/controller source remains provider-tested. Earlier
+PRs1/2 are closed as superseded, with all heads included and branches preserved.
+All schedules remain disabled; credentials/runtime state remain local.

@@ -8,10 +8,10 @@ automation.
 
 ## Current Milestone
 
-Integrate the accepted, provider-tested local OpenCode/Hermes completion loop
-while preserving the Phase14.5 safety foundation and current task boundaries.
-Integrated validation and independent review have passed; cross-machine
-transport remains deferred.
+The provider-tested local OpenCode/Hermes completion loop is integrated on
+main, preserving the Phase14.5 safety foundation and current task boundaries.
+Integrated validation, independent review and fresh main download checks passed;
+cross-machine transport remains deferred.
 
 ## Milestones
 

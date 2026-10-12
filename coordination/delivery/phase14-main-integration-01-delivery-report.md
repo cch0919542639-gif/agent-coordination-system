@@ -74,3 +74,12 @@ coordination data and fresh bootstrap/preview. Keep all worker schedules disable
 - Integrated validation:412 passes,2 explained legacy-fixture skips; full validator, compilation, diff and command checks passed.
 - Independent review and concrete GitHub result: separate scoped OpenCode review and main-targeted PR recorded.
 - Authorization: linked existing clean-gate operator policy and current continue instruction govern integration after validation/review; unresolved concerns stop the merge.
+
+## Main Promotion Result
+
+PR #3 merged into main on2026-10-12 at06:41:12 UTC. Main commit bd5c388
+has exactly the reviewed c6fd925 candidate tree. A fresh actual GitHub main
+clone passed full coordination validation and fresh bootstrap/preview with
+zero model launches. Source/integration/test diff was empty. Original PRs1/2
+were closed as superseded only after confirming both heads are included in main;
+their branches remain available. Final closure changes are docs/evidence only.

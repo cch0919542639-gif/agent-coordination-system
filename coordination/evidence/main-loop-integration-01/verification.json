@@ -42,5 +42,16 @@
   },
   "runtime_delta": "orchestrate.py adds main status and launcher-dry-run entries/help branch; controller/worker behavior unchanged.",
   "authorization": "main DECISIONS.md2026-07-21 clean-validation/accepted-review completion policy, linked by current user-requested integration task.",
-  "merge_status": "Prepared; remote main unchanged at candidate recording."
+  "merge_status": "Prepared; remote main unchanged at candidate recording.",
+  "main_promotion": {
+    "pull_request": "https://github.com/cch0919542639-gif/agent-coordination-system/pull/3",
+    "status": "MERGED",
+    "merged_at": "2026-10-12T06:41:12Z",
+    "main_merge_commit": "bd5c3885bb4bcb18807b62ffd1c0d4352ab69566",
+    "reviewed_candidate": "c6fd925db78dc58deac85a23b852ec51b20a6f81",
+    "main_tree_equals_reviewed_candidate": true,
+    "fresh_main_clone_validation": "PASS",
+    "fresh_main_bootstrap_and_preview": "PASS; workers_launched0",
+    "historical_prs": "PR1/PR2 closed after verifying both published heads are ancestors of main; branches retained."
+  }
 }

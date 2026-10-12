@@ -29,3 +29,6 @@ from the actual task card before dispatching.
 
 - phase14-main-integration-01 prepares verified local-loop promotion to main
   under the existing clean-validation/accepted-review completion policy.
+
+- phase14-main-integration-01 and independent phase14-main-review-01 are
+  accepted DONE; PR3 merged the verified local loop into main.
