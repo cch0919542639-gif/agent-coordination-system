@@ -1,3 +1,25 @@
+# External Review Report Metadata
+
+- Review ID: phase14.5-05-external
+- Reviewer: External Independent Verifier
+- Task ID: phase14.5-05-external-review-01
+- Phase: phase14.5
+- Decision: accepted
+- Reviewed At: 2026-07-22
+
+## Summary
+
+Metadata normalization only; the original external review below is preserved.
+
+## Validation Check
+
+Historical validation evidence remains unchanged below; this metadata edit is
+not a rerun of that historical review.
+
+## Accepted Artifacts
+
+- scripts/supervised_launch_validation.py (as identified in the original review)
+
 # External Review Report for phase14.5-05
 
 **Task ID**: phase14.5-05-external-review-01  

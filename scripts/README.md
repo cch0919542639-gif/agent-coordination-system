@@ -308,3 +308,10 @@ Usage:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\validate.ps1
 ```
+
+## Local Completion Loop
+
+`prepare_local_loop.py --run-id FRESH-ID` initializes local registrations and a
+finite three-task demo without launching a model. `orchestrate.py local-loop
+--plan PATH --run` executes it; `--resume` preserves the same plan/ACK.
+See `docs/operations/github-download-verification.md`.

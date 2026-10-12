@@ -59,3 +59,13 @@
 
 Record an evidence-backed phase summary, decide the `phase14-local-03`
 integration path, then open the bounded OpenCode runtime-adapter preflight.
+
+## Local Completion Loop Publication
+
+The phase14-local-loop-01 implementation is accepted with real bounded recovery,
+automatic reporting, follow-up dispatch and zero-launch replay. Failed historical
+pilots remain cancelled with evidence. The earlier local suite passed90 tests.
+The publication branch adds portable Python discovery and a fresh-download
+preparation command. GitHub clone verification is governed by
+phase14-loop-publication-01; exact results are in its delivery report.
+No original registry, inbox, ACKs, credentials or private transcripts are shipped.

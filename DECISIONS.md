@@ -12,3 +12,12 @@
 | 2026-08-04 | OpenCode polling uses the Windows Task Scheduler task `OpenCode Controlled Worker` at a 10-minute cadence. | It directly wakes the accepted OpenCode launcher; Codex app automation did not trigger reliably. | The task is disabled by default; when enabled, each turn handles at most one owner-matching delivery with no retry, auto-approval, or lifecycle authority. |
 | 2026-07-19 | Require a docs-agent phase summary after every evidence-backed phase or material segment acceptance. | Durable project memory must be updated from repository evidence rather than chat recollection. | The orchestrator opens a bounded summary task after acceptance; it updates the designated Master Plan with completion, integration state, residual risks, and next action. |
 | 2026-10-11 | Run the Hermes controlled worker through a bounded installed AIAgent session and the same native ten-minute wake-up mechanism as OpenCode. | The interactive CLI context exceeded Groq capacity; pilot-04 verified a fresh owner-strict dispatch with Qwen 3.8 27B, fixed request/output limits and immediate REVIEW receipt stop. | Worker model selection is local to the invocation; Desktop keeps GPT-OSS 120B. The native task stays disabled, both legacy cron jobs stay paused, and only the orchestrator accepts deliveries. |
+
+## Finite deterministic local completion loop
+
+Codex may control only an explicit finite plan whose cards name LOCAL_LOOP and
+pin independent machine checks. Workers may submit but never accept or dispatch.
+Repair preserves the same task and ACK within bounded attempts; failure stops
+continuation. Qualitative review, merging and continuous scheduling retain
+their original gates. Fresh clones create new local registrations/tasks/receipts
+instead of importing runtime state.

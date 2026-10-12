@@ -111,3 +111,9 @@ it only when scheduled polling is desired. See
 
 Before any model run, ensure the selected task is explicitly authorized for
 external model processing. Completion still requires an orchestrator review.
+
+## Local OpenCode / Hermes Completion Loop
+
+Use branch `codex/local-agent-completion-loop` for the newly published flow.
+See [download setup and real verification](docs/operations/github-download-verification.md)
+and [finite controller contract](docs/operations/local-agent-completion-loop.md).

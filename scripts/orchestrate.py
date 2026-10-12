@@ -31,6 +31,7 @@ COMMAND_MAP = {
     "repo-sync": "repo_sync.py",
     "worker": "worker_poller.py",
     "runtime-preflight": "runtime_adapter_preflight.py",
+    "local-loop": "local_agent_loop.py",
 }
 
 

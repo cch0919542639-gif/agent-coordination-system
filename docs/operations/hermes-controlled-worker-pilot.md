@@ -33,6 +33,16 @@ tool-definition budget without adding another mechanism.
 Requests set `parallel_tool_calls=false`, matching Groq's
 [GPT-OSS tool-use contract](https://console.groq.com/docs/tool-use/overview).
 Provider tool validation remains enabled.
+The launcher preserves the exact packet Objective and allowed paths in the
+initial user assignment, so bounded file output or later compaction cannot
+replace the requested artifact with generic report-only work. It supplies the
+claim/submit helpers' exact task/agent arguments and the exact repository
+delivery template with Task ID, Agent and Phase already bound. The submit helper's optional --summary/--artifact/--payload-id mode verifies the
+ACK, owner, artifact scope and SHA256, generates canonical fields from the
+repository template, runs validation, then submits. Failure retains an
+unsubmitted candidate and makes no acceptance claim. Existing manual-report
+submission remains compatible. Independent artifact acceptance remains with
+the controller/reviewer.
 The worker explicitly reads repository context, activates one owner-matching
 delivery, claims its task, writes evidence, validates, submits to review, and
 stops. Global memory, persona, context-file injection, session storage, and
@@ -42,26 +52,40 @@ The runner supplies a short coordination-worker system brief through Hermes's
 system-prompt hooks, so the full interactive persona cannot consume the task
 budget. This is scoped to this process and does not change Desktop settings.
 
-The runner caps native context compression at 3,000 estimated tokens, fixes
-each completion at 4,096 tokens through request overrides, and uses low reasoning
-effort for GPT-OSS and no reasoning for the Qwen worker default. Hermes can
+The runner caps native context compression at 5,500 estimated tokens, fixes
+each main completion at 768 tokens through request overrides, and uses low reasoning
+effort for GPT-OSS and no reasoning for a Qwen override. Hermes can
 otherwise raise the output limit when repairing a truncated
 tool call. Terminal output is capped at 2,500 characters through Hermes's
 existing process-local limits cache and restored on exit. This keeps the
 worker budget small without changing global config. The compressor protects
-the first message and only the last two messages; its interactive default of
+the initial assigned message across every compaction and only the last two messages; its interactive default of
 twenty protected messages prevents compression in a short worker session.
+Native auxiliary compaction is also scoped to the same worker provider/model,
+with a 6,000-character serialized input bound, ~400-token summary guidance and
+a hard 768-token completion cap through the already-resolved API client, whose
+bounded native retries cannot switch provider/model. Micro-compaction is disabled
+because its separate call path bypasses this bound.
+An output truncated at that cap is rejected rather than installed as a summary.
+These worker-process overrides are restored on exit; Desktop config is unchanged.
 It prints only API-step counts, sanitized retry status, and completion/failure
-metadata. Each API request has at most three attempts; the launcher never
+metadata. Compression is explicitly enabled, with at most 24 compactions in the bounded session.
+For minute-token HTTP429s, the process-local diagnostic hook adds5s of
+refill margin before the SDK backoff: observed retry requests grew by ~300
+tokens and exhausted the old3-attempt budget by ~2s. Daily quota errors receive
+no extra margin. The worker timeout and retry count remain bounded.
+Each API request has at most three attempts; the launcher never
 automatically starts another worker session or activates another payload.
 After each completed tool, the runner checks the acknowledged owner-matching
 delivery record, expected durable inbox,
 task ID, payload ID, project, owner, original filename, REVIEW card, and report.
 A matching receipt interrupts Hermes immediately and returns exit code zero;
-a model's completion claim alone cannot pass. This confirms submission only;
+a model's completion claim alone cannot pass. The SDK verification-stop gate supplies
+at most three reminders to continue the same task when no REVIEW receipt exists,
+within the existing 24-call budget. The gate is process-local and restored on exit. This confirms submission only;
 the orchestrator still reviews and accepts the artifacts.
 
-The worker default is `qwen/qwen3.8-27b`; the current local configuration
+The worker default is `openai/gpt-oss-20b`; the current local configuration
 routes it to Groq. Desktop keeps its `openai/gpt-oss-120b` default. The launcher
 uses existing credentials without reading or
 copying them. It does not use `--oneshot` (which bypasses command approval),

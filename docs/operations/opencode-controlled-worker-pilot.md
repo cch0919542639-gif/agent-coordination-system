@@ -34,8 +34,12 @@ may claim and submit exactly that one assigned task for repository review.
 It never enables `--auto`, accepts, reviews, merges, commits, pushes, starts
 another agent, or selects an unassigned task.
 
-The default model is OpenCode's built-in
-`opencode/deepseek-v4-flash-free`. Before `-Run`, an operator must make the
+The current default model is OpenCode's built-in
+`opencode/space-bunny-free`. The former `opencode/deepseek-v4-flash-free`
+was absent from the installed runtime's model catalog on 2026-10-11. Native
+OpenCode 1.18.35 listed the replacement and a no-tools completion succeeded.
+OpenCode's [Zen documentation](https://opencode.ai/docs/zen/) lists Space Bunny
+as temporarily free with zero-retention processing. Before `-Run`, an operator must make the
 required runtime credential available without recording it in this repository.
 
 ## Rollback

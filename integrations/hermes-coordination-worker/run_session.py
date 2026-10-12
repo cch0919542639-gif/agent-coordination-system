@@ -5,6 +5,7 @@ import json
 import os
 import re
 import sys
+import time
 from pathlib import Path
 
 WORKER_BRIEF = """You are Hermes, a controlled repository coordination worker.
@@ -18,6 +19,33 @@ The only tool names are terminal and process. Use terminal with Python's
 standard library for every file operation. Preserve the delivery template's
 literal labels and replace inaccurate evidence rather than appending to it.
 """
+
+DIAGNOSTICS = (
+    r"(?:HTTP|Error code:)\s*\d{3}|Limit \d+(?:, Used \d+)?, Requested \d+|"
+    r"rate_limit_exceeded|tool_use_failed|payload too large|maximum context length|"
+    r"tool call validation failed|failed to call a function|failed to generate|"
+    r"invalid_request_error|failed_generation|context_length_exceeded|"
+    r"tokens per (?:minute|day|second|hour)|requests per (?:minute|day|second|hour)|"
+    r"\b(?:ITPM|OTPM|TPM|TPD|RPM|RPD|TPS|RPS)\b|try again in [0-9.hms ]{1,30}"
+)
+
+
+def bounded_compression(call, runtime, worker_model, **kwargs):
+    """Keep native compaction within this worker's provider and output budget."""
+    if kwargs.get("task") == "compression":
+        kwargs.update(model=worker_model, provider=runtime.get("provider"),
+                      base_url=runtime.get("base_url"), api_key=runtime.get("api_key"),
+                      api_mode=runtime.get("api_mode"), max_tokens=768,
+                      reasoning_config=None,
+                      extra_body={**(kwargs.get("extra_body") or {}), "max_tokens": 768,
+                                  "reasoning_effort": "none" if worker_model == "qwen/qwen3.8-27b" else "low"})
+        kwargs["messages"] = [dict(message, content=re.sub(
+            r"Target ~\d+ tokens\.", "Target ~400 tokens. Preserve task identity, constraints and next step; use concise bullets.",
+            message["content"])) for message in kwargs["messages"]]
+    result = call(**kwargs)
+    if kwargs.get("task") == "compression" and getattr(result.choices[0], "finish_reason", None) == "length":
+        raise RuntimeError("Controlled compression reached its output bound; incomplete summary rejected.")
+    return result
 
 
 def status_metadata(_kind, message):
@@ -37,7 +65,8 @@ def step_metadata(count, tools):
         except (TypeError, ValueError):
             continue
         if isinstance(result, dict):
-            codes.append({"exit_code": result.get("exit_code"), "error": bool(result.get("error"))})
+            code = result.get("exit_code")
+            codes.append({"exit_code": code if type(code) is int else None, "error": bool(result.get("error"))})
     print(json.dumps({"api_step": count, "tool_results": codes}), flush=True)
 
 
@@ -88,6 +117,8 @@ def run_session(model, prompt, task_id, payload_id):
     from run_agent import AIAgent
     from tools.terminal_tool import cleanup_all_environments, set_approval_callback
     from tools.tool_output_limits import get_tool_output_limits
+    import agent.context_compressor as compression_module
+    import agent.verification_stop as verification_module
 
     if os.environ.get("HERMES_YOLO_MODE", "").lower() in {"1", "true", "yes", "on"}:
         raise RuntimeError("Controlled sessions cannot enable automatic approval.")
@@ -98,6 +129,21 @@ def run_session(model, prompt, task_id, payload_id):
     output_limits = get_tool_output_limits()
     original_limits = output_limits.copy()
     output_limits["max_bytes"] = 2500
+    original_compression = compression_module.call_llm
+    original_verify_enabled = verification_module.verify_on_stop_enabled
+    original_verify_nudge = verification_module.build_verify_on_stop_nudge
+    def receipt_nudge(**kwargs):
+        if kwargs.get("attempts", 0) >= 3 or submitted_receipt(task_id, payload_id):
+            return None
+        return (
+            "The assigned task has no verified REVIEW receipt yet. Continue executing "
+            "that same task with terminal: read required context, claim if READY, "
+            "produce its artifact and templated delivery report, validate, and submit. "
+            "Narration does not complete this task. Stop if actually blocked; record "
+            "the blocker in your allowed progress file. Never process another task."
+        )
+    verification_module.verify_on_stop_enabled = lambda: True
+    verification_module.build_verify_on_stop_nudge = receipt_nudge
 
     class WorkerAgent(AIAgent):
         # The full interactive persona cannot fit this provider's worker budget.
@@ -112,7 +158,30 @@ def run_session(model, prompt, task_id, payload_id):
             status_metadata("lifecycle", message)
             super()._buffer_status(message)
 
+        def _invoke_api_request_error_hook(self, **kwargs):
+            error = f"HTTP {kwargs.get('status_code')} " + str(kwargs.get("error_message", ""))
+            print(json.dumps({"diagnostics": re.findall(DIAGNOSTICS, error, re.IGNORECASE)}), flush=True)
+            # Groq estimates a wait for the rejected request, while the SDK's
+            # retry can grow by ~300 tokens. At8K TPM,5s adds ~667 tokens of
+            # refill margin without raising the finite retry/session budgets.
+            if kwargs.get("status_code") == 429 and re.search(r"tokens per minute|\b[IO]?TPM\b", error, re.IGNORECASE):
+                time.sleep(5)
+
     agent = None
+    compression_class = None
+    original_input_bound = None
+    def controlled_auxiliary(**kwargs):
+        def direct(**bounded):
+            if bounded.get("task") != "compression":
+                return original_compression(**bounded)
+            # Use the already-resolved client: the native auxiliary helper can
+            # switch providers/models on capacity errors, even with explicit args.
+            return agent.client.with_options(max_retries=2, timeout=60).chat.completions.create(
+                model=model, messages=bounded["messages"], max_tokens=768,
+                reasoning_effort="none" if model == "qwen/qwen3.8-27b" else "low", timeout=60,
+            )
+        return bounded_compression(direct, runtime, model, **kwargs)
+    compression_module.call_llm = controlled_auxiliary
     def stop_on_review(*_args):
         if agent is not None and submitted_receipt(task_id, payload_id):
             agent.interrupt()
@@ -128,10 +197,10 @@ def run_session(model, prompt, task_id, payload_id):
             credential_pool=runtime.get("credential_pool"),
             enabled_toolsets=["terminal"],
             max_iterations=24,
-            max_tokens=4096,
+            max_tokens=768,
             reasoning_config={"effort": "low"},
             request_overrides={
-                "parallel_tool_calls": False, "max_tokens": 4096,
+                "parallel_tool_calls": False, "max_tokens": 768,
                 "reasoning_effort": "none" if model == "qwen/qwen3.8-27b" else "low",
             },
             platform="cron",
@@ -146,31 +215,49 @@ def run_session(model, prompt, task_id, payload_id):
             tool_complete_callback=stop_on_review,
         )
         # Groq's observed 8K TPM cap is smaller than the model's context window.
-        agent.context_compressor.threshold_tokens_cap = 3000
-        agent.context_compressor.threshold_tokens = 3000
+        agent.compression_enabled = True
+        agent.max_compression_attempts = 24
+        agent.context_compressor.threshold_tokens_cap = 5500
+        agent.context_compressor.threshold_tokens = 5500
         # The default 20-message protected tail leaves short worker runs
         # with nothing eligible for compression before Groq rejects them.
         agent.context_compressor.protect_first_n = 1
+        # This bounded session has one assignment; keep it out of tail anchoring
+        # after every compaction, rather than the SDK's first-compaction decay.
+        agent.context_compressor._effective_protect_first_n = lambda _messages=None: 1
         agent.context_compressor.protect_last_n = 2
+        agent.context_compressor.summary_model = model
+        agent.context_compressor._micro_compact_enabled = False
+        compression_class = type(agent.context_compressor)
+        original_input_bound = compression_class._SUMMARY_INPUT_MAX_CHARS
+        compression_class._SUMMARY_INPUT_MAX_CHARS = 6000
         agent._api_max_retries = 3
         agent.suppress_status_output = True
         result = agent.run_conversation(prompt)
         receipt = submitted_receipt(task_id, payload_id)
-        metadata = {"completed": receipt, "failed": not receipt, "api_calls": result.get("api_calls")}
+        calls = result.get("api_calls")
+        metadata = {"completed": receipt, "failed": not receipt,
+                    "api_calls": calls if type(calls) is int else None}
+        for key in ("input_tokens", "output_tokens", "last_prompt_tokens"):
+            if type(result.get(key)) is int:
+                metadata[key] = result[key]
         if receipt:
             metadata["stop_reason"] = "review_receipt"
         else:
-            error = str(result.get("error", ""))
-            metadata["failure_reason"] = result.get("failure_reason") or "missing_review_receipt"
-            metadata["diagnostics"] = re.findall(
-                r"(?:HTTP|Error code:)\s*\d{3}|Limit \d+(?:, Used \d+)?, Requested \d+|"
-                r"rate_limit_exceeded|tool_use_failed|payload too large|maximum context length|"
-                r"tool call validation failed|failed to call a function|failed to generate|"
-                r"invalid_request_error|failed_generation|context_length_exceeded|"
-                r"attempted to call tool '[a-zA-Z0-9_.-]{1,64}'",
-                error,
-                re.IGNORECASE,
-            )
+            # SDK releases also return failed turns through the finalizer.
+            # Extract only the diagnostic allowlist; never print these raw fields.
+            error = " ".join(str(result.get(key, "")) for key in
+                             ("error", "turn_exit_reason", "final_response"))
+            reason = result.get("failure_reason")
+            metadata["failure_reason"] = reason if isinstance(reason, str) and reason in {
+                "rate_limit", "billing", "authentication", "context_length", "timeout", "server_error",
+            } else "missing_review_receipt"
+            metadata["diagnostics"] = re.findall(DIAGNOSTICS, error, re.IGNORECASE)
+        reason = str(result.get("turn_exit_reason", ""))
+        metadata["turn_exit_category"] = next((label for label in (
+            "text_response", "empty_response_exhausted", "all_retries_exhausted_no_response",
+            "max_iterations_reached", "interrupted", "local_processing_error",
+        ) if reason.startswith(label)), "other")
         print(json.dumps(metadata))
         return 0 if receipt else 1
     finally:
@@ -180,6 +267,11 @@ def run_session(model, prompt, task_id, payload_id):
         set_approval_callback(None)
         output_limits.clear()
         output_limits.update(original_limits)
+        compression_module.call_llm = original_compression
+        verification_module.verify_on_stop_enabled = original_verify_enabled
+        verification_module.build_verify_on_stop_nudge = original_verify_nudge
+        if compression_class is not None:
+            compression_class._SUMMARY_INPUT_MAX_CHARS = original_input_bound
 
 
 if __name__ == "__main__":

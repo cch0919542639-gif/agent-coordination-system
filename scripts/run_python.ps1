@@ -6,14 +6,9 @@ param(
     [string[]]$ScriptArgs
 )
 
-$python = "C:\Users\angel\AppData\Local\Programs\Python\Python312\python.exe"
-
-if (-not (Test-Path $python)) {
-    Write-Error "Python runtime not found at $python"
-    exit 1
-}
-
 $repoRoot = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot 'resolve-python.ps1')
+$python = Get-CoordinationPython -RepoRoot $repoRoot
 $resolvedScript = if ([System.IO.Path]::IsPathRooted($ScriptPath)) {
     $ScriptPath
 } else {
