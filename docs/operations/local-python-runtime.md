@@ -1,88 +1,25 @@
 # Local Python Runtime
 
-## Purpose
-
-This document defines the local Python runtime entrypoint for this repository on Windows machines where `python` or `py` may not be available directly in the current shell.
-
-The goal is operational consistency:
-
-- one known Python path
-- one wrapper for arbitrary Python script execution
-- one wrapper for coordination validation
-
-## Current Python Runtime
-
-Current known working path:
-
-```text
-C:\Users\angel\AppData\Local\Programs\Python\Python312\python.exe
-```
-
-This path should be treated as the preferred local runtime for this machine unless a future update replaces it.
-
-## Recommended Entry Points
-
-Prefer these repo wrappers over direct raw commands:
+The coordination engine needs Python3.11+ on Windows. `run_python.ps1` and both
+controlled-worker prompts use `Get-CoordinationPython` from resolve-python.ps1.
+Resolution order is explicit COORDINATION_PYTHON, this checkout's
+.venv/Scripts/python.exe, PATH Python, then the Windows py launcher. A supplied
+override must exist and meet the version requirement; it never silently falls
+back to another interpreter. No account-specific runtime path is required.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\run_python.ps1 scripts\orchestrate.py validate
-powershell -ExecutionPolicy Bypass -File scripts\validate.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run_python.ps1 scripts/orchestrate.py validate
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate.ps1
 ```
 
-These wrappers are useful when:
+The execution-policy override is process-only. To select a specific installed
+Python, set COORDINATION_PYTHON to its actual executable for this shell. The
+repo wrapper changes no installation, credentials or global configuration.
+Hermes's SDK uses its own installed Python beside the Hermes executable;
+the controller/lifecycle helpers use the resolved coordination runtime.
 
-- `python` is not in `PATH`
-- `py` is present but does not resolve an installed runtime
-- the shell environment changes across machines or sessions
-
-## Direct Runtime Check
-
-If you need to verify the runtime directly:
-
-```powershell
-& "C:\Users\angel\AppData\Local\Programs\Python\Python312\python.exe" --version
-```
-
-## Common Commands
-
-Run coordination validation:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\validate.ps1
-```
-
-Run orchestrate directly through the wrapper:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\run_python.ps1 scripts\orchestrate.py next
-```
-
-Run validator script directly through the wrapper:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\run_python.ps1 scripts\validate_coordination_files.py
-```
-
-## Failure Modes
-
-### `python` not recognized
-
-Use the wrapper scripts in `scripts/` instead of relying on `PATH`.
-
-### `py` exists but says no installed Python found
-
-This means the launcher is present but no usable runtime is registered for the current session. Use the fixed runtime path above or the wrapper scripts.
-
-### Access denied from a restricted shell
-
-If the current shell cannot execute the runtime directly, the orchestrator may need to run the wrapper or runtime through an elevated/approved command path.
-
-## Maintenance Rule
-
-If the Python installation path changes:
-
-1. update `scripts/run_python.ps1`
-2. update this document
-3. verify `scripts/validate.ps1` still works
-
-Do not assume that `python` in `PATH` is stable across all agent machines.
+If discovery fails, install Python3.11+ or set the explicit executable path.
+Do not assume a PATH alias or launcher has a usable interpreter. Confirm the
+selected runtime before a model run; the wrapper reports a missing or older
+runtime instead of dispatching work. Provider/agent prerequisites are in
+[the download guide](github-download-verification.md).

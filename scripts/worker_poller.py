@@ -268,7 +268,7 @@ def acknowledge_delivery(payload_id: str) -> int:
 # Activation — Phase 14 same-machine worker handoff
 # ---------------------------------------------------------------------------
 
-def activate_worker(worker_id: str, output_json: bool = False) -> int:
+def activate_worker(worker_id: str, output_json: bool = False, task_id: str | None = None) -> int:
     """Emit one safe action payload for the first owner-matching pending delivery.
 
     Acknowledgement happens only after the payload is durably printed.
@@ -297,6 +297,7 @@ def activate_worker(worker_id: str, output_json: bool = False) -> int:
         and r.get("destination") == "registered_worker"
         and r.get("status") == "pending"
         and r.get("owner", "") == worker.worker_id
+        and (task_id is None or r.get("task_id") == task_id)
     ]
 
     if not eligible:
@@ -530,6 +531,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     act_parser.add_argument("worker_id", help="Registered worker identifier.")
     act_parser.add_argument("--json", action="store_true", help="Output action payload as JSON.")
+    act_parser.add_argument("--task-id", help="Activate only this explicitly selected task.")
 
     return parser
 
@@ -570,7 +572,7 @@ def main() -> int:
         return acknowledge_delivery(args.payload_id)
 
     if args.command == "activate":
-        return activate_worker(args.worker_id, output_json=args.json)
+        return activate_worker(args.worker_id, output_json=args.json, task_id=args.task_id)
 
     return 0
 

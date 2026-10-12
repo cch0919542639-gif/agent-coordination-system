@@ -1,0 +1,55 @@
+{"event": "run_started", "task_id": null, "at": "2026-10-11T18:17:32Z"}
+{"event": "dispatch_prepared", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:17:33Z", "owner": "hermes-coordination-pilot", "payload_id": "08be7917219da139"}
+{"event": "task_dispatched", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:17:33Z", "owner": "hermes-coordination-pilot", "payload_id": "08be7917219da139"}
+{"event": "worker_started", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:17:35Z", "owner": "hermes-coordination-pilot", "attempt": 1}
+{"event": "worker_process_started", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:17:35Z", "pid": 18796}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:17:46Z", "metadata": {"api_step": 1, "tool_results": []}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:17:50Z", "metadata": {"api_step": 2, "tool_results": [{"exit_code": 0, "error": false}]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:17:51Z", "metadata": {"api_step": 3, "tool_results": [{"exit_code": 0, "error": false}]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:17:52Z", "metadata": {"diagnostics": ["HTTP 429", "Error code: 429", "tokens per minute", "ITPM", "Limit 7000, Used 6465, Requested 4554", "try again in 34.448571428s. ", "rate_limit_exceeded"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:17:57Z", "metadata": {"status": ["Rate limited", "Waiting 35.0s", "attempt 2/3"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:18:34Z", "metadata": {"api_step": 4, "tool_results": [{"exit_code": 0, "error": false}]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:18:34Z", "metadata": {"diagnostics": ["HTTP 429", "Error code: 429", "tokens per minute", "ITPM", "Limit 7000, Used 6108, Requested 4882", "try again in 34.199999999s. ", "rate_limit_exceeded"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:18:39Z", "metadata": {"status": ["Rate limited", "Waiting 35.0s", "attempt 2/3"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:19:16Z", "metadata": {"api_step": 5, "tool_results": [{"exit_code": 0, "error": false}]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:19:16Z", "metadata": {"diagnostics": ["HTTP 429", "Error code: 429", "tokens per minute", "ITPM", "Limit 7000, Used 6051, Requested 5520", "try again in 39.18s. ", "rate_limit_exceeded"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:19:21Z", "metadata": {"status": ["Rate limited", "Waiting 40.0s", "attempt 2/3"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:20:11Z", "metadata": {"api_step": 6, "tool_results": [{"exit_code": 0, "error": false}]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:20:11Z", "metadata": {"diagnostics": ["HTTP 429", "Error code: 429", "tokens per minute", "ITPM", "Limit 7000, Used 6683, Requested 5719", "try again in 46.302857142s. ", "rate_limit_exceeded"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:20:16Z", "metadata": {"status": ["Rate limited", "Waiting 47.0s", "attempt 2/3"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:21:05Z", "metadata": {"api_step": 7, "tool_results": [{"exit_code": 1, "error": false}]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:21:05Z", "metadata": {"diagnostics": ["HTTP 429", "Error code: 429", "tokens per minute", "ITPM", "Limit 7000, Used 6054, Requested 6014", "try again in 43.44s. ", "rate_limit_exceeded"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:21:10Z", "metadata": {"status": ["Rate limited", "Waiting 44.0s", "attempt 2/3"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:21:57Z", "metadata": {"api_step": 8, "tool_results": [{"exit_code": 1, "error": false}]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:21:57Z", "metadata": {"diagnostics": ["HTTP 429", "Error code: 429", "tokens per day", "TPD", "Limit 200000, Used 197888, Requested 6495", "try again in 31m33.456s. ", "rate_limit_exceeded"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:21:57Z", "metadata": {"status": ["Rate limited", "Waiting 600.0s", "attempt 2/3"]}}
+{"event": "worker_exited", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:23:16Z", "exit_code": 1, "scope_violations": []}
+{"event": "run_stopped", "task_id": null, "at": "2026-10-11T18:23:16Z", "reason": "Worker hermes-coordination-pilot failed with exit 1; no delivery accepted."}
+{"event": "run_started", "task_id": null, "at": "2026-10-11T18:39:30Z"}
+{"event": "worker_started", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:39:32Z", "owner": "hermes-coordination-pilot", "attempt": 2}
+{"event": "worker_process_started", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:39:32Z", "pid": 10048}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:39:43Z", "metadata": {"api_step": 1, "tool_results": []}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:39:46Z", "metadata": {"api_step": 2, "tool_results": [{"exit_code": 1, "error": false}]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:39:48Z", "metadata": {"api_step": 3, "tool_results": [{"exit_code": 0, "error": false}]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:39:48Z", "metadata": {"diagnostics": ["HTTP 429", "Error code: 429", "tokens per minute", "TPM", "Limit 8000, Used 6708, Requested 4154", "try again in 21.465s. ", "rate_limit_exceeded"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:39:53Z", "metadata": {"status": ["Rate limited", "Waiting 22.0s", "attempt 2/3"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:40:17Z", "metadata": {"api_step": 4, "tool_results": [{"exit_code": 0, "error": false}]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:40:17Z", "metadata": {"diagnostics": ["HTTP 429", "Error code: 429", "tokens per minute", "TPM", "Limit 8000, Used 6758, Requested 4440", "try again in 23.985s. ", "rate_limit_exceeded"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:40:22Z", "metadata": {"status": ["Rate limited", "Waiting 24.0s", "attempt 2/3"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:40:49Z", "metadata": {"api_step": 5, "tool_results": [{"exit_code": 0, "error": false}]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:40:49Z", "metadata": {"diagnostics": ["HTTP 429", "Error code: 429", "tokens per minute", "TPM", "Limit 8000, Used 6517, Requested 4573", "try again in 23.174999999s. ", "rate_limit_exceeded"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:40:54Z", "metadata": {"status": ["Rate limited", "Waiting 24.0s", "attempt 2/3"]}}
+{"event": "worker_metadata", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:41:20Z", "metadata": {"api_calls": 5, "input_tokens": 18011, "output_tokens": 1348, "last_prompt_tokens": 4020, "completed": true, "failed": false, "turn_exit_category": "interrupted"}}
+{"event": "worker_exited", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:41:23Z", "exit_code": 0, "scope_violations": []}
+{"event": "task_reviewed", "task_id": "local-loop-v5-02", "at": "2026-10-11T18:41:26Z", "decision": "accepted", "failed_checks": []}
+{"event": "dispatch_prepared", "task_id": "local-loop-v5-03", "at": "2026-10-11T18:41:26Z", "owner": "opencode-coordination-pilot", "payload_id": "446994dbdc3ad888"}
+{"event": "task_dispatched", "task_id": "local-loop-v5-03", "at": "2026-10-11T18:41:27Z", "owner": "opencode-coordination-pilot", "payload_id": "446994dbdc3ad888"}
+{"event": "worker_started", "task_id": "local-loop-v5-03", "at": "2026-10-11T18:41:29Z", "owner": "opencode-coordination-pilot", "attempt": 1}
+{"event": "worker_process_started", "task_id": "local-loop-v5-03", "at": "2026-10-11T18:41:29Z", "pid": 20992}
+{"event": "worker_exited", "task_id": "local-loop-v5-03", "at": "2026-10-11T18:43:48Z", "exit_code": 0, "scope_violations": []}
+{"event": "task_reviewed", "task_id": "local-loop-v5-03", "at": "2026-10-11T18:43:51Z", "decision": "accepted", "failed_checks": []}
+{"event": "run_completed", "task_id": null, "at": "2026-10-11T18:43:51Z", "accepted_tasks": ["local-loop-v5-02", "local-loop-v5-03"]}
+{"event": "run_started", "task_id": null, "at": "2026-10-11T18:44:59Z"}
+{"event": "run_completed", "task_id": null, "at": "2026-10-11T18:44:59Z", "accepted_tasks": ["local-loop-v5-02", "local-loop-v5-03"]}
+{"event": "run_started", "task_id": null, "at": "2026-10-11T18:52:57Z"}
+{"event": "run_completed", "task_id": null, "at": "2026-10-11T18:52:57Z", "accepted_tasks": ["local-loop-v5-02", "local-loop-v5-03"]}

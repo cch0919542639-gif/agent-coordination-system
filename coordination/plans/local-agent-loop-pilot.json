@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "run_id": "local-agent-loop-pilot-01",
+  "tasks": [
+    {
+      "task_id": "local-loop-pilot-01",
+      "owner": "opencode-coordination-pilot",
+      "checks": [
+        {
+          "path": "coordination/evidence/local-loop-pilot/stage1.json",
+          "json_equals": {
+            "stage": 1,
+            "agent": "opencode",
+            "value": 7
+          }
+        }
+      ]
+    },
+    {
+      "task_id": "local-loop-pilot-02",
+      "owner": "hermes-coordination-pilot",
+      "checks": [
+        {
+          "path": "coordination/evidence/local-loop-pilot/stage2.json",
+          "json_equals": {
+            "stage": 2,
+            "agent": "hermes",
+            "value": 21
+          }
+        }
+      ]
+    },
+    {
+      "task_id": "local-loop-pilot-03",
+      "owner": "opencode-coordination-pilot",
+      "checks": [
+        {
+          "path": "coordination/evidence/local-loop-pilot/final.json",
+          "json_equals": {
+            "status": "completed",
+            "value": 21,
+            "workers": [
+              "opencode",
+              "hermes"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "max_attempts": 2,
+  "worker_timeout_seconds": 900,
+  "check_timeout_seconds": 30,
+  "run_timeout_seconds": 3600
+}

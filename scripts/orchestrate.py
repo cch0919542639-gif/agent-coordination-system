@@ -33,6 +33,7 @@ COMMAND_MAP = {
     "worker": "worker_poller.py",
     "runtime-preflight": "runtime_adapter_preflight.py",
     "launcher-dry-run": "launcher_dry_run.py",
+    "local-loop": "local_agent_loop.py",
 }
 
 

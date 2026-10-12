@@ -285,7 +285,7 @@ For Windows environments where `python` or `py` is not reliably available in `PA
 
 ### `run_python.ps1`
 
-Runs a repository Python script using the fixed local runtime path documented in `docs/operations/local-python-runtime.md`.
+Runs a repository Python script with Python3.11+ resolved from COORDINATION_PYTHON, this checkout's .venv, PATH, then the Windows Python launcher. See `docs/operations/local-python-runtime.md`.
 
 Usage:
 
@@ -301,10 +301,17 @@ powershell -ExecutionPolicy Bypass -File scripts\run_python.ps1 scripts\orchestr
 
 ### `validate.ps1`
 
-Runs the coordination validator through the fixed Python runtime wrapper.
+Runs the coordination validator through the portable Python runtime wrapper.
 
 Usage:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\validate.ps1
 ```
+
+## Local Completion Loop
+
+`prepare_local_loop.py --run-id FRESH-ID` initializes local registrations and a
+finite three-task demo without launching a model. `orchestrate.py local-loop
+--plan PATH --run` executes it; `--resume` preserves the same plan/ACK.
+See `docs/operations/github-download-verification.md`.
