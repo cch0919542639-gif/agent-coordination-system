@@ -69,3 +69,16 @@ The publication branch adds portable Python discovery and a fresh-download
 preparation command. GitHub clone verification is governed by
 phase14-loop-publication-01; exact results are in its delivery report.
 No original registry, inbox, ACKs, credentials or private transcripts are shipped.
+
+## GitHub Fresh-Download Verification (2026-10-12)
+
+phase14-loop-publication-01 is accepted DONE. Source ca7cdf1 is published on
+codex/local-agent-completion-loop. A clean GitHub clone matched12 runtime source
+files, created fresh local registrations/tasks without old ACKs, passed97
+focused tests, and completed actual OpenCode repair -> Hermes21 -> OpenCode
+completion. One provider HTTP400 required bounded same-ACK resume; completed
+replay launched zero workers. Both full coordination validators passed.
+Evidence/docs publication follows without changing tested runtime source.
+This was verified on the same physical Windows machine with existing providers;
+another machine still needs Python, installed agents and local provider setup.
+main remains unmerged; use the named branch and the download guide.

@@ -1,7 +1,7 @@
 ---
 task_id: phase14-loop-publication-01
 phase: phase14-local-agent-loop
-status: IN_PROGRESS
+status: DONE
 owner: codex
 reviewer: ORCHESTRATOR
 priority: high

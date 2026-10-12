@@ -81,3 +81,14 @@ Model availability, quotas and local installation still affect execution.
 General tasks need their own scoped cards and explicit acceptance checks. This
 demonstration does not grant workers qualitative acceptance, merge authority,
 unbounded queue draining or cross-machine task transport.
+
+## Verified result (2026-10-12)
+
+The fresh GitHub clone of source commit `ca7cdf1` passed97 focused tests and
+completed the new OpenCode -> Hermes -> OpenCode chain. OpenCode automatically
+repaired its first submission; Hermes required an explicit same-ACK retry after
+a provider HTTP400, then was accepted and automatically triggered OpenCode's
+final task. The controller stopped at COMPLETED, and replay launched zero
+workers. All worker scope checks were clean. Exact source hashes, reports,
+reviews and sanitized events are in `coordination/evidence/github-download-check-01/`.
+Original runtime state and private transcripts were not published.

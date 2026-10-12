@@ -25,4 +25,4 @@ Use `python scripts/orchestrate.py next` for a suggestion, then confirm status
 from the actual task card before dispatching.
 
 - Local-loop implementation and independent review are accepted; GitHub publication
-  and fresh-download verification are tracked by phase14-loop-publication-01.
+  and fresh-download verification are accepted on phase14-loop-publication-01.
