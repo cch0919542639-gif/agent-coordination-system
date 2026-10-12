@@ -78,3 +78,45 @@ This repository currently contains:
 - operating protocols and rollout guides
 - standard templates and sample files
 - the first wave of live pilot task cards
+
+## Controlled Hermes and OpenCode Workers
+
+Both runtimes use the same repo-first, owner-strict handoff: an assigned task
+creates a durable delivery, the worker claims at most one matching task, writes
+delivery evidence, and submits it to `review/`. Neither runtime may accept,
+merge, commit, push, select unassigned work, or handle a second task in one
+turn.
+
+### Hermes
+
+Hermes uses the repository skill and bounded SDK runner through its controlled
+PowerShell launcher. The current worker default is existing Groq GPT-OSS20B;
+its accepted local-loop run verifies exact ACK/report receipts. Legacy cron
+jobs remain paused and the native worker schedule remains disabled. See
+[Hermes operator guide](docs/operations/hermes-controlled-worker-pilot.md).
+
+### OpenCode
+
+OpenCode uses `opencode/space-bunny-free` through the controlled launcher:
+
+```powershell
+.\integrations\opencode-coordination-worker\run-controlled-worker.ps1 -Run
+```
+
+The launcher isolates runtime state with `XDG_CONFIG_HOME` and processes only
+`opencode-coordination-pilot` deliveries. Windows Task Scheduler is the native
+wake-up mechanism, using the `OpenCode Controlled Worker` task at a 10-minute
+cadence. It is currently **Disabled** after a successful supervised test; enable
+it only when scheduled polling is desired. See
+[OpenCode operator guide](docs/operations/opencode-controlled-worker-pilot.md).
+
+Before any model run, ensure the selected task is explicitly authorized for
+external model processing. Completion still requires an orchestrator review.
+
+## Local OpenCode / Hermes Completion Loop
+
+The default `main` integration includes the provider-tested finite local loop
+and portable download/bootstrap path. Existing safety validation and status
+projection remain available; execution workers cannot merge or accept work.
+See [download setup and real verification](docs/operations/github-download-verification.md)
+and [finite controller contract](docs/operations/local-agent-completion-loop.md).

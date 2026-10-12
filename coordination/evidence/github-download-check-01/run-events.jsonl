@@ -1,0 +1,49 @@
+{"event": "run_started", "task_id": null, "at": "2026-10-12T03:03:54Z"}
+{"event": "dispatch_prepared", "task_id": "github-download-check-01-01", "at": "2026-10-12T03:03:54Z", "owner": "opencode-coordination-pilot", "payload_id": "8a7fc19ea61936b4"}
+{"event": "task_dispatched", "task_id": "github-download-check-01-01", "at": "2026-10-12T03:03:55Z", "owner": "opencode-coordination-pilot", "payload_id": "8a7fc19ea61936b4"}
+{"event": "worker_started", "task_id": "github-download-check-01-01", "at": "2026-10-12T03:03:57Z", "owner": "opencode-coordination-pilot", "attempt": 1}
+{"event": "worker_process_started", "task_id": "github-download-check-01-01", "at": "2026-10-12T03:03:57Z", "pid": 6364}
+{"event": "worker_exited", "task_id": "github-download-check-01-01", "at": "2026-10-12T03:05:23Z", "exit_code": 0, "scope_violations": []}
+{"event": "task_reviewed", "task_id": "github-download-check-01-01", "at": "2026-10-12T03:05:24Z", "decision": "needs_fix", "failed_checks": ["Check 1: coordination/evidence/github-download-check-01/stage1.json JSON differs from the declared contract."]}
+{"event": "repair_dispatched", "task_id": "github-download-check-01-01", "at": "2026-10-12T03:05:24Z", "same_acknowledged_payload": "8a7fc19ea61936b4"}
+{"event": "worker_started", "task_id": "github-download-check-01-01", "at": "2026-10-12T03:05:25Z", "owner": "opencode-coordination-pilot", "attempt": 2}
+{"event": "worker_process_started", "task_id": "github-download-check-01-01", "at": "2026-10-12T03:05:25Z", "pid": 20692}
+{"event": "worker_exited", "task_id": "github-download-check-01-01", "at": "2026-10-12T03:06:46Z", "exit_code": 0, "scope_violations": []}
+{"event": "task_reviewed", "task_id": "github-download-check-01-01", "at": "2026-10-12T03:06:46Z", "decision": "accepted", "failed_checks": []}
+{"event": "dispatch_prepared", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:06:46Z", "owner": "hermes-coordination-pilot", "payload_id": "90e87cf127f2f303"}
+{"event": "task_dispatched", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:06:47Z", "owner": "hermes-coordination-pilot", "payload_id": "90e87cf127f2f303"}
+{"event": "worker_started", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:06:47Z", "owner": "hermes-coordination-pilot", "attempt": 1}
+{"event": "worker_process_started", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:06:48Z", "pid": 21468}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:06:57Z", "metadata": {"api_step": 1, "tool_results": []}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:07:02Z", "metadata": {"api_step": 2, "tool_results": [{"exit_code": 0, "error": false}]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:07:03Z", "metadata": {"diagnostics": ["HTTP 400", "Error code: 400", "invalid_request_error", "tool_use_failed", "failed_generation"]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:07:03Z", "metadata": {"status": ["HTTP 400", "HTTP 400"]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:07:03Z", "metadata": {"api_calls": 2, "completed": false, "failed": true, "turn_exit_category": "other", "diagnostics": ["HTTP 400", "HTTP 400"], "failure_reason": ["missing_review_receipt"]}}
+{"event": "worker_exited", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:07:04Z", "exit_code": 1, "scope_violations": []}
+{"event": "run_stopped", "task_id": null, "at": "2026-10-12T03:07:04Z", "reason": "Worker hermes-coordination-pilot failed with exit 1; no delivery accepted."}
+{"event": "run_started", "task_id": null, "at": "2026-10-12T03:07:40Z"}
+{"event": "worker_started", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:07:40Z", "owner": "hermes-coordination-pilot", "attempt": 2}
+{"event": "worker_process_started", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:07:41Z", "pid": 2572}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:07:47Z", "metadata": {"api_step": 1, "tool_results": []}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:07:51Z", "metadata": {"api_step": 2, "tool_results": [{"exit_code": 1, "error": false}]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:07:52Z", "metadata": {"api_step": 3, "tool_results": [{"exit_code": 0, "error": false}]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:07:52Z", "metadata": {"diagnostics": ["HTTP 429", "Error code: 429", "tokens per minute", "TPM", "Limit 8000, Used 6309, Requested 3659", "try again in 14.76s. ", "rate_limit_exceeded"]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:07:57Z", "metadata": {"status": ["Rate limited", "Waiting 15.0s", "attempt 2/3"]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:08:14Z", "metadata": {"api_step": 4, "tool_results": [{"exit_code": 0, "error": false}]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:08:14Z", "metadata": {"diagnostics": ["HTTP 429", "Error code: 429", "tokens per minute", "TPM", "Limit 8000, Used 7035, Requested 3782", "try again in 21.1275s. ", "rate_limit_exceeded"]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:08:19Z", "metadata": {"status": ["Rate limited", "Waiting 22.0s", "attempt 2/3"]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:08:43Z", "metadata": {"api_step": 5, "tool_results": [{"exit_code": 0, "error": false}]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:08:43Z", "metadata": {"diagnostics": ["HTTP 429", "Error code: 429", "tokens per minute", "TPM", "Limit 8000, Used 7094, Requested 4467", "try again in 26.7075s. ", "rate_limit_exceeded"]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:08:48Z", "metadata": {"status": ["Rate limited", "Waiting 27.0s", "attempt 2/3"]}}
+{"event": "worker_metadata", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:09:17Z", "metadata": {"api_calls": 5, "input_tokens": 17561, "output_tokens": 800, "last_prompt_tokens": 3917, "completed": true, "failed": false, "turn_exit_category": "interrupted"}}
+{"event": "worker_exited", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:09:18Z", "exit_code": 0, "scope_violations": []}
+{"event": "task_reviewed", "task_id": "github-download-check-01-02", "at": "2026-10-12T03:09:18Z", "decision": "accepted", "failed_checks": []}
+{"event": "dispatch_prepared", "task_id": "github-download-check-01-03", "at": "2026-10-12T03:09:19Z", "owner": "opencode-coordination-pilot", "payload_id": "9d96d36e19a9d5e4"}
+{"event": "task_dispatched", "task_id": "github-download-check-01-03", "at": "2026-10-12T03:09:19Z", "owner": "opencode-coordination-pilot", "payload_id": "9d96d36e19a9d5e4"}
+{"event": "worker_started", "task_id": "github-download-check-01-03", "at": "2026-10-12T03:09:19Z", "owner": "opencode-coordination-pilot", "attempt": 1}
+{"event": "worker_process_started", "task_id": "github-download-check-01-03", "at": "2026-10-12T03:09:20Z", "pid": 14936}
+{"event": "worker_exited", "task_id": "github-download-check-01-03", "at": "2026-10-12T03:10:39Z", "exit_code": 0, "scope_violations": []}
+{"event": "task_reviewed", "task_id": "github-download-check-01-03", "at": "2026-10-12T03:10:40Z", "decision": "accepted", "failed_checks": []}
+{"event": "run_completed", "task_id": null, "at": "2026-10-12T03:10:40Z", "accepted_tasks": ["github-download-check-01-01", "github-download-check-01-02", "github-download-check-01-03"]}
+{"event": "run_started", "task_id": null, "at": "2026-10-12T03:11:50Z"}
+{"event": "run_completed", "task_id": null, "at": "2026-10-12T03:11:51Z", "accepted_tasks": ["github-download-check-01-01", "github-download-check-01-02", "github-download-check-01-03"]}

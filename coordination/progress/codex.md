@@ -1,25 +1,24 @@
 # Progress Report
 
 - Agent: codex
-- Active Task: none
-- Phase: phase14.5-external-runtime-launcher
-- Status: DONE
-- Last Updated: 2026-07-22 00:12
+- Active Task: phase14-main-integration-01
+- Phase: phase14-local-agent-loop
+- Status: IN_PROGRESS
+- Last Updated: 2026-10-12
 
 ## Current Step
 
-Independent review accepted the documentation-only Phase 14.5-04 design.
+Prepare the main-based loop integration, resolve conflicts and verify independently.
 
 ## Changes So Far
 
-- done\2026-07-21_phase14.5-04_supervised-launch-design.md
-- reviews\review-phase14.5-04.md
+- Main's status and launcher-dry-run commands retained alongside local-loop.
+- Both branches' decisions and external review evidence preserved.
 
 ## Blocker Status
 
-none
+Validation and independent review pending; no remote main change yet.
 
 ## Next Step
 
-Operator may push the accepted local commit; no supervised runtime launch is
-authorized.
+Apply the established clean-gate merge policy only after all gates pass.

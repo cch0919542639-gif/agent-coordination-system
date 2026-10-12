@@ -1,0 +1,45 @@
+{
+  "remote_source_commit": "ca7cdf175272a9442c68a5b597bbffde5ebf66d4",
+  "source_files_sha256_lf": {
+    "scripts/local_agent_loop.py": "3cb1e0c052570aa37a68534c972fcb7829c89c356215eaecfb6db13c0137d1c0",
+    "scripts/verify_worker_handoff.py": "a358bdf35de15bdada055a51486e2a7a586a9a2ee99fab357a82e2bff37657e4",
+    "scripts/orchestrate.py": "538d3fa26061cd3a6b1011bea543726206befed7d07ef63d9f3bce7be5bdc766",
+    "scripts/worker_poller.py": "5c0d79c35996b19fd9730e7a0058b9f902cd94f982cbfb2878cb5e19072e81f5",
+    "scripts/submit_task.py": "5358d543a3bff6c6b6c2887cf6fa3f157ad53f4a7876e3e1f6074791cbe9a0af",
+    "scripts/run_python.ps1": "2ce37178d38bde4917b120f864122df3cff9bb66219addd7699e71e73f3c1345",
+    "scripts/resolve-python.ps1": "9f98139a4ad0ebf9b981ad55adb9bdb16c6433db7bf5c85dc1a5e58e446f14c9",
+    "scripts/prepare_local_loop.py": "9a1aa14746da7afd1b25fc6601bf45ff2e9602b9d3b4b2dc1ed99a995375b3c0",
+    "integrations/hermes-coordination-worker/run-controlled-worker.ps1": "cf35ed810fa0bcb5c5b782bb9c55bf219dce6b88a0407f610b480e72c02e3a5d",
+    "integrations/hermes-coordination-worker/run-session.ps1": "756948e779f0c27b07a01e048ed4ec97514648db388f5c79a16ed55a9229c966",
+    "integrations/hermes-coordination-worker/run_session.py": "672693f84468d27490ed7b921c4320f20e46c5214a4f9ecfc77391a35d94e43c",
+    "integrations/opencode-coordination-worker/run-controlled-worker.ps1": "e0ffbaaf4cf76e7e8fc1b77e73fd6fcb2c578f1362728480bbdea3276cc9ed07"
+  },
+  "original_runtime_state_copied": false,
+  "physical_machine": "same computer; fresh remote clone with existing installed agents/providers",
+  "publication_tests": {
+    "passed": 97,
+    "seconds": 64.72
+  },
+  "remote_clone_tests": {
+    "passed": 97,
+    "seconds": 97.31
+  },
+  "run_id": "github-download-check-01",
+  "status": "COMPLETED",
+  "accepted_tasks": [
+    "github-download-check-01-01",
+    "github-download-check-01-02",
+    "github-download-check-01-03"
+  ],
+  "completed_replay_worker_launches": 0,
+  "operator_resume": "Hermes first attempt stopped on HTTP400 tool generation. Explicit same-ACK second attempt succeeded with bounded minute-rate backoff. No receipts/attempts were reset.",
+  "source_changed_during_run": false,
+  "final_json": {
+    "status": "completed",
+    "value": 21,
+    "workers": [
+      "opencode",
+      "hermes"
+    ]
+  }
+}

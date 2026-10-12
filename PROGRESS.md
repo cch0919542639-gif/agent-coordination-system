@@ -37,3 +37,43 @@
 
 Finish independent verification of the Phase 14.5 summary before beginning
 the documentation-only `phase14.5-04` supervised-launch design task.
+
+## Local Completion Loop Publication
+
+The phase14-local-loop-01 implementation is accepted with real bounded recovery,
+automatic reporting, follow-up dispatch and zero-launch replay. Failed historical
+pilots remain cancelled with evidence. The earlier local suite passed90 tests.
+The publication branch adds portable Python discovery and a fresh-download
+preparation command. GitHub clone verification is governed by
+phase14-loop-publication-01; exact results are in its delivery report.
+No original registry, inbox, ACKs, credentials or private transcripts are shipped.
+
+## GitHub Fresh-Download Verification (2026-10-12)
+
+phase14-loop-publication-01 is accepted DONE. Source ca7cdf1 is published on
+codex/local-agent-completion-loop. A clean GitHub clone matched12 runtime source
+files, created fresh local registrations/tasks without old ACKs, passed97
+focused tests, and completed actual OpenCode repair -> Hermes21 -> OpenCode
+completion. One provider HTTP400 required bounded same-ACK resume; completed
+replay launched zero workers. Both full coordination validators passed.
+Evidence/docs publication follows without changing tested runtime source.
+This was verified on the same physical Windows machine with existing providers;
+another machine still needs Python, installed agents and local provider setup.
+main remains unmerged; use the named branch and the download guide.
+
+## Main Integration Preparation
+
+phase14-main-integration-01 resolves current main conflicts and preserves
+launcher-dry-run, status projection and the accepted validation foundation.
+The existing2026-07-21 clean-gate policy authorizes integration after clean
+validation and independent accepted review. No main update has occurred yet.
+
+## Main Integration Validation (2026-10-12)
+
+The main-based candidate passed412 script tests with2 explained historical
+fixture skips, compilation, coordination validation and diff checks. Independent
+OpenCode review phase14-main-review-01 is accepted; its scope violations were
+empty and additional29 focused tests passed. Controller/worker source matches
+the actual provider-tested publication; main status and launcher-dry-run remain
+intact. The candidate is prepared for the authorized clean-gate main merge.
+Advisory status-projector legacy progress mismatch alerts remain unchanged.
