@@ -11,7 +11,10 @@ from coordination_common import ROOT, save_task, utc_now_string
 from local_agent_loop import PROJECT, WORKERS, digest, identifier
 
 
-def prepare(run_id):
+def prepare(run_id, workers=None):
+    workers = workers or ("opencode-coordination-pilot", "hermes-coordination-pilot")
+    if any(owner not in WORKERS for owner in workers):
+        raise ValueError("Unsupported worker registration.")
     identifier(run_id)
     if len(run_id) > 80:
         raise ValueError("Run ID must be at most 80 characters.")
@@ -33,7 +36,7 @@ def prepare(run_id):
     project = get_project(PROJECT)
     if project and Path(project.local_path).resolve() != ROOT.resolve():
         raise ValueError("Project registration points to another checkout; no automatic retargeting.")
-    for owner in WORKERS:
+    for owner in workers:
         worker = get_worker(owner)
         if worker and (worker.project_id != PROJECT or not worker.enabled):
             raise ValueError("Worker registration conflicts or is disabled; inspect it before preparing work.")
@@ -46,7 +49,7 @@ def prepare(run_id):
         raise ValueError("Routing policy differs from this finite demo contract; no automatic replacement.")
     if not project:
         add_project(ProjectEntry(PROJECT, str(ROOT.resolve())))
-    for owner in WORKERS:
+    for owner in workers:
         if not get_worker(owner):
             register_worker(owner, PROJECT)
     if not matching:

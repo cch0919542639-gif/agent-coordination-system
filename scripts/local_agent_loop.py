@@ -22,6 +22,8 @@ REVIEWER = "LOCAL_LOOP"
 WORKERS = {
     "opencode-coordination-pilot": "opencode-coordination-worker",
     "hermes-coordination-pilot": "hermes-coordination-worker",
+    "antigravity-coordination-pilot": "antigravity-coordination-worker",
+    "reasonix-coordination-pilot": "reasonix-coordination-worker",
 }
 
 

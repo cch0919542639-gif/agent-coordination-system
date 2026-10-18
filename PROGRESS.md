@@ -1,5 +1,32 @@
 # Progress
 
+## 2026-10-18: Scoped Antigravity / Reasonix publication
+
+- Added acknowledged controlled launchers, structured compatibility mode and
+  explicit native read/edit/test mode for Antigravity and Reasonix. The finite
+  controller can dispatch OpenCode -> Hermes -> Antigravity -> Reasonix ->
+  OpenCode, verify submissions and continue bounded same-task repairs.
+- Preserved the original two-worker preparation default and both existing
+  runtime launchers/SDK runner byte-for-byte. Publication excludes local
+  registrations, run cards, receipts, binaries, credentials and private settings.
+- Imported native worker source already subjected to independent Antigravity
+  review and lead resolution. Error-bearing passed text and tests before the
+  last edit are rejected by regression checks. Process-group cleanup and
+  crash-recoverable permission restoration were included in the resolved source.
+- Isolated publication verification: new worker/preparation tests **50 passed**;
+  full scripts suite **461 passed, 2 skipped, 1 failed** in 96.69 seconds.
+  Coordination validation passed. The failing installed-Hermes compaction test
+  raises `TypeError` for `min_tail_user_messages` on this machine's older SDK.
+  Re-running the unchanged upstream test reproduces the same failure. This is
+  an existing environment incompatibility; no unrelated Hermes fix is included.
+- Local provider trials completed five accepted stages, negative command-denial
+  probes and zero-launch replay. These used local OpenCode/Hermes compatibility
+  adjustments that are outside this publication, so they do not establish a
+  fresh-provider end-to-end pass for this isolated publication checkout.
+- Publish a reviewable branch/PR; keep main unchanged while the full validation
+  gate remains unresolved. Native tool permissions are not an OS sandbox, and
+  command parsing currently targets plain Python argv and pytest results.
+
 ## Current State
 
 - Central monitor and owner-strict routing are active for the local

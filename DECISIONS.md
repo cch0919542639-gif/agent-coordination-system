@@ -28,3 +28,13 @@ Repair preserves the same task and ACK within bounded attempts; failure stops
 continuation. Qualitative review, merging and continuous scheduling retain
 their original gates. Fresh clones create new local registrations/tasks/receipts
 instead of importing runtime state.
+
+## 2026-10-18: Antigravity / Reasonix native tool execution
+
+Use explicit per-task worker_execution=native_tools while retaining the
+structured_artifacts default. Require exact ownership/ACK, external-processing
+authorization, immutable command/test contracts, observed native read/edit/test
+provenance and independent LOCAL_LOOP acceptance. Reasonix grants are scoped
+to its session; Antigravity uses a private locked crash-recoverable permission
+lease. Keep original OpenCode/Hermes defaults and launchers unchanged. Native
+tool grants and scope checks do not provide an OS sandbox.
