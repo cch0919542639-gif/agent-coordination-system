@@ -120,3 +120,10 @@ and portable download/bootstrap path. Existing safety validation and status
 projection remain available; execution workers cannot merge or accept work.
 See [download setup and real verification](docs/operations/github-download-verification.md)
 and [finite controller contract](docs/operations/local-agent-completion-loop.md).
+
+## Antigravity / Reasonix Native Tools
+
+Antigravity and Reasonix join the finite controller with explicit native file
+read/edit and pinned Python test commands, canonical REVIEW submission and
+independent acceptance before the next dispatch. Existing two-worker defaults
+remain unchanged. See the [setup and permission contract](docs/operations/native-tools-workers.md).
