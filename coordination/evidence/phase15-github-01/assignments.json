@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-21 Asia/Taipei",
+  "repo": "https://github.com/cch0919542639-gif/agent-coordination-system",
+  "publication_branch": "codex/phase15-github-handoff-01",
+  "worker_base_commit": "910cb9175870fd6f3df6e699b632f85cb0a97bf4",
+  "baseline_semantics": "Worker base deliberately precedes this assignment metadata commit; source and READY cards are fixed at base. Published branch must contain base.",
+  "assignments": [
+    {
+      "task_id": "phase15-github-validation-01",
+      "owner": "phase15-angeline-worker",
+      "machine_label": "angeline",
+      "worker_branch": "codex/phase15-github-validation-01",
+      "worker_base_commit": "910cb9175870fd6f3df6e699b632f85cb0a97bf4",
+      "task_card": "coordination/task-board/ready/2026-10-20_phase15-github-validation-01_validation-tests.md",
+      "state": "READY,not claimed or executed",
+      "evidence_directory": "coordination/evidence/phase15-github-01/validation/"
+    },
+    {
+      "task_id": "phase15-github-durability-01",
+      "owner": "phase15-gigabyte-worker",
+      "machine_label": "gigabyte-202509",
+      "worker_branch": "codex/phase15-github-durability-01",
+      "worker_base_commit": "910cb9175870fd6f3df6e699b632f85cb0a97bf4",
+      "task_card": "coordination/task-board/ready/2026-10-20_phase15-github-durability-01_durability-tests.md",
+      "state": "READY,not claimed or executed",
+      "evidence_directory": "coordination/evidence/phase15-github-01/durability/"
+    }
+  ],
+  "permissions": "Read/claim/execute only the assigned local scoped task after verifying published base. This approval publishes only handoff branch; worker branch/PR upload follows that machine human authorization. No self acceptance or merge.",
+  "budget_per_host": {
+    "top_level_pytest_concurrency": 1,
+    "pytest_invocations": 3,
+    "pytest_timeout_seconds": 180,
+    "active_work_minutes": 30,
+    "new_model_provider_calls": 0,
+    "paid_services": 0
+  },
+  "actual_worker_claims": 0,
+  "actual_B_executions": 0
+}
