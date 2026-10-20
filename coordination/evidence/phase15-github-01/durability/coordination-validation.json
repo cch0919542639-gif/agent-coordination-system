@@ -1,0 +1,13 @@
+{
+  "command": [
+    "C:\\Users\\v1728\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "scripts/validate_coordination_files.py"
+  ],
+  "utc_start": "2026-10-20T16:54:10.629610+00:00",
+  "utc_end": "2026-10-20T16:54:10.835846+00:00",
+  "exit_code": 0,
+  "stdout": "Coordination validation passed.\n",
+  "stderr": "",
+  "previous_attempt": "coordination-validation-attempt-1.json",
+  "repair": "Restore two required incident template headings; no Python changes."
+}

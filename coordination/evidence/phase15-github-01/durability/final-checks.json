@@ -1,0 +1,28 @@
+{
+  "checked_utc": "2026-10-20T16:54:31.116522+00:00",
+  "source_pins_match": true,
+  "test_bytes_match_tested_candidate": true,
+  "scope_check_passed": true,
+  "evidence_bytes": 47263,
+  "implementation_window_seconds": 207.890258,
+  "pytest_invocations": 2,
+  "coordination_validator_passed": true,
+  "changed_paths": [
+    "coordination/delivery/phase15-github-durability-01-delivery-report.md",
+    "coordination/evidence/phase15-github-01/durability/attempt-1.execution.json",
+    "coordination/evidence/phase15-github-01/durability/attempt-1.junit.xml",
+    "coordination/evidence/phase15-github-01/durability/attempt-1.txt",
+    "coordination/evidence/phase15-github-01/durability/attempt-2.junit.xml",
+    "coordination/evidence/phase15-github-01/durability/attempt-2.txt",
+    "coordination/evidence/phase15-github-01/durability/coordination-validation-attempt-1.json",
+    "coordination/evidence/phase15-github-01/durability/coordination-validation.json",
+    "coordination/evidence/phase15-github-01/durability/execution.json",
+    "coordination/evidence/phase15-github-01/durability/findings.md",
+    "coordination/evidence/phase15-github-01/durability/work-start.json",
+    "coordination/incidents/2026-10-21_phase15-github-durability-01_fixture-import.md",
+    "coordination/progress/phase15-gigabyte-worker.md",
+    "coordination/task-board/ready/2026-10-20_phase15-github-durability-01_durability-tests.md",
+    "coordination/task-board/review/2026-10-20_phase15-github-durability-01_durability-tests.md",
+    "tests/scripts/test_phase15_github_durability.py"
+  ]
+}
