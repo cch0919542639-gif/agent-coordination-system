@@ -4,7 +4,7 @@ import sqlite3
 
 import pytest
 
-from test_offline_inbox import (
+from tests.scripts.test_offline_inbox import (
     BODY, MAX_BYTES, InboxRefused, canonical, frame, inbox, journal, state, verify,
 )
 

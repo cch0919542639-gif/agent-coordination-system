@@ -1,0 +1,52 @@
+{
+  "task_id": "phase15-github-validation-01",
+  "owner": "phase15-angeline-worker",
+  "assigned_machine_label": "angeline",
+  "observed_hostname": "angeline",
+  "observed_OS": "Windows-11-10.0.26300-SP0",
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "pytest_version": "9.1.1",
+  "worker_base_commit": "910cb9175870fd6f3df6e699b632f85cb0a97bf4",
+  "tested_candidate_sha": "37618094f323ca240858c418659fd74145a9c38f",
+  "test_file": "tests/scripts/test_phase15_github_validation.py",
+  "test_file_sha256": "644b2acfc096759fd4df383c6c2654d8f1d209e706db6e9d945d794d1d306814",
+  "source_pins": {
+    "coordination_runtime/__init__.py": "7b004d7a4de1a58463c2061fad6c3840dbf59629fd96d2f84d748486a73b30d4",
+    "coordination_runtime/offline_inbox.py": "850c790244045f64bfdc7ed106afe82180ebda9a4d5bba40239ffcdfdbbe5d16",
+    "tests/scripts/test_offline_inbox.py": "e5b3f7e24a74e120e59a0fb417b8679cabe679ee86bd1b379d5d0d0cce516ef8",
+    "docs/operations/phase15-offline-inbox-contract.md": "e0667ed495f42e76f65b5b7bc135ae6d5030e93caaa29bbcd52f49cd0c4fa632",
+    "coordination_runtime/state_controller.py": "a6b2a776337b10f239cce9a5fb02e03294acdaa04b40f8baeab91e4db5da412e"
+  },
+  "command": [
+    "python",
+    "-m",
+    "pytest",
+    "tests/scripts/test_offline_inbox.py",
+    "tests/scripts/test_phase15_github_validation.py",
+    "-q",
+    "--basetemp=<fresh task-specific local scratch>",
+    "--junitxml=coordination/evidence/phase15-github-01/validation/attempt-1.xml"
+  ],
+  "UTC_start": "2026-10-20T16:50:35.953715+00:00",
+  "UTC_end": "2026-10-20T16:50:37.930328+00:00",
+  "elapsed_seconds": 1.984,
+  "exit_code": 2,
+  "timeout": false,
+  "attempt_number": 1,
+  "pytest_invocation_limit": 3,
+  "new_provider_calls": 0,
+  "direct_peer_connections": 0,
+  "B_execution": false,
+  "junit": [
+    {
+      "name": "pytest",
+      "errors": "1",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "1",
+      "time": "0.625",
+      "timestamp": "2026-10-21T00:50:36.940626+08:00",
+      "hostname": "angeline"
+    }
+  ]
+}
