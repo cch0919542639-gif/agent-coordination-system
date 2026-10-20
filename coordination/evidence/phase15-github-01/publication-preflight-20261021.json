@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-21 Asia/Taipei",
+  "authorized_candidate": "a6ce59bc45930687fbe548c272945f6c57120283",
+  "preflight_head": "9314d3a0b30dbbf16f2d6fb59a2eaa5c2ddc805d",
+  "worker_base_commit": "910cb9175870fd6f3df6e699b632f85cb0a97bf4",
+  "branch": "codex/phase15-github-handoff-01",
+  "push_url": "https://github.com/cch0919542639-gif/agent-coordination-system.git",
+  "fresh_clone_base_pins": {
+    "coordination_runtime/__init__.py": true,
+    "coordination_runtime/offline_inbox.py": true,
+    "tests/scripts/test_offline_inbox.py": true,
+    "docs/operations/phase15-offline-inbox-contract.md": true,
+    "coordination_runtime/state_controller.py": true
+  },
+  "fresh_clone_READY_cards": [
+    "2026-10-20_phase15-github-validation-01_validation-tests.md",
+    "2026-10-20_phase15-github-durability-01_durability-tests.md"
+  ],
+  "fresh_clone_validator_exit": 0,
+  "metadata_only_delta_from_approved_candidate": [
+    "PLAN.md",
+    "PROGRESS.md",
+    "TASKS.md",
+    "coordination/evidence/phase15-github-01/assignments.json",
+    "coordination/evidence/phase15-github-01/completion-summary.md",
+    "coordination/evidence/phase15-github-01/dispatch-pack.md",
+    "coordination/evidence/phase15-github-01/publication-authorization.json",
+    "coordination/evidence/phase15-github-01/ready-release-checks.json",
+    "coordination/task-board/ready/2026-10-20_phase15-github-durability-01_durability-tests.md",
+    "coordination/task-board/ready/2026-10-20_phase15-github-validation-01_validation-tests.md"
+  ],
+  "source_test_changes": false,
+  "secret_pattern_check": "passed",
+  "no_existing_actions_directory": true,
+  "additional_pytest_runs": 0,
+  "worker_claims": 0,
+  "B_executions": 0,
+  "publication": "pending authorized single-branch push; no main merge or force"
+}
