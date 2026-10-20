@@ -13,6 +13,7 @@
     "coordination/delivery/phase15-github-review-01-delivery-report.md",
     "coordination/delivery/phase15-github-validation-01-delivery-report.md",
     "coordination/evidence/phase15-github-01/attempt-1-history.json",
+    "coordination/evidence/phase15-github-01/committed-baseline-verification.json",
     "coordination/evidence/phase15-github-01/completion-summary.md",
     "coordination/evidence/phase15-github-01/final-publication-scope.json",
     "coordination/evidence/phase15-github-01/independent-checks.json",
@@ -54,5 +55,6 @@
   "PR": false,
   "worker_dispatches": 0,
   "B_executions": 0,
-  "note": "Final scope after accepted docs/lifecycle bookkeeping; exact committed byte check follows separately."
+  "note": "Final scope after accepted docs/lifecycle bookkeeping; exact committed byte check follows separately.",
+  "post_commit_verification": "9b4daa51c4de33914e7f64c5c44446f40c79d9f1; five committed and fresh-checkout pins match; only verification/scope JSON follows"
 }

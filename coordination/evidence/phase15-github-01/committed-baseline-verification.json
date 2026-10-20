@@ -1,0 +1,25 @@
+{
+  "verified_commit": "9b4daa51c4de33914e7f64c5c44446f40c79d9f1",
+  "scope": "Fresh local clone with core.autocrlf=true; no GitHub or B connection",
+  "five_checkout_pin_matches": {
+    "coordination_runtime/__init__.py": true,
+    "coordination_runtime/offline_inbox.py": true,
+    "tests/scripts/test_offline_inbox.py": true,
+    "docs/operations/phase15-offline-inbox-contract.md": true,
+    "coordination_runtime/state_controller.py": true
+  },
+  "five_committed_blob_pin_matches": {
+    "coordination_runtime/__init__.py": true,
+    "coordination_runtime/offline_inbox.py": true,
+    "tests/scripts/test_offline_inbox.py": true,
+    "docs/operations/phase15-offline-inbox-contract.md": true,
+    "coordination_runtime/state_controller.py": true
+  },
+  "validator_exit": 0,
+  "validator_summary": "Coordination validation passed.",
+  "clone_worktree_clean": true,
+  "additional_pytest_runs": 0,
+  "existing_88_test_evidence": "local-checks.json; same five input bytes",
+  "push": false,
+  "B_execution": false
+}
