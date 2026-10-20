@@ -1,0 +1,20 @@
+{
+  "scope": "A-only handoff integration,not A/B combined qualification",
+  "worker_submission": "cd3dc63cfa987991510b6791b3fb6ece3cf223e4",
+  "tested_reviewed_candidate": "ff18ea99922ece71432c0b73a7158170ef53ff25",
+  "raw_A_test_sha256": "38f707647e2e8e85ac95569f1500b0801b3bdcd4908bb66484ebbda609dc968b",
+  "raw_A_test_and_candidate_blob_identical": true,
+  "five_source_pin_matches": {
+    "coordination_runtime/__init__.py": true,
+    "coordination_runtime/offline_inbox.py": true,
+    "tests/scripts/test_offline_inbox.py": true,
+    "docs/operations/phase15-offline-inbox-contract.md": true,
+    "coordination_runtime/state_controller.py": true
+  },
+  "B_task_ready_unchanged": true,
+  "new_test_attribute": "-text;protect exact tested bytes on checkout",
+  "additional_pytest_runs": 0,
+  "reason_no_rerun": "No test/source bytes changed by merge;only lifecycle/evidence metadata and narrow byte-preserving attribute",
+  "new_provider_or_peer_actions": 0,
+  "B_execution": false
+}

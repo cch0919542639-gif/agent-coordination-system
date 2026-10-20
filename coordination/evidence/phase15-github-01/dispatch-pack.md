@@ -1,5 +1,12 @@
 # Phase15：兩台電腦各自領取任務
 
+## Current status (2026-10-21)
+
+A/angeline is DONE:current Codex session executed the assignment,102 tests pass
+and independent review accepted. Do not redispatch A. B/second-machine task is
+still READY;use only its section below. Older A instructions are retained history.
+
+
 2026-10-21。發布已獲使用者同意；這是領取指示，不是已開始執行的回報。
 兩台電腦只需要各自連 GitHub，不需要彼此連線、8443、TLS 私鑰或遠端控制。
 請在各機既有代理中提供對應任務；不由本文件自動啟動模型、排程或程序。

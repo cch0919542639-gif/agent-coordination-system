@@ -11,9 +11,12 @@
       "machine_label": "angeline",
       "worker_branch": "codex/phase15-github-validation-01",
       "worker_base_commit": "910cb9175870fd6f3df6e699b632f85cb0a97bf4",
-      "task_card": "coordination/task-board/ready/2026-10-20_phase15-github-validation-01_validation-tests.md",
-      "state": "IN_PROGRESS;current Codex session on observed angeline executes the assignment",
-      "evidence_directory": "coordination/evidence/phase15-github-01/validation/"
+      "task_card": "coordination/task-board/done/2026-10-20_phase15-github-validation-01_validation-tests.md",
+      "state": "DONE;current Codex session on angeline executed and independent review accepted102tests",
+      "evidence_directory": "coordination/evidence/phase15-github-01/validation/",
+      "task_card_at_worker_base": "coordination/task-board/ready/2026-10-20_phase15-github-validation-01_validation-tests.md",
+      "tested_candidate": "ff18ea99922ece71432c0b73a7158170ef53ff25",
+      "baseline_plus_new_tests_passed": 102
     },
     {
       "task_id": "phase15-github-durability-01",
@@ -36,5 +39,6 @@
     "paid_services": 0
   },
   "actual_worker_claims": 1,
-  "actual_B_executions": 0
+  "actual_B_executions": 0,
+  "completed_worker_tasks": 1
 }

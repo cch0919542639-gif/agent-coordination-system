@@ -1,0 +1,48 @@
+{
+  "task_id": "phase15-github-validation-01",
+  "reviewer": "codex-phase15-github-review",
+  "reviewed_at_UTC": "2026-10-20T16:54:20.888428+00:00",
+  "decision": "accepted",
+  "tested_candidate_sha": "ff18ea99922ece71432c0b73a7158170ef53ff25",
+  "worker_base_commit": "910cb9175870fd6f3df6e699b632f85cb0a97bf4",
+  "scope": "angeline validation implementation only; no B execution or dual-host integration acceptance",
+  "checks": {
+    "candidate_matches_reviewed_commit": true,
+    "correct_worker_base": true,
+    "five_source_pins_unchanged": true,
+    "new_test_matches_execution_and_candidate": true,
+    "candidate_scope_matches_task": true,
+    "junit_88_baseline_plus_14_new": true,
+    "execution_success_corresponds_to_junit": true,
+    "failure_history_retained": true,
+    "attempt_and_time_budget": true,
+    "correct_assigned_machine_evidence": true,
+    "evidence_size_within_limits": true,
+    "no_new_test_process_or_network_calls": true,
+    "new_coverage_independently_reviewed": true,
+    "coordination_validator": true
+  },
+  "source_pins": {
+    "coordination_runtime/__init__.py": "7b004d7a4de1a58463c2061fad6c3840dbf59629fd96d2f84d748486a73b30d4",
+    "coordination_runtime/offline_inbox.py": "850c790244045f64bfdc7ed106afe82180ebda9a4d5bba40239ffcdfdbbe5d16",
+    "tests/scripts/test_offline_inbox.py": "e5b3f7e24a74e120e59a0fb417b8679cabe679ee86bd1b379d5d0d0cce516ef8",
+    "docs/operations/phase15-offline-inbox-contract.md": "e0667ed495f42e76f65b5b7bc135ae6d5030e93caaa29bbcd52f49cd0c4fa632",
+    "coordination_runtime/state_controller.py": "a6b2a776337b10f239cce9a5fb02e03294acdaa04b40f8baeab91e4db5da412e"
+  },
+  "snapshot_sha256": {
+    "tests/scripts/test_phase15_github_validation.py": "38f707647e2e8e85ac95569f1500b0801b3bdcd4908bb66484ebbda609dc968b",
+    "coordination/task-board/in_progress/2026-10-20_phase15-github-validation-01_validation-tests.md": "44edb4faaa55e6c3979ede1af4afb3cf3b9a60dc910d7a29e14ce5f01bf1a4d7",
+    "coordination/evidence/phase15-github-01/validation/execution.json": "64265eb10f4b6c01deb29de8e674ef688a054c9f40b11a6f32aabab472c68d00",
+    "coordination/evidence/phase15-github-01/validation/attempt-2.xml": "cf667ded58ca80760d10d1c896c6a71f89a180c76650b5a9384f5b76dd75d7c8",
+    "coordination/evidence/phase15-github-01/validation/attempt-1.xml": "0a9a37d8c5ead525fa31ae85018bc4e857e5ac211610d439e8511a36995800c3",
+    "coordination/evidence/phase15-github-01/validation/attempt-1-execution.json": "81982d40cba617ac12f3e14cc0c4b2b55be830e53955dda4af77d65db1b4992d",
+    "coordination/evidence/phase15-github-01/validation/claim.json": "27408d1653a48a0076961cdffb363a8d5f0d06b2f42da209e32275faf7a34549"
+  },
+  "baseline_passed": 88,
+  "new_passed": 14,
+  "total_passed": 102,
+  "pytest_invocations_consumed": 2,
+  "reviewer_pytest_invocations": 0,
+  "reviewer_actions": "Read-only source/evidence/scope inspection and coordination validator; only these two review evidence files written.",
+  "scope_exceptions": "No worker task acceptance or lifecycle transition by reviewer. Integration must preserve reviewed test bytes; narrowed -text attribute belongs to lead publication scope."
+}
