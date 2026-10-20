@@ -15,8 +15,8 @@ prepare two disjoint packets against frozen inputs:
 
 | Machine / owner | Packet | Exclusive new test file |
 | --- | --- | --- |
-| angeline / phase15-angeline-worker | [validation](../../task-board/blocked/2026-10-20_phase15-github-validation-01_validation-tests.md) | tests/scripts/test_phase15_github_validation.py |
-| 技嘉202509 / phase15-gigabyte-worker | [durability](../../task-board/blocked/2026-10-20_phase15-github-durability-01_durability-tests.md) | tests/scripts/test_phase15_github_durability.py |
+| angeline / phase15-angeline-worker | [validation](../../task-board/ready/2026-10-20_phase15-github-validation-01_validation-tests.md) | tests/scripts/test_phase15_github_validation.py |
+| 技嘉202509 / phase15-gigabyte-worker | [durability](../../task-board/ready/2026-10-20_phase15-github-durability-01_durability-tests.md) | tests/scripts/test_phase15_github_durability.py |
 
 A adds at least six distinct validation/rejection cases; B adds at least five
 persistence/fault cases. Both read existing coverage and must add distinct
@@ -98,3 +98,9 @@ final publication candidate, followed by an exact-target publication decision.
 Lead acceptance: phase15-github-docs-01 is now accepted DONE; see
 coordination/reviews/review-phase15-github-docs-01.md (repository-relative).
 The preceding submission wording is retained history. Publication remains pending.
+
+## Approved release update (2026-10-21)
+
+User approved the scoped GitHub publication and both READY cards. The preceding
+BLOCKED/pending passages describe preparation history. Worker execution and
+integration remain unperformed. Final dispatch pins the published worker base.

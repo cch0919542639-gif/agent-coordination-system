@@ -1,5 +1,14 @@
 # Plan
 
+## Approved GitHub release (2026-10-21)
+
+User approved publication of codex/phase15-github-handoff-01 and release of
+two assigned worker cards as READY. Source/test pins and budgets unchanged.
+Publication verification and exact dispatch commit follow; no worker has
+claimed or executed from this release yet. Older BLOCKED/pending statements
+below are dated preparation history. No peer/service/model activation.
+
+
 ## Current direction: GitHub-only parallel collaboration (2026-10-20)
 
 GitHub-only packet preparation and independent review are accepted DONE; two

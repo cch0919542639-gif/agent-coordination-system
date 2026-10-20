@@ -1,7 +1,7 @@
 ---
 task_id: phase15-github-durability-01
 phase: phase15-github-01
-status: BLOCKED
+status: READY
 owner: phase15-gigabyte-worker
 reviewer: codex-phase15-github-review
 priority: high
@@ -41,9 +41,9 @@ Existing offline input pins are in coordination/evidence/phase15-github-01/sourc
 
 ## Constraints
 
-Currently BLOCKED on publication and explicit assignment, not on peer TLS.
-Lead must release this card as READY first. Use the exact published release
-commit and codex/phase15-github-durability-01; no automatic task claiming or peer access.
+Released READY by user-approved GitHub publication on2026-10-21.
+Claim only after the exact published release/owner assignment is verified. Use
+the published worker-base commit and codex/phase15-github-durability-01; no automatic task claiming or peer access.
 Zero new model/provider calls or paid services. No production code modification.
 Only existing Python/pytest/PyYAML; missing dependencies mean stop, not install.
 

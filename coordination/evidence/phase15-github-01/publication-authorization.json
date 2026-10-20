@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-21 Asia/Taipei",
+  "user_reply": "同意",
+  "approved_candidate": "a6ce59bc45930687fbe548c272945f6c57120283",
+  "origin": "https://github.com/cch0919542639-gif/agent-coordination-system.git",
+  "branch": "codex/phase15-github-handoff-01",
+  "scope": [
+    "Publish minimal reviewed handoff branch",
+    "Release two assigned cards as READY"
+  ],
+  "not_granted": [
+    "merge main",
+    "force push",
+    "other branch publication",
+    "direct peer access",
+    "new worker/provider/service activation"
+  ],
+  "publication_state": "authorized,not yet attempted"
+}

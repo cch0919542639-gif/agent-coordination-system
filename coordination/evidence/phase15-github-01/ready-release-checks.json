@@ -1,0 +1,36 @@
+{
+  "user_scope": "approved publication and READY lifecycle update only",
+  "lifecycle_changes": {
+    "coordination/task-board/blocked/2026-10-20_phase15-github-validation-01_validation-tests.md": {
+      "new_path": "coordination/task-board/ready/2026-10-20_phase15-github-validation-01_validation-tests.md",
+      "change": "status and release constraint only;owner/scope/branch/tests unchanged"
+    },
+    "coordination/task-board/blocked/2026-10-20_phase15-github-durability-01_durability-tests.md": {
+      "new_path": "coordination/task-board/ready/2026-10-20_phase15-github-durability-01_durability-tests.md",
+      "change": "status and release constraint only;owner/scope/branch/tests unchanged"
+    }
+  },
+  "new_runtime_or_tests": false,
+  "push_attempts": 0,
+  "verified_cards": {
+    "validation": {
+      "status": "READY",
+      "owner_scope_branch_budget_metadata_unchanged": true,
+      "old_blocked_card_absent": true
+    },
+    "durability": {
+      "status": "READY",
+      "owner_scope_branch_budget_metadata_unchanged": true,
+      "old_blocked_card_absent": true
+    }
+  },
+  "five_source_pin_matches": {
+    "coordination_runtime/__init__.py": true,
+    "coordination_runtime/offline_inbox.py": true,
+    "tests/scripts/test_offline_inbox.py": true,
+    "docs/operations/phase15-offline-inbox-contract.md": true,
+    "coordination_runtime/state_controller.py": true
+  },
+  "coordination_validator": "passed",
+  "pytest_rerun": "not needed; lifecycle/docs only, five tested input bytes unchanged"
+}
