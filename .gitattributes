@@ -1,0 +1,6 @@
+# Preserve exact reviewed input bytes across clone/autocrlf settings.
+coordination_runtime/__init__.py -text
+coordination_runtime/offline_inbox.py -text
+tests/scripts/test_offline_inbox.py -text
+docs/operations/phase15-offline-inbox-contract.md -text
+coordination_runtime/state_controller.py -text

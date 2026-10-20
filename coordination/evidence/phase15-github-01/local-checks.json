@@ -1,0 +1,44 @@
+{
+  "scope": "local isolated publication baseline; not B execution",
+  "attempt": 2,
+  "utc_start": "2026-10-20T15:19:31.397092+00:00",
+  "utc_end": "2026-10-20T15:19:55.411582+00:00",
+  "command": [
+    "python",
+    "-m",
+    "pytest",
+    "tests/scripts/test_offline_inbox.py",
+    "-q",
+    "--basetemp=<fresh task-specific scratch>",
+    "--junitxml=coordination/evidence/phase15-github-01/publication-baseline-attempt-2.xml"
+  ],
+  "timeout_seconds": 180,
+  "exit_code": 0,
+  "timed_out": false,
+  "elapsed_seconds": 24.016,
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "github_publication": false,
+  "peer_connections": 0,
+  "worker_host_runs": 0,
+  "model_provider_calls": 0,
+  "attempt1_preserved": "attempt-1-history.json",
+  "junit": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "88",
+      "time": "22.924",
+      "timestamp": "2026-10-20T23:19:32.269225+08:00",
+      "hostname": "angeline"
+    }
+  ],
+  "source_pin_matches": {
+    "coordination_runtime/__init__.py": true,
+    "coordination_runtime/offline_inbox.py": true,
+    "tests/scripts/test_offline_inbox.py": true,
+    "docs/operations/phase15-offline-inbox-contract.md": true,
+    "coordination_runtime/state_controller.py": true
+  }
+}

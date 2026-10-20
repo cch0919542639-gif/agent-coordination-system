@@ -28,3 +28,12 @@ Repair preserves the same task and ACK within bounded attempts; failure stops
 continuation. Qualitative review, merging and continuous scheduling retain
 their original gates. Fresh clones create new local registrations/tasks/receipts
 instead of importing runtime state.
+
+## GitHub-mediated two-machine work (2026-10-20)
+
+User explicitly selects GitHub task/branch/PR handoff over direct control of B.
+This wave needs no mutual TLS, SSH, shared runtime DB or remote launcher/custody.
+Retain those requirements only for separately scoped future remote execution.
+Use one lead, frozen source/release commits, disjoint branches, host-local
+evidence and independent review. No push or service activation authority is
+implied. Historical TLS failures remain evidence, not GitHub blockers.

@@ -1,0 +1,14 @@
+{
+  "source_commit": "501da4e5d6fb209a27a8fb8d54811f574d008e72",
+  "snapshot_commit": "265a926",
+  "publication_base": "bfc5163af6dca4b9b7dec6b599563e3cbf984cac",
+  "files": {
+    "coordination_runtime/__init__.py": "7b004d7a4de1a58463c2061fad6c3840dbf59629fd96d2f84d748486a73b30d4",
+    "coordination_runtime/offline_inbox.py": "850c790244045f64bfdc7ed106afe82180ebda9a4d5bba40239ffcdfdbbe5d16",
+    "tests/scripts/test_offline_inbox.py": "e5b3f7e24a74e120e59a0fb417b8679cabe679ee86bd1b379d5d0d0cce516ef8",
+    "docs/operations/phase15-offline-inbox-contract.md": "e0667ed495f42e76f65b5b7bc135ae6d5030e93caaa29bbcd52f49cd0c4fa632",
+    "coordination_runtime/state_controller.py": "a6b2a776337b10f239cce9a5fb02e03294acdaa04b40f8baeab91e4db5da412e"
+  },
+  "scope": "Byte-identical offline inputs; not production crypto or transport.",
+  "fixture_scope": "StateController supplied unchanged solely for baseline initialize and monkeypatch(apply); parallel/resource/CLI integration not supported or activated."
+}

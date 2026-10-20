@@ -1,0 +1,13 @@
+{
+  "attempt": 1,
+  "pytest_outcome": "88 setup errors; zero test bodies executed",
+  "cause": "default pytest temp root PermissionError WinError5",
+  "duration_seconds": 32.186,
+  "wrapper_failure": "cp950 decode error followed by stdout None TypeError; no checks manifest generated",
+  "raw_xml_sha256": "0b0e1ca1041d874306c3d9512e0d5c16ad1427c9c80dc3ffaa498d1de5951428",
+  "raw_xml_bytes": 690779,
+  "raw_preserved": "Local scratch archive; not published because oversized and contains unnecessary local path tracebacks",
+  "compact_xml": "publication-baseline-attempt-1.xml",
+  "fix": "Use new task-specific --basetemp and explicit UTF-8 capture; no OS permissions changed",
+  "automatic_retry": false
+}

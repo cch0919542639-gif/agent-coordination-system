@@ -1,5 +1,15 @@
 # Tasks
 
+## Current direction: GitHub-only parallel collaboration (2026-10-20)
+
+User selects independent tasks on angeline and the second named computer via
+GitHub branches/PRs. Direct-host TLS/SSH/remote-launch pilot is superseded; it
+is not a GitHub readiness gate. Do not run earlier Downloads diagnostics or
+start services. See coordination/plans/phase15-github-01.md and
+docs/operations/phase15-github-handoff-guide.md. Two disjoint test packets are
+prepared; publication, actual worker execution and integration remain pending.
+No additional peer connections, model jobs or two-host completion claimed.
+
 ## Authoritative System
 
 Task lifecycle lives in `coordination/task-board/`:

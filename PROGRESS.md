@@ -1,5 +1,17 @@
 # Progress
 
+## Current direction: GitHub-only parallel collaboration (2026-10-20)
+
+GitHub-only packet preparation and independent review are accepted DONE; two
+disjoint test tasks are prepared for angeline and 技嘉202509. See
+coordination/evidence/phase15-github-01/completion-summary.md for five unchanged
+input pins, the local 88-pass baseline, preserved first 88 setup errors and 15
+independent checks. StateController is a restricted test fixture subset.
+Direct-host TLS/SSH/remote-launch work is superseded; TLS is not a GitHub gate.
+Do not run earlier Downloads diagnostics or start services. Publication, explicit
+assignment, actual worker execution, worker reviews and integration remain pending;
+worker cards remain BLOCKED. No dual-host completion or repaired TLS is claimed.
+
 ## Current State
 
 - Central monitor and owner-strict routing are active for the local
