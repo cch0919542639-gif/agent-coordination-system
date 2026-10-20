@@ -1,13 +1,15 @@
 # Progress
 
-## Approved GitHub release (2026-10-21)
+## GitHub release published (2026-10-21)
 
-User approved publication of codex/phase15-github-handoff-01 and release of
-two assigned worker cards as READY. Source/test pins and budgets unchanged.
-Publication verification and exact dispatch commit follow; no worker has
-claimed or executed from this release yet. Older BLOCKED/pending statements
-below are dated preparation history. No peer/service/model activation.
-
+User-approved codex/phase15-github-handoff-01 was published; remote SHA verified
+against first published commit bf5a3e177b4d9dd30b77c24f488888000a36ce27.
+Fixed worker base:910cb9175870fd6f3df6e699b632f85cb0a97bf4. See
+coordination/evidence/phase15-github-01/dispatch-pack.md and publication receipt.
+Two assigned cards are READY:angeline validation and second-machine durability.
+Neither worker has claimed/executed; independent results and integration remain
+pending. Older BLOCKED/publication-pending passages below are preparation history.
+No peer/service/provider activation. Receipt-only commits do not change worker base.
 
 ## Current direction: GitHub-only parallel collaboration (2026-10-20)
 

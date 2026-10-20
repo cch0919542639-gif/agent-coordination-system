@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-21 Asia/Taipei",
+  "verified_at_UTC": "2026-10-20T16:20:36.493332+00:00",
+  "branch": "codex/phase15-github-handoff-01",
+  "first_published_commit": "bf5a3e177b4d9dd30b77c24f488888000a36ce27",
+  "remote_head_verified": "bf5a3e177b4d9dd30b77c24f488888000a36ce27",
+  "worker_base_commit": "910cb9175870fd6f3df6e699b632f85cb0a97bf4",
+  "user_approval": "publication-authorization.json",
+  "push_exit_code": 0,
+  "push_kind": "normal,new single branch; no force; no main merge",
+  "READY_tasks": [
+    "phase15-github-validation-01",
+    "phase15-github-durability-01"
+  ],
+  "claim_count": 0,
+  "actual_B_execution": false,
+  "direct_peer_connections": 0,
+  "new_provider_or_service_launches": 0,
+  "dispatch_pack": "dispatch-pack.md",
+  "note": "First publication receipt is followed only by receipt/context metadata on the same authorized branch; worker base remains fixed."
+}
