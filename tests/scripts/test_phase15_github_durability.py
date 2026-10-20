@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from test_offline_inbox import BODY, frame, inbox, state
+from tests.scripts.test_offline_inbox import BODY, frame, inbox, state
 from coordination_runtime.offline_inbox import InboxRefused
 
 
