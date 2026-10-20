@@ -4,3 +4,4 @@ coordination_runtime/offline_inbox.py -text
 tests/scripts/test_offline_inbox.py -text
 docs/operations/phase15-offline-inbox-contract.md -text
 coordination_runtime/state_controller.py -text
+tests/scripts/test_phase15_github_validation.py -text
