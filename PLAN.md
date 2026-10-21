@@ -1,5 +1,16 @@
 # Plan
 
+## First GitHub two-machine wave complete (2026-10-21)
+
+A/B accepted DONE:102 (88+14) and94 (88+6);independent14/15 checks passed.
+Combined candidate9114fe64 passed108;PR5 merged56575a8 into handoff only.
+All seven source/test raw/blob pins and fresh-clone checkouts match;validator
+passed with core.autocrlf=true. See coordination/evidence/phase15-github-01/wave-completion.md.
+Main remainsbfc5163;angeline pytest budget3/3,no rerun. Start new work from the
+integrated handoff baseline;do not redispatch DONE tasks. Only this finite GitHub
+wave is complete,not full remote-runtime/production qualification. No new peer
+control,provider jobs or services. Older pending statements below are history.
+
 ## B delivery independently verified (2026-10-21)
 
 Technically complete B delivery is verified from PR5/head2a76667:94passed

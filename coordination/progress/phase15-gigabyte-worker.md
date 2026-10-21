@@ -3,7 +3,7 @@
 - Agent: phase15-gigabyte-worker
 - Active Task: phase15-github-durability-01
 - Phase: phase15-github-01
-- Status: REVIEW
+- Status: DONE - lead recorded accepted PR integration
 - Last Updated: 2026-10-21 Asia/Taipei
 
 ## Current Step
@@ -23,7 +23,16 @@ repair verified. Five source pins unchanged; two pytest invocations used.
 
 ## Next Step
 
-Coordination validator passed; scope, evidence budget and source pins passed.
-Operator authorized GitHub completion publication on 2026-10-21 Asia/Taipei.
-Push the assigned branch and open its review PR against the handoff branch.
-Independent review and integration belong to lead.
+This assigned task is complete. Retain evidence;do not rerun or redispatch.
+Both A and B are DONE and PR5 is merged. New work needs a new scoped packet.
+
+## Lead completion
+
+Independent review accepted;PR5 merged56575a8 into handoff.108combined tests
+already passed;seven merged input pins match. No additional worker run.
+
+## Wave completion recorded by lead (2026-10-21)
+
+Both tasks DONE. Actual PR5 merge56575a8 is verified against seven tested
+input pins and a fresh clone;108combined tests passed. Older acceptance notes
+describe prior task checkpoints. No further worker or provider action.

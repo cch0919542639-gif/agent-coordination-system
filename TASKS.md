@@ -1,5 +1,15 @@
 # Tasks
 
+## First GitHub two-machine wave complete (2026-10-21)
+
+A and B deliveries accepted;both tasks DONE. PR5 merged56575a8 into handoff.
+108combined tests passed;all seven merged source/test pins match that candidate.
+Main unchanged;no peer control or provider/service activation. This closes only
+the first GitHub-mediated wave,not full remote-runtime/production qualification.
+Durable completion summary and fresh-clone verification follow. Older pending
+statements below are dated history.
+
+
 ## B delivery independently verified (2026-10-21)
 
 Technically complete B delivery is verified from PR5/head2a76667:94passed

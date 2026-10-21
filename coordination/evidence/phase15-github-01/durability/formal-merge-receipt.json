@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-21 Asia/Taipei",
+  "PR": {
+    "baseRefName": "codex/phase15-github-handoff-01",
+    "headRefOid": "2a76667b19df281d0893bd0bf422cf5187331adf",
+    "mergeCommit": {
+      "oid": "56575a8adf54ba338d2776b14f353c319917d4d6"
+    },
+    "mergedAt": "2026-10-21T06:06:53Z",
+    "state": "MERGED",
+    "url": "https://github.com/cch0919542639-gif/agent-coordination-system/pull/5"
+  },
+  "target": "codex/phase15-github-handoff-01",
+  "seven_tested_input_pin_matches": {
+    "coordination_runtime/__init__.py": {
+      "raw": true,
+      "blob": true
+    },
+    "coordination_runtime/offline_inbox.py": {
+      "raw": true,
+      "blob": true
+    },
+    "tests/scripts/test_offline_inbox.py": {
+      "raw": true,
+      "blob": true
+    },
+    "docs/operations/phase15-offline-inbox-contract.md": {
+      "raw": true,
+      "blob": true
+    },
+    "coordination_runtime/state_controller.py": {
+      "raw": true,
+      "blob": true
+    },
+    "tests/scripts/test_phase15_github_validation.py": {
+      "raw": true,
+      "blob": true
+    },
+    "tests/scripts/test_phase15_github_durability.py": {
+      "raw": true,
+      "blob": true
+    }
+  },
+  "existing_combined_validation": 108,
+  "existing_combined_candidate": "9114fe64bfdac65fc483187dfd23bf5f201cd6ba",
+  "postmerge_test_source_changes": false,
+  "additional_pytest_runs": 0,
+  "reason": "Merged code and both test bytes identical to108-passing reviewed combination",
+  "main_head_unchanged": "bfc5163af6dca4b9b7dec6b599563e3cbf984cac",
+  "direct_peer_or_provider_activation": false
+}

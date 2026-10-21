@@ -22,10 +22,16 @@ None;five source pins match and observed hostname is angeline.
 
 ## Next Step
 
-Independent review of tested candidateff18ea99922ece71432c0b73a7158170ef53ff25.
-Lead handles formal acceptance and approved-branch publication;B remains pending.
+This assigned task is complete. Retain evidence;do not rerun or redispatch.
+Both A and B are DONE and PR5 is merged. New work needs a new scoped packet.
 
 ## Lead acceptance
 
 Independent reviewer accepted A;lead integrated exact tested bytes into approved
 handoff branch. B remains READY and actual B results/combined tests are pending.
+
+## Wave completion recorded by lead (2026-10-21)
+
+Both tasks DONE. Actual PR5 merge56575a8 is verified against seven tested
+input pins and a fresh clone;108combined tests passed. Older acceptance notes
+describe prior task checkpoints. No further worker or provider action.

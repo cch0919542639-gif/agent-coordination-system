@@ -1,5 +1,12 @@
 # Phase15：兩台電腦各自領取任務
 
+## First wave completed (2026-10-21)
+
+Both A and B tasks are DONE. PR5 formally merged56575a8 into handoff;108
+combined tests passed and seven merged byte pins match. Do not redispatch
+either completed task. Earlier instructions are retained history. Main unchanged.
+
+
 ## Verified delivery status (2026-10-21)
 
 A is DONE. B delivered PR5 and passed independent review:94tests;local

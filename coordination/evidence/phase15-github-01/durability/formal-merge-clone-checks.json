@@ -1,0 +1,17 @@
+{
+  "scope": "Fresh local clone of actual GitHub merge commit with core.autocrlf=true",
+  "verified_merge_commit": "56575a8adf54ba338d2776b14f353c319917d4d6",
+  "seven_checkout_pin_matches": {
+    "coordination_runtime/__init__.py": true,
+    "coordination_runtime/offline_inbox.py": true,
+    "tests/scripts/test_offline_inbox.py": true,
+    "docs/operations/phase15-offline-inbox-contract.md": true,
+    "coordination_runtime/state_controller.py": true,
+    "tests/scripts/test_phase15_github_validation.py": true,
+    "tests/scripts/test_phase15_github_durability.py": true
+  },
+  "validator_exit": 0,
+  "clone_clean": true,
+  "additional_pytest_invocations": 0,
+  "completion_metadata_follows_without_source_or_test_changes": true
+}

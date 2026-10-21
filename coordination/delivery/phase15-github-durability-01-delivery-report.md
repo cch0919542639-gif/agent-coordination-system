@@ -3,7 +3,7 @@
 - Task ID: phase15-github-durability-01
 - Agent: phase15-gigabyte-worker
 - Phase: phase15-github-01
-- Status: DELIVERED, awaiting independent review
+- Status: ACCEPTED; independently reviewed and PR5 integrated by lead
 - Observed hostname: 技嘉202509
 - OS: Windows-11-10.0.26300-SP0
 - Python: 3.13.15
@@ -65,3 +65,9 @@ or merge this worker delivery.
 Lead must integrate both reviewed worker candidates and run combined validation
 before declaring the two-host wave complete. Later report commits do not change
 the tested Python bytes; execution.json identifies the tested code candidate.
+
+## Lead formal integration (2026-10-21)
+
+PR5 merged as56575a8adf54ba338d2776b14f353c319917d4d6 into handoff only.
+Seven input byte pins match the108-passing combined candidate. B is DONE;
+earlier submission instructions above remain history. Main unchanged.
