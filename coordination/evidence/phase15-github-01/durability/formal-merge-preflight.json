@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-21 Asia/Taipei",
+  "scope": "Next authorized step after accepted review:formal PR5 integration into handoff only",
+  "PR": 5,
+  "expected_head": "2a76667b19df281d0893bd0bf422cf5187331adf",
+  "target": "codex/phase15-github-handoff-01",
+  "main_merge": false,
+  "force_or_admin_bypass": false,
+  "source_and_both_test_blob_pins_match": true,
+  "independent_checks_pass": 15,
+  "existing_combined_tests_pass": 108,
+  "additional_pytest_runs": 0,
+  "preserve_B_test_checkout_bytes": "narrow -text attribute added before merge"
+}
