@@ -57,9 +57,11 @@ tolerance around the configured 5s timeout. No production source changed.
 
 ## Recommended Handoff
 
-Local commits only: worker branch publication is not granted by the dispatch
-publication approval. Obtain the operator's explicit branch/PR publication grant,
-then route an independent reviewer; do not accept or merge this worker delivery.
+On 2026-10-21 Asia/Taipei the local operator explicitly requested publishing
+the completion to GitHub for review from the other computer. This authorizes
+pushing codex/phase15-github-durability-01 and creating its review PR targeting
+codex/phase15-github-handoff-01. Route an independent reviewer; do not accept
+or merge this worker delivery.
 Lead must integrate both reviewed worker candidates and run combined validation
 before declaring the two-host wave complete. Later report commits do not change
 the tested Python bytes; execution.json identifies the tested code candidate.

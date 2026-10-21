@@ -24,5 +24,6 @@ repair verified. Five source pins unchanged; two pytest invocations used.
 ## Next Step
 
 Coordination validator passed; scope, evidence budget and source pins passed.
-Retain local delivery commit. Branch/PR publication
-requires an explicit grant. Independent review and integration belong to lead.
+Operator authorized GitHub completion publication on 2026-10-21 Asia/Taipei.
+Push the assigned branch and open its review PR against the handoff branch.
+Independent review and integration belong to lead.
