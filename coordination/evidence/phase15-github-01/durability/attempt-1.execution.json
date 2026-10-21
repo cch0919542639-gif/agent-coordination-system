@@ -1,0 +1,43 @@
+{
+  "task_id": "phase15-github-durability-01",
+  "assigned_machine_label": "gigabyte-202509",
+  "observed_hostname": "技嘉202509",
+  "observed_os": "Windows-11-10.0.26300-SP0",
+  "python_version": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+  "pytest_version": "9.1.1",
+  "dispatch_commit": "7e2d2fc492f023fc6e6b30f0147be4d0ed20a7f6",
+  "release_base_sha": "910cb9175870fd6f3df6e699b632f85cb0a97bf4",
+  "tested_candidate_sha": "293b4500d720111a009067fd7bf3a902402da01a",
+  "test_file_sha256": "1bf7ae5509b801d1b28cad80f9410b3beb90199e9b92a383edb860af01a5cffd",
+  "source_pins": {
+    "coordination_runtime/__init__.py": "7b004d7a4de1a58463c2061fad6c3840dbf59629fd96d2f84d748486a73b30d4",
+    "coordination_runtime/offline_inbox.py": "850c790244045f64bfdc7ed106afe82180ebda9a4d5bba40239ffcdfdbbe5d16",
+    "tests/scripts/test_offline_inbox.py": "e5b3f7e24a74e120e59a0fb417b8679cabe679ee86bd1b379d5d0d0cce516ef8",
+    "docs/operations/phase15-offline-inbox-contract.md": "e0667ed495f42e76f65b5b7bc135ae6d5030e93caaa29bbcd52f49cd0c4fa632",
+    "coordination_runtime/state_controller.py": "a6b2a776337b10f239cce9a5fb02e03294acdaa04b40f8baeab91e4db5da412e"
+  },
+  "source_pins_match": true,
+  "command": [
+    "C:\\Users\\v1728\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "-m",
+    "pytest",
+    "tests/scripts/test_offline_inbox.py",
+    "tests/scripts/test_phase15_github_durability.py",
+    "-q",
+    "--junitxml=coordination\\evidence\\phase15-github-01\\durability\\attempt-1.junit.xml"
+  ],
+  "utc_start": "2026-10-20T16:52:07.719791+00:00",
+  "utc_end": "2026-10-20T16:52:10.459068+00:00",
+  "duration_seconds": 2.855671999976039,
+  "exit_code": 2,
+  "attempt": 1,
+  "passed": 0,
+  "failed": 0,
+  "errors": 1,
+  "skipped": 0,
+  "baseline_synthetic_process_budget": {
+    "max_concurrent": 6,
+    "total": 12
+  },
+  "new_test_child_processes": 0
+}

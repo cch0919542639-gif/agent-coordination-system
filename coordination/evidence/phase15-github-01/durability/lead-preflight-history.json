@@ -1,0 +1,6 @@
+{
+  "initial_driver_failure": "Default cp950 decoding failed on B UTF-8 metadata before starting pytest",
+  "pytest_started": false,
+  "fix": "Explicit UTF-8 JSON reads;no task source changes",
+  "additional_test_attempts": 0
+}

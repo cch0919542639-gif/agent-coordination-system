@@ -1,7 +1,7 @@
 ---
 task_id: phase15-github-durability-01
 phase: phase15-github-01
-status: READY
+status: REVIEW
 owner: phase15-gigabyte-worker
 reviewer: codex-phase15-github-review
 priority: high

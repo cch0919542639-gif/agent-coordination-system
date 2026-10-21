@@ -1,5 +1,16 @@
 # Progress
 
+## B delivery independently verified (2026-10-21)
+
+Technically complete B delivery is verified from PR5/head2a76667:94passed
+(88baseline+6new),15 independent checks passed,five source pins unchanged.
+Local isolated A+B candidate9114fe6 passed108tests (88+14+6). B board state
+is REVIEW pending formal PR integration,not READY/unclaimed. No B test/source
+code was merged into this published branch by this review-only update.
+See durability/lead-verification-summary.md under phase15-github-01 evidence.
+Older B-pending statements below are dated history;do not redispatch B work.
+
+
 ## Angeline implementation completed (2026-10-21)
 
 Current Codex session executed phase15-github-validation-01 on angeline;

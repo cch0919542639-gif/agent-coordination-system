@@ -1,5 +1,12 @@
 # Phase15：兩台電腦各自領取任務
 
+## Verified delivery status (2026-10-21)
+
+A is DONE. B delivered PR5 and passed independent review:94tests;local
+combined candidate108tests pass. Do not redispatch either task. Formal PR
+integration remains pending;older READY instructions below are history.
+
+
 ## Current status (2026-10-21)
 
 A/angeline is DONE:current Codex session executed the assignment,102 tests pass

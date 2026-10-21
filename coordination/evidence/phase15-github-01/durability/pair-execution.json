@@ -1,0 +1,58 @@
+{
+  "scope": "Local isolated combination of accepted A and submitted B;not actual PR merge or publication",
+  "review_candidate": "9114fe64bfdac65fc483187dfd23bf5f201cd6ba",
+  "A_tested_candidate": "ff18ea99922ece71432c0b73a7158170ef53ff25",
+  "B_tested_candidate": "79ea5112a6e56956bf980ed1f4c43e09894807cf",
+  "B_PR_head": "2a76667b19df281d0893bd0bf422cf5187331adf",
+  "observed_hostname": "angeline",
+  "OS": "Windows-11-10.0.26300-SP0",
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "pytest": "9.1.1",
+  "source_pins": {
+    "coordination_runtime/__init__.py": "7b004d7a4de1a58463c2061fad6c3840dbf59629fd96d2f84d748486a73b30d4",
+    "coordination_runtime/offline_inbox.py": "850c790244045f64bfdc7ed106afe82180ebda9a4d5bba40239ffcdfdbbe5d16",
+    "tests/scripts/test_offline_inbox.py": "e5b3f7e24a74e120e59a0fb417b8679cabe679ee86bd1b379d5d0d0cce516ef8",
+    "docs/operations/phase15-offline-inbox-contract.md": "e0667ed495f42e76f65b5b7bc135ae6d5030e93caaa29bbcd52f49cd0c4fa632",
+    "coordination_runtime/state_controller.py": "a6b2a776337b10f239cce9a5fb02e03294acdaa04b40f8baeab91e4db5da412e"
+  },
+  "new_test_hashes": {
+    "tests/scripts/test_phase15_github_validation.py": "38f707647e2e8e85ac95569f1500b0801b3bdcd4908bb66484ebbda609dc968b",
+    "tests/scripts/test_phase15_github_durability.py": "a74f5eec77d047ba75e073f6bdf8c8b53eedfcd9173e15e09ce2eb9b93fef826"
+  },
+  "command": [
+    "python",
+    "-m",
+    "pytest",
+    "tests/scripts/test_offline_inbox.py",
+    "tests/scripts/test_phase15_github_validation.py",
+    "tests/scripts/test_phase15_github_durability.py",
+    "-q",
+    "--basetemp=<fresh task-specific scratch>",
+    "--junitxml=coordination/evidence/phase15-github-01/durability/pair-tests.xml"
+  ],
+  "UTC_start": "2026-10-21T02:00:40.447100+00:00",
+  "UTC_end": "2026-10-21T02:01:19.106024+00:00",
+  "elapsed_seconds": 38.657,
+  "exit_code": 0,
+  "timeout": false,
+  "angeline_pytest_invocations_total": 3,
+  "previous_A_invocations": 2,
+  "this_integration_invocations": 1,
+  "max_angeline_invocations": 3,
+  "further_retry_allowed": false,
+  "preflight_failure": "lead-preflight-history.json;no pytest started",
+  "new_provider_calls": 0,
+  "direct_peer_connections": 0,
+  "junit": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "108",
+      "time": "37.438",
+      "timestamp": "2026-10-21T10:00:41.310699+08:00",
+      "hostname": "angeline"
+    }
+  ]
+}

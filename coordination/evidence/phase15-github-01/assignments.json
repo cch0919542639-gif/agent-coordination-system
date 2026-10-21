@@ -24,9 +24,13 @@
       "machine_label": "gigabyte-202509",
       "worker_branch": "codex/phase15-github-durability-01",
       "worker_base_commit": "910cb9175870fd6f3df6e699b632f85cb0a97bf4",
-      "task_card": "coordination/task-board/ready/2026-10-20_phase15-github-durability-01_durability-tests.md",
-      "state": "READY,not claimed or executed",
-      "evidence_directory": "coordination/evidence/phase15-github-01/durability/"
+      "task_card": "coordination/task-board/review/2026-10-20_phase15-github-durability-01_durability-tests.md",
+      "state": "REVIEW;B delivery independently accepted for integration;PR5 remains OPEN",
+      "evidence_directory": "coordination/evidence/phase15-github-01/durability/",
+      "task_card_at_worker_base": "coordination/task-board/ready/2026-10-20_phase15-github-durability-01_durability-tests.md",
+      "tested_candidate": "79ea5112a6e56956bf980ed1f4c43e09894807cf",
+      "submitted_PR_head": "2a76667b19df281d0893bd0bf422cf5187331adf",
+      "baseline_plus_new_tests_passed": 94
     }
   ],
   "permissions": "Read/claim/execute only the assigned local scoped task after verifying published base. This approval publishes only handoff branch; worker branch/PR upload follows that machine human authorization. No self acceptance or merge.",
@@ -38,7 +42,10 @@
     "new_model_provider_calls": 0,
     "paid_services": 0
   },
-  "actual_worker_claims": 1,
-  "actual_B_executions": 0,
-  "completed_worker_tasks": 1
+  "actual_worker_claims": 2,
+  "actual_B_executions": 1,
+  "completed_worker_tasks": 1,
+  "verified_worker_deliveries": 2,
+  "local_combined_tests_passed": 108,
+  "formal_B_PR_merge": false
 }

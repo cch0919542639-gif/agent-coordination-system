@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\v1728\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "scripts/validate_coordination_files.py"
+  ],
+  "utc_start": "2026-10-20T16:53:59.745964+00:00",
+  "utc_end": "2026-10-20T16:54:00.065433+00:00",
+  "exit_code": 1,
+  "stdout": "Coordination validation failed:\n- coordination\\incidents\\2026-10-21_phase15-github-durability-01_fixture-import.md: missing label `## Exact Blocker`\n- coordination\\incidents\\2026-10-21_phase15-github-durability-01_fixture-import.md: missing label `## Scope / Risk Impact`\n",
+  "stderr": ""
+}
