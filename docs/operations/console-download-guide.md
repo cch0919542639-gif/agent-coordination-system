@@ -21,6 +21,11 @@ Angle-bracket values are placeholders. Use the commit printed in the release
 handoff. These commands do not install dependencies, create accounts, push or
 enable workers. The runtime uses Python's standard library.
 
+The examples select Python3.12 with `py -3.12`. If your computer already has
+Python3.13 or later, use its selector (for example `py -3.13`) or that interpreter's
+full executable path throughout; you do not need an additional Python3.12
+installation. Confirm the selected interpreter is3.12+ with `--version`.
+
 ## Initialize explicitly on this computer
 
 Select three separate absolute canonical paths: the downloaded repository,

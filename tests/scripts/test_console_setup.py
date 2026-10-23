@@ -1,8 +1,10 @@
 """New private setup only: replay/refusal and real finite foreground HTTP."""
 import http.client
+import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import socket
 import sqlite3
 import subprocess
@@ -25,7 +27,8 @@ def config(tmp_path):
 
 
 def snapshot(root):
-    return {p.name: p.read_bytes() for p in Path(root).iterdir()}
+    # Do not expose private login contents in pytest assertion diagnostics.
+    return {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in Path(root).iterdir()}
 
 
 def test_initialization_replay_preserves_every_byte_and_disabled_binding(config):
@@ -49,6 +52,20 @@ def test_replay_configuration_mismatch_refuses_before_mutation(config, field, va
     with pytest.raises(StateError):
         setup.initialize(config | {field: value})
     assert snapshot(config['state_dir']) == before
+
+
+def test_copied_private_root_refuses_stored_path_mismatch(config):
+    setup.initialize(config)
+    root = Path(config['state_dir']); moved = root.with_name('copied-private')
+    moved.mkdir(); setup.private_directory(moved)
+    for path in root.iterdir():
+        shutil.copyfile(path, moved / path.name)
+        if os.name != 'nt': (moved / path.name).chmod(0o600)
+    before = snapshot(moved)
+    with pytest.raises(StateError, match='configuration differs'):
+        setup.load(moved)
+    assert snapshot(moved) == snapshot(root) == before
+    setup.load(root)
 
 
 @pytest.mark.parametrize('kind', ['foreign', 'schema', 'root', 'workspace', 'mode', 'auth', 'login'])

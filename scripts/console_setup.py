@@ -138,7 +138,7 @@ def load(state_dir, expected=None):
     if not isinstance(config, dict) or set(config) != {'schema_version', 'repo', 'workspaces', 'project_id', 'state_dir', 'username', 'role'}:
         raise StateError('Configuration shape invalid.')
     rebuilt = settings(**{k: config[k] for k in config if k != 'schema_version'})
-    if type(config['schema_version']) is not int or config != rebuilt or (expected is not None and config != expected):
+    if type(config['schema_version']) is not int or config != rebuilt or Path(config['state_dir']) != root or (expected is not None and config != expected):
         raise StateError('Existing configuration differs; no files were changed.')
     p = ParallelController(StateController(root / 'runtime.db'), config['repo'], config['workspaces'], config['project_id'])
     with p.controller._db() as db:
