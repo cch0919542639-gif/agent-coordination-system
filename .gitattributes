@@ -28,3 +28,17 @@ web/static/index.html -text
 scripts/console_setup.py -text
 tests/scripts/test_console_setup.py -text
 docs/operations/console-download-guide.md -text
+
+# Preserve selected accepted console board snapshots.
+coordination/task-board/done/2026-10-23_console-package-01_downloadable-console-source.md -text
+coordination/task-board/done/2026-10-23_console-package-review-01_independent-source-review.md -text
+coordination/task-board/done/2026-10-23_console-bootstrap-01_local-console-initialization.md -text
+coordination/task-board/done/2026-10-23_console-bootstrap-review-01_independent-bootstrap-review.md -text
+coordination/reviews/review-console-package-01.md -text
+coordination/reviews/review-console-package-review-01.md -text
+coordination/reviews/review-console-bootstrap-01.md -text
+coordination/reviews/review-console-bootstrap-review-01.md -text
+coordination/delivery/console-package-01-delivery-report.md -text
+coordination/delivery/console-package-review-01-delivery-report.md -text
+coordination/delivery/console-bootstrap-01-delivery-report.md -text
+coordination/delivery/console-bootstrap-review-01-delivery-report.md -text
