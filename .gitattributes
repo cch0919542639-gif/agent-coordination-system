@@ -25,3 +25,6 @@ web/read_model.py -text
 web/static/app.css -text
 web/static/app.js -text
 web/static/index.html -text
+scripts/console_setup.py -text
+tests/scripts/test_console_setup.py -text
+docs/operations/console-download-guide.md -text
