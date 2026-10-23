@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>協作控制台</title><link rel="stylesheet" href="/app.css"><script src="/app.js" defer></script></head>
+<body>
+<a class="skip" href="#main">跳到主要內容</a>
+<section id="login" class="login-wrap" aria-labelledby="login-title">
+ <div class="login-card"><span class="eyebrow">COORDINATION SYSTEM / 2.0</span><h1 id="login-title">協作，清楚有序。</h1><p>登入本機控制台，查看任務、執行紀錄與審查證據。</p>
+ <form id="login-form"><label for="username">使用者名稱</label><input id="username" name="username" required autocomplete="username" maxlength="100"><label for="token">存取權杖</label><input id="token" name="token" type="password" required autocomplete="current-password" maxlength="43" minlength="43"><button type="submit" class="primary">登入控制台 <span aria-hidden="true">→</span></button></form><p id="login-error" class="error" role="alert"></p><small>僅限本機 · 127.0.0.1 · 權限由伺服器檢查</small></div>
+</section>
+<div id="console" class="shell" hidden>
+ <aside><div class="brand"><span class="brand-mark" aria-hidden="true">◈</span><div>協作控制台<small>COORDINATION / 2.0</small></div></div><p class="nav-label">工作空間</p><nav aria-label="主要導覽">
+ <button data-view="overview" aria-current="page"><span aria-hidden="true">▦</span> 總覽</button><button data-view="board"><span aria-hidden="true">▤</span> 任務看板</button><button data-view="monitor"><span aria-hidden="true">◉</span> Agent 監控</button><button data-view="workspaces"><span aria-hidden="true">▱</span> 工作區</button><button data-view="reviews"><span aria-hidden="true">◇</span> 審查中心</button><button data-view="events"><span aria-hidden="true">≋</span> 事件紀錄</button><button data-view="settings"><span aria-hidden="true">⚙</span> 設定與操作</button>
+ </nav><div class="aside-foot"><span class="dot"></span> 本機連線<small>有限執行 · 明確權限</small></div></aside>
+ <div class="workspace"><header><span id="project" class="project">本機專案</span><div class="account"><span id="identity"></span><span id="role" class="badge"></span><button id="logout" class="quiet">登出</button></div></header>
+ <main id="main" tabindex="-1"><div class="page-heading"><div><p class="eyebrow">YOUR LOCAL WORKSPACE</p><h1 id="title">工作總覽</h1><p id="subtitle">從任務到證據，掌握目前進度。</p></div><button id="refresh" class="secondary">重新整理 ↻</button></div>
+ <div class="status-line"><span id="connection" role="status">讀取中</span><span id="updated"></span></div><p id="error" class="error" role="alert"></p><div id="content" aria-live="polite"></div>
+ <div class="pagination"><button id="previous" class="secondary" hidden>上一頁</button><span id="page-info"></span><button id="next" class="secondary" hidden>下一頁</button></div>
+ <section id="operations" class="panel" hidden aria-labelledby="operations-title"><div class="panel-heading"><h2 id="operations-title">受控操作</h2><span class="badge">先預覽，再確認</span></div><p>Operator 可檢查與提出預覽；Administrator 才能確認執行。Controller 會重新檢查狀態與安全條件。</p>
+ <form id="action-form"><label for="action">操作</label><select id="action"><option value="resource.probe">採樣資源／必要時開啟保護</option><option value="resource.reset">重設資源保護</option><option value="recovery.reconcile">請求恢復執行</option><option value="board.reconcile">調和任務板意圖</option><option value="board.cancel">取消任務板意圖</option><option value="parallel.disable">停止接納／停用 Parallel Mode（須靜止）</option></select><div id="action-fields" class="form-grid"></div><button type="submit" class="secondary">產生預覽</button></form>
+ <form id="inspect-form" class="inspect-form"><label for="run-id">即時檢查執行 ID</label><div class="input-row"><input id="run-id" required maxlength="100" placeholder="run-task-a"><button type="submit" class="secondary">檢查</button></div></form>
+ <pre id="action-result" tabindex="0" aria-label="操作預覽與結果" hidden></pre><button id="confirm" class="danger" hidden>確認執行此預覽</button><p id="action-message" role="status"></p>
+ </section><footer>資料來自本機任務板與 Controller。程序收據與審查紀錄的即時有效性須重新核對。</footer></main></div>
+</div></body></html>

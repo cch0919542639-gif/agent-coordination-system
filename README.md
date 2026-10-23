@@ -120,3 +120,11 @@ and portable download/bootstrap path. Existing safety validation and status
 projection remain available; execution workers cannot merge or accept work.
 See [download setup and real verification](docs/operations/github-download-verification.md)
 and [finite controller contract](docs/operations/local-agent-completion-loop.md).
+
+## Local collaboration console candidate
+
+P1a source and P1b Windows initialization are accepted locally. Start with the
+[download/setup guide](docs/operations/console-download-guide.md), then check
+[release status and source/review provenance](docs/operations/console-release-status.md).
+Publication and actual second-computer verification remain pending; this console
+views local task/runtime state and does not create or dispatch tasks.
