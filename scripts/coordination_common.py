@@ -20,7 +20,27 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def parallel_marker(root: Path) -> Path:
+    return Path(root) / "coordination/monitor/runtime/coordination-v2/parallel-mode.json"
+
+
+def require_serial(root: Path = ROOT) -> None:
+    marker = parallel_marker(root)
+    if marker.exists() or marker.is_symlink():
+        raise ValueError("Parallel Mode requires the coordination controller.")
+
+
+def guard_shared_write(path: Path) -> None:
+    path = Path(path).absolute()
+    for candidate in {path, path.resolve()}:
+        for parent in candidate.parents:
+            if parent.name.casefold() == "coordination":
+                relative = candidate.relative_to(parent)
+                if relative.parts and relative.parts[0].casefold() in {"task-board", "delivery", "reviews", "progress"}:
+                    require_serial(parent.parent)
+
 def write_text(path: Path, content: str) -> None:
+    guard_shared_write(path)
     path.write_text(content, encoding="utf-8", newline="\n")
 
 
@@ -127,6 +147,7 @@ def list_tasks(states: tuple[str, ...] | None = None) -> list[tuple[Path, dict[s
 
 
 def move_task(path: Path, destination_state: str, front_matter: dict[str, object], body: str) -> Path:
+    guard_shared_write(path)
     destination_dir = TASK_BOARD_DIR / destination_state
     destination_dir.mkdir(parents=True, exist_ok=True)
     destination_path = destination_dir / path.name
