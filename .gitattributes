@@ -1,0 +1,27 @@
+# Preserve exact pinned archive bytes across Windows clones.
+coordination_runtime/__init__.py -text
+coordination_runtime/board_projection.py -text
+coordination_runtime/parallel_policy.py -text
+coordination_runtime/parallel_runtime.py -text
+coordination_runtime/recovery_manager.py -text
+coordination_runtime/resource_guard.py -text
+coordination_runtime/state_controller.py -text
+coordination_runtime/workspace.py -text
+docs/operations/board-intent-contract.md -text
+docs/operations/parallel-mode-contract.md -text
+docs/operations/recovery-resource-contract.md -text
+docs/operations/runtime-state-contract.md -text
+docs/operations/web-console-contract.md -text
+docs/operations/web-console-guide.md -text
+scripts/coordination_common.py -text
+scripts/worker_process_guard.py -text
+tests/scripts/test_board_projection.py -text
+tests/scripts/test_parallel_runtime.py -text
+tests/scripts/test_state_controller.py -text
+tests/scripts/test_web_console.py -text
+web/__init__.py -text
+web/api.py -text
+web/read_model.py -text
+web/static/app.css -text
+web/static/app.js -text
+web/static/index.html -text
