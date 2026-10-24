@@ -1,6 +1,5 @@
 """Explicit local console initialization and finite foreground serving (Python 3.12+)."""
 import argparse
-import csv
 import ctypes
 import hashlib
 import json
@@ -23,12 +22,18 @@ FILES = {'config.json', 'auth.json', 'runtime.db', 'login.txt'}
 
 
 def current_sid():
-    result = subprocess.run(['whoami', '/user', '/fo', 'csv', '/nh'],
-                            capture_output=True, text=True, check=True, timeout=10)
-    sid = next(csv.reader([result.stdout.strip()]))[1]
-    if not re.fullmatch(r'S-1-[0-9-]+', sid):
+    # Account-name bytes depend on Windows locale. Parse only the ASCII SID;
+    # never decode the name or let subprocess guess an output text encoding.
+    try:
+        result = subprocess.run(['whoami', '/user', '/fo', 'csv', '/nh'],
+                                capture_output=True, check=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        raise StateError('Windows user identity unavailable.') from None
+    raw = result.stdout
+    match = re.fullmatch(rb'"(?:[^"\r\n]|"")*","(S-1-[0-9]+(?:-[0-9]+){1,15})"\r?\n?', raw) if isinstance(raw, bytes) and len(raw) <= 16384 else None
+    if match is None:
         raise StateError('Windows user identity unavailable.')
-    return sid
+    return match[1].decode('ascii')
 
 
 def require_private(path, inherited=False):

@@ -9,6 +9,7 @@ import socket
 import sqlite3
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -16,6 +17,68 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT), str(ROOT / 'scripts')]
 import console_setup as setup
 from coordination_runtime.state_controller import StateError
+
+
+@pytest.mark.parametrize('payload,default_encoding', [
+    ('"example\\測試使用者","S-1-5-21-100-200-300-1001"\r\n'.encode('utf-8'), 'cp950'),
+    ('"example\\測試使用者","S-1-5-21-100-200-300-1001"\r\n'.encode('cp950'), 'utf-8'),
+    (b'"example\\\xff","S-1-5-21-100-200-300-1001"\r\n', 'ascii'),
+    ('"example\\測試, ""user""","S-1-5-21-100-200-300-1001"\r\n'.encode('utf-8'), 'cp950'),
+], ids=['utf8-under-cp950', 'cp950-under-utf8', 'raw-nontext', 'quoted-comma'])
+def test_current_sid_never_decodes_non_ascii_account_output(monkeypatch, payload, default_encoding):
+    def run(command, **kwargs):
+        assert command == ['whoami', '/user', '/fo', 'csv', '/nh']
+        assert kwargs['capture_output'] and kwargs['check'] and kwargs['timeout'] == 10
+        raw = payload.decode(default_encoding) if kwargs.get('text') else payload
+        return SimpleNamespace(stdout=raw, returncode=0)
+    monkeypatch.setattr(setup.subprocess, 'run', run)
+    assert setup.current_sid() == 'S-1-5-21-100-200-300-1001'
+
+
+@pytest.mark.parametrize('payload', [None, b'', b'"user"\r\n',
+    b'"user","S-1-5-"\r\n', b'"user","S-1-5-21"\r\n"other","S-1-5-22"\r\n',
+    b'"user","S-1-5-21"junk', b'"user","S-1-5-21\xff"\r\n', b'x' * 16385],
+    ids=['none', 'empty', 'missing-sid', 'invalid-sid', 'multiple-records', 'suffix', 'nonascii-sid', 'oversized'])
+def test_current_sid_refuses_missing_or_malformed_output(monkeypatch, payload):
+    def run(command, **kwargs):
+        output = payload.decode('ascii') if isinstance(payload, bytes) and kwargs.get('text') else payload
+        return SimpleNamespace(stdout=output, returncode=0)
+    monkeypatch.setattr(setup.subprocess, 'run', run)
+    with pytest.raises(StateError, match='identity unavailable'):
+        setup.current_sid()
+
+
+@pytest.mark.parametrize('failure', [subprocess.CalledProcessError(1, ['whoami']),
+                                    subprocess.TimeoutExpired(['whoami'], 10), OSError('synthetic refusal')])
+def test_current_sid_command_failure_is_fail_closed(monkeypatch, failure):
+    def run(*args, **kwargs):
+        raise failure
+    monkeypatch.setattr(setup.subprocess, 'run', run)
+    with pytest.raises(StateError, match='identity unavailable'):
+        setup.current_sid()
+
+
+def test_current_sid_isolated_child_ignores_utf8_environment(tmp_path):
+    code = '''import sys
+from types import SimpleNamespace
+sys.path.insert(0,sys.argv[1])
+import console_setup as setup
+payload='"example\\\\測試使用者","S-1-5-21-100-200-300-1001"\\r\\n'.encode('utf-8')
+def run(*args,**kwargs):
+    if kwargs.get('text'):
+        try: return SimpleNamespace(stdout=payload.decode('cp950'))
+        except UnicodeDecodeError: return SimpleNamespace(stdout=None)
+    return SimpleNamespace(stdout=payload)
+setup.subprocess.run=run
+assert sys.flags.isolated and sys.flags.utf8_mode==0
+assert setup.current_sid()=='S-1-5-21-100-200-300-1001'
+print('isolated SID extraction passed')
+'''
+    result = subprocess.run([sys.executable, '-I', '-X', 'utf8=0', '-B', '-c', code, str(ROOT / 'scripts')],
+                            cwd=tmp_path, capture_output=True, text=True, timeout=20,
+                            env=dict(os.environ, PYTHONUTF8='1'))
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == 'isolated SID extraction passed'
 
 
 @pytest.fixture
