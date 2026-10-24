@@ -1,5 +1,16 @@
 # Progress
 
+## Console Fresh-Download Verification Evidence (2026-10-25)
+
+The independently downloaded c7f7dee console candidate failed direct Windows /
+Python3.13.15 initialization because whoami output could not decode as CP950.
+Explicit UTF-8 enabled init/replay, seven API views, Viewer refusals and finite
+restart checks, but the focused suite remains114 passed /1 failed because its
+isolated CLI child reproduces the encoding failure. Acceptance remains blocked;
+no product code or formal task acceptance changed. The sanitized report and
+evidence are in
+`coordination/delivery/console-download-verification-20261024-report.md`.
+
 ## Current State
 
 - Central monitor and owner-strict routing are active for the local

@@ -1,0 +1,8 @@
+{
+  "preferred_encoding": "cp950",
+  "utf8_mode": 0,
+  "whoami_decoding_success": {
+    "utf-8": true,
+    "cp950": false
+  }
+}

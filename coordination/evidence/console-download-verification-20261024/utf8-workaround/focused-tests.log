@@ -1,0 +1,49 @@
+......................F................................................. [ 62%]
+...........................................                              [100%]
+================================== FAILURES ===================================
+___ test_cli_new_directory_login_seven_views_viewer_refusal_and_finite_exit ___
+
+config = {'schema_version': 1, 'repo': '<USER_HOME>\\AppData\\Local\\Temp\\pytest-of-user\\pytest-277\\test_cli_new_direc...al\\Temp\\pytest-of-user\\pytest-277\\test_cli_new_directory_login_s0\\workspaces', 'project_id': 'test-project', ...}
+tmp_path = WindowsPath('<USER_HOME>/AppData/Local/Temp/pytest-of-user/pytest-277/test_cli_new_directory_login_s0')
+
+    def test_cli_new_directory_login_seven_views_viewer_refusal_and_finite_exit(config, tmp_path):
+        command = [sys.executable, '-I', '-B', str(ROOT / 'scripts/console_setup.py')]
+        result = subprocess.run(command + ['init', '--repo', config['repo'], '--workspaces', config['workspaces'],
+            '--project-id', config['project_id'], '--state-dir', config['state_dir']],
+            cwd=tmp_path, capture_output=True, text=True, timeout=20)
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: Exception in thread Thread-1 (_readerthread):
+E         Traceback (most recent call last):
+E           File "<USER_HOME>\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1044, in _bootstrap_inner
+E             self.run()
+E             ~~~~~~~~^^
+E           File "<USER_HOME>\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 995, in run
+E             self._target(*self._args, **self._kwargs)
+E             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "<USER_HOME>\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1615, in _readerthread
+E             buffer.append(fh.read())
+E                           ~~~~~~~^^
+E         UnicodeDecodeError: 'cp950' codec can't decode byte 0xe6 in position 1: illegal multibyte sequence
+E         Traceback (most recent call last):
+E           File "<CHECKOUT>\scripts\console_setup.py", line 247, in <module>
+E             raise SystemExit(main())
+E                              ~~~~^^
+E           File "<CHECKOUT>\scripts\console_setup.py", line 232, in main
+E             created = initialize(config)
+E           File "<CHECKOUT>\scripts\console_setup.py", line 172, in initialize
+E             private_directory(staging)
+E             ~~~~~~~~~~~~~~~~~^^^^^^^^^
+E           File "<CHECKOUT>\scripts\console_setup.py", line 100, in private_directory
+E             sid = current_sid()
+E           File "<CHECKOUT>\scripts\console_setup.py", line 28, in current_sid
+E             sid = next(csv.reader([result.stdout.strip()]))[1]
+E                                    ^^^^^^^^^^^^^^^^^^^
+E         AttributeError: 'NoneType' object has no attribute 'strip'
+E
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['<USER_HOME>\\AppData\\Local\\Programs\\Python\\Python313\\python.exe', '-I', '-B', 'D:\\a...[1]\n                           ^^^^^^^^^^^^^^^^^^^\nAttributeError: \'NoneType\' object has no attribute \'strip\'\n').returncode
+
+tests\scripts\test_console_setup.py:174: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/scripts/test_console_setup.py::test_cli_new_directory_login_seven_views_viewer_refusal_and_finite_exit
+1 failed, 114 passed in 24.50s

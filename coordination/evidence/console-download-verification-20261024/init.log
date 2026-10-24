@@ -1,0 +1,27 @@
+Exception in thread Thread-1 (_readerthread):
+Traceback (most recent call last):
+  File "<USER_HOME>\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1044, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "<USER_HOME>\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 995, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<USER_HOME>\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1615, in _readerthread
+    buffer.append(fh.read())
+                  ~~~~~~~^^
+UnicodeDecodeError: 'cp950' codec can't decode byte 0xe6 in position 1: illegal multibyte sequence
+Traceback (most recent call last):
+  File "<CHECKOUT>\scripts\console_setup.py", line 247, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "<CHECKOUT>\scripts\console_setup.py", line 232, in main
+    created = initialize(config)
+  File "<CHECKOUT>\scripts\console_setup.py", line 172, in initialize
+    private_directory(staging)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "<CHECKOUT>\scripts\console_setup.py", line 100, in private_directory
+    sid = current_sid()
+  File "<CHECKOUT>\scripts\console_setup.py", line 28, in current_sid
+    sid = next(csv.reader([result.stdout.strip()]))[1]
+                           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
