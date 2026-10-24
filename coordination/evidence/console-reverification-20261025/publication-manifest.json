@@ -1,0 +1,23 @@
+{
+  "tested_commit": "92e1248b63dee44a607296b3d63f61207b61f09a",
+  "publication_date": "2026-10-25",
+  "redactions": [
+    "hostname",
+    "Windows username/home",
+    "local checkout/private/workspace root paths",
+    "trailing whitespace"
+  ],
+  "original_evidence_retained_locally": true,
+  "files": {
+    "focused-tests.log": "165f04349df64acecbb245eb63cd4db1372048e4085cd08ce8510ccc47931daa",
+    "git-status.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "head.log": "72a96219f8ee8ae94386a0a859f01197818c183b9f29a887255ff9849f960ca4",
+    "init-conflict.log": "9d1a256bb112b69e9443584b10318ca8c88b4072073c0dfedd5880dde56be1e5",
+    "init-replay.log": "cd2006aaf136237424e8b7235e8c414785d2189150fe26be4ce987b10d94cd28",
+    "init.log": "86ebcf70ba09940c31d9625b0bd8181c2588ed3ff45ab33beddc1f1bb137da95",
+    "junit.xml": "204b87ee3a26467ee141e84fe47ea08c64ee7f0c09e675ee07686a6d3008b04f",
+    "results.json": "a53d27c46ad912122a1c595163e87dda5dc562bd176ed011adebff8de7db7f0d",
+    "serve-0.log": "f4f0850f7f1609677c49629d185dc413af6fad10be07e31388f52239a9bb7002",
+    "serve-1.log": "e8143c31840834f2e95128e429a66194edcc26c09b9980fbb79d6744b1fc0795"
+  }
+}
