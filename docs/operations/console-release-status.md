@@ -1,54 +1,59 @@
-# Local console delivery status
+# Repaired console candidate: acceptance HOLD
 
-2026-10-23: P1a source packaging and P1b local Windows initialization are accepted.
-This is a local reviewable candidate. Publication and actual second-computer
-acceptance are pending; P1 is not complete. Task creation/assignment is P2 and
-is not available through this console.
+2026-10-25: the Windows SID encoding repair is accepted locally at code/test
+commit `8a5bc1693e8f8e8ea0f476424b59d37346f44b8a`. This metadata layer prepares
+a repaired release; it has not been published. P1 acceptance remains HOLD until
+fresh exact-release download/init/replay/login/stop/restart in the original failing
+environment succeeds. P2/P3 planning waits for that result. Task creation/assignment
+is not available through the console.
 
-Start with the self-contained [download and setup guide](console-download-guide.md).
-It covers Git/version selection, Python3.12+ selectors, explicit local init,
-private login handling, finite foreground startup, stop/restart and recovery.
-The runtime uses Python's standard library and Git; pytest is needed for tests only.
+Original release `c7f7dee2c356009f51fbe63434ecf0c5400e7571` was published on
+origin `codex/console-bootstrap-01` with draft PR6 into main; no main merge is
+claimed. Evidence `4a0f61d76c78ac5bf85f61c996c8c77a539ea970` reports its original
+initialization acceptance FAIL:114passed/1failed under CP950/non-ASCII account
+output. The later PYTHONUTF8 workaround does not qualify that acceptance.
+Physical host identity is unproven; this repair does not prove two distinct hosts.
 
-## Provenance and portable board
+## Use the repaired source
 
-Accepted code/test tip: `c3020c4d73b6965aa9f03ea2e60eabcaff587c99` on
-`codex/console-bootstrap-01`. P1a tip: `5daa318d2d9c2b4dd4ff93081396bd452212c4a1`;
-main base: `bfc5163af6dca4b9b7dec6b599563e3cbf984cac`. Release metadata is layered
-above that accepted tip; its own commit is supplied by the release handoff.
-The proposed later target is origin branch `codex/console-bootstrap-01` with a
-draft PR into main. No push, PR or merge is authorized or claimed here.
+The [download/setup guide](console-download-guide.md) covers exact-version
+selection, Python3.12+ selectors, new private initialization, local login and
+finite foreground stop/restart. The SID repair requires no PYTHONUTF8 workaround:
+command output stays bytes, only a validated ASCII SID field is decoded, and
+account-name bytes are never decoded. Existing permissions/ACL checks remain.
+Runtime uses Python's standard library and Git; pytest is needed for tests only.
 
-The downloaded board contains the pinned main snapshot (101 cards) plus four
-accepted console source/review cards (105 total). It does not contain every task
-in the separate integration board currently viewed on angeline. Each computer
-views its own checkout and local runtime. Only explicit Git operations exchange
-tracked task changes; refreshing the browser does not synchronize computers.
-Create new private configuration on each computer; never copy live accounts,
-tokens, runtime DBs or ACKs between computers.
+Accepted initial bootstrap: `c3020c4d73b6965aa9f03ea2e60eabcaff587c99`;
+P1a packaging: `5daa318d2d9c2b4dd4ff93081396bd452212c4a1`;
+main base: `bfc5163af6dca4b9b7dec6b599563e3cbf984cac`. The repair changes setup
+and its tests; the guide now adds revalidation instructions. The release handoff
+supplies the later metadata commit; no document contains its own commit SHA.
+Repaired publication to origin `codex/console-bootstrap-01` and draft PR6 update
+require a separate exact-target authorization; no remote action occurs here.
 
-[Portable manifest](../../coordination/evidence/console-release-01/manifest.json)
-pins29 accepted source/test/doc/static files and12 exact accepted board snapshots
-(four DONE cards, four canonical decisions, four deliveries).
+## Portable board and evidence
+
+This checkout contains main's101card snapshot plus four earlier accepted console
+cards and two accepted encoding source/review cards:107total. It is separate from
+the larger integration board currently viewed on angeline. Each computer views
+its own checkout/runtime; explicit Git operations exchange tracked changes.
+Browser refresh does not synchronize computers. Create new private state per
+computer; do not copy live accounts, tokens, runtime DBs or ACKs.
+
+[Manifest](../../coordination/evidence/console-release-01/manifest.json) pins29
+source/test/doc/static files and18exact snapshots (six DONE cards, six canonical
+reviews, six deliveries). Two source/test pins supersede c7f7dee; the guide pin
+identifies this metadata layer separately. Prior12snapshots remain unchanged.
 [Verification summary](../../coordination/evidence/console-release-01/verification-summary.md)
-explains tests, failures and remaining gates. Copied cards/reports are historical
-acceptance snapshots: references in them to archive evidence, progress, absolute
-source-checkout provenance or files outside this minimal bundle are not bundled
-live links. Their old delivered/review/pending wording is original history;
-canonical copied decisions and this status state current acceptance. No raw logs,
-transcripts, private initialization receipts or local secrets are bundled.
+retains failure and test lineage. Copied reports/cards are historical snapshots:
+archive evidence/progress paths or absolute source-provenance references outside
+the manifest are not bundled live links. Their prior pending wording remains
+history; copied canonical decisions record local acceptance. No raw logs, private
+initialization receipts, transcripts or live private configuration are bundled.
 
-## Verified scope and remaining gates
-
-P1a producer40 console and separate52 affected checks captured exit0. Independent
-40-case JUnit passes, but its interrupted wrapper did not capture child native
-exit. P1b final current23 bootstrap checks and independent23 checks each captured
-exit0, plus independent same-host fresh-clone init/replay/finite serve with seven
-views200, Viewer write403 and unchanged private bytes. Earlier61/62 runs precede
-the final root-binding repair and are not final combined-suite results.
-
-Actual second-host download/init/login/restart, Python3.13+, expanded symlink/
-junction coverage and whole-repository qualification remain untested. Publication
-needs a separate exact-target authorization; second-machine proof follows the
-published exact commit. No daemon, remote worker launch or dispatch endpoint is
-added by this delivery.
+Final Python3.13 affected131tests captured native0; independent isolated3.13 SID16
+captured native0. Earlier red14fail/2pass and focused3.12bootstrap39 are separate.
+Optional independent boundary probes have two harness failures and remain
+incomplete, not green. These local checks do not replace original-environment
+acceptance. Whole-repository and broader symlink/junction qualification remain
+outside scope. No daemon, worker launch or task dispatch endpoint is added.

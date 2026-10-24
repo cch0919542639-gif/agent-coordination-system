@@ -1,3 +1,52 @@
+# Encoding repair verification continuation (2026-10-25)
+
+Current accepted code/test tip:8a5bc1693e8f8e8ea0f476424b59d37346f44b8a.
+Original publishedc7f7dee and evidence4a0f61d remain historical facts: original
+acceptance FAIL114pass/1fail, CP950/non-ASCII whoami decoding failure. Subsequent
+PYTHONUTF8 workaround is not acceptance, and physical distinct-host identity is
+not proven. P1acceptance HOLD and P2/P3planning deferred until a fresh exact repaired
+release download/init/replay/login/stop/restart succeeds in that original environment.
+Repaired publication still needs exact-target authorization; no remote edits here.
+
+Repair captures raw whoami output, validates one quoted record and decodes only
+its ASCII SID field. Account-name bytes never decode; command/output errors fail
+closed. Existing ACL checks/grants and other setup behavior are unchanged.
+
+| Distinct repair execution | Result | Limits |
+| --- | --- | --- |
+| Original source with16new regressions |14failed/2passed, native1, JUnit2.884s|red reproduction;23deselected; separate CP950 preview error after captured exit |
+| Repaired Python3.12 bootstrap |39passed21.56s, native0|test labels later shortened; final byte binding below |
+| Final Python3.13.15 affected |131passed71.44s, native0|39bootstrap+40web+24state+28board; exact final source/test hashes |
+| Independent Python3.13 isolated SID |16passed1.60s, native0|23deselected;-I -Xutf8=0 with ignored PYTHONUTF8=1 environment |
+| Optional independent boundary children |two native1 harness failures|first incorrect length fixture; corrected child later incorrect lone-CR refusal expectation; incomplete, not green |
+
+Five valid boundary cases and one oversized refusal ran in the corrected optional
+child before its harness assertion failed; later optional cases were not run.
+These failures do not establish a product defect or a passing boundary smoke.
+No new pytest invocation is made for this metadata layer. Final131 includes
+synthetic native ACL/init/replay/finite HTTP/login/seven-view/Viewer403 checks,
+not actual original-host or two-physical-host acceptance. Existing broader
+symlink/junction and whole-repository limits remain. Suites must not be summed.
+
+Manifest now carries29raw/blob source/test/doc/static pins: two repaired code/test
+identities from8a5bc16 supersede predecessor pins, while guide provenance is this
+metadata layer. Prior old pins are retained under superseded_pins. Six new exact
+repair DONE/review/delivery snapshots expand12to18; board105to107. All prior12
+snapshot bytes stay unchanged. Existing source attributes stay intact; six new
+snapshot rules are explicit -text. Remaining archive evidence links in copied
+snapshots are historical/unbundled. No raw logs/private receipts are distributed.
+
+To verify a download from the repository root, load manifest.json using json,
+then check hashlib.sha256(Path(item['path']).read_bytes()).hexdigest() equals
+item['sha256'] for source_pins + accepted_board_snapshots (47files). Git blobs
+identify the same pinned bytes. Manifest equality is integrity, not independent
+authenticity; select the exact handed-off repaired release commit. Current source
+acceptance supersedes old source pins, not the failed original acceptance outcome.
+
+The original2026-10-23 summary below is byte-preserved dated history. Its previous
+current-version,41files,105cards and publication-pending statements are superseded
+by this continuation and release status; original test outcomes remain unchanged.
+
 # Portable verification summary
 
 This evidence-only release packet reruns no product tests. The manifest pins

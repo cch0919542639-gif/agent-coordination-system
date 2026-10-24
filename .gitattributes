@@ -42,3 +42,11 @@ coordination/delivery/console-package-01-delivery-report.md -text
 coordination/delivery/console-package-review-01-delivery-report.md -text
 coordination/delivery/console-bootstrap-01-delivery-report.md -text
 coordination/delivery/console-bootstrap-review-01-delivery-report.md -text
+
+# Preserve accepted locale-repair snapshots.
+coordination/task-board/done/2026-10-25_console-encoding-fix-01_windows-sid-encoding.md -text
+coordination/task-board/done/2026-10-25_console-encoding-review-01_independent-locale-regression-review.md -text
+coordination/reviews/review-console-encoding-fix-01.md -text
+coordination/reviews/review-console-encoding-review-01.md -text
+coordination/delivery/console-encoding-fix-01-delivery-report.md -text
+coordination/delivery/console-encoding-review-01-delivery-report.md -text

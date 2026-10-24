@@ -1,3 +1,22 @@
+## Locale repair and required acceptance rerun (2026-10-25)
+
+Select the repaired release commit supplied in the handoff; its accepted code/test
+base is8a5bc1693e8f8e8ea0f476424b59d37346f44b8a. Original publishedc7f7dee
+failed initialization under CP950/non-ASCII whoami output (114passed/1failed in
+evidence4a0f61d). PYTHONUTF8 is not required by the repair and is not an acceptance
+workaround. The repair reads raw command bytes and decodes only a validated ASCII
+SID; account-name bytes are never decoded, and existing ACL checks are unchanged.
+
+After the repaired release is authorized and published, repeat exact-commit
+download, init, identical replay, login, stop and restart in the original failing
+environment with its ordinary configuration and the chosen isolated interpreter;
+do not add PYTHONUTF8 to make it pass. Preserve the failed attempt as history.
+Local Python3.13 repair tests do not substitute for this acceptance rerun or prove
+a distinct physical host. P1 acceptance remains HOLD; P2/P3 planning waits for the
+rerun. See [current release status](console-release-status.md) for exact evidence
+and publication gates. Initialize only new explicitly chosen private state as
+explained below; do not reset or alter an existing setup to force acceptance.
+
 # Download, initialize and run the local console
 
 This guide describes a Windows Python3.12+ source candidate. Publication and a
