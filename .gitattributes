@@ -51,6 +51,12 @@ coordination/reviews/review-console-encoding-review-01.md -text
 coordination/delivery/console-encoding-fix-01-delivery-report.md -text
 coordination/delivery/console-encoding-review-01-delivery-report.md -text
 
+# Preserve reviewed entry-guard bytes in the integrated release.
+scripts/local_agent_loop.py -text
+scripts/worker_poller.py -text
+coordination/task-board/done/2026-10-25_console-entry-guards-01_legacy-entry-guards.md -text
+coordination/reviews/review-console-entry-guards-01.md -text
+coordination/delivery/console-entry-guards-01-delivery-report.md -text
 # Preserve accepted handoff source and board snapshot bytes.
 coordination_runtime/github_handoff.py -text
 scripts/github_handoff.py -text
@@ -70,3 +76,6 @@ coordination/delivery/console-handoff-ui-01-delivery-report.md -text
 coordination/task-board/done/2026-10-25_console-handoff-review-01.md -text
 coordination/reviews/review-console-handoff-review-01.md -text
 coordination/delivery/console-handoff-review-01-delivery-report.md -text
+coordination/task-board/done/2026-10-25_console-main-readiness-01_integrated-console-validation.md -text
+coordination/reviews/review-console-main-readiness-01.md -text
+coordination/delivery/console-main-readiness-01-delivery-report.md -text

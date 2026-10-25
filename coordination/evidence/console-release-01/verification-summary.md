@@ -1,3 +1,13 @@
+# Main-integrated handoff verification (2026-10-25)
+
+Candidate is a product/test-preserving merge of mainc3682d3 and featurea82c5a7.
+Current regression/clone results belong to console-handoff-main-integration-01;
+old241main and focused handoff results below are historical source-specific runs.
+Manifest has37source pins and36accepted snapshots,73total, with114board cards.
+The live two-computer synchronization/intake gate remains pending; no activation.
+
+## Historical handoff verification (preserved)
+
 # Handoff verification continuation
 
 ## Current accepted handoff candidate (2026-10-25)

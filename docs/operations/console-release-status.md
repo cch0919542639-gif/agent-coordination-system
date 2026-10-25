@@ -1,3 +1,26 @@
+# Handoff candidate integrated with main
+
+Updated2026-10-25. Mainc3682d3 includes merged PR6 and reviewed PR10 guards.
+This candidate merges it into PR9a82c5a7 without rewriting either history.
+Product/test content is the accepted parent union: handoff source1feeca7 plus
+main's guarded legacy loop/activation. Five metadata conflicts are resolved here;
+no new product logic is introduced. Exact final commit/publication is in PR9/Git.
+
+Manifest now pins37source/test/doc/static files and36accepted snapshots
+(twelve DONE cards, canonical reviews and deliveries),73paths total. It preserves
+all prior30feature and21main snapshot identities (18shared). The board has114cards
+including this integration record. A new fixed-candidate regression/clone result
+is recorded under coordination/evidence/console-handoff-main-integration-01/.
+Earlier131/110/241checks below remain scoped to their prior exact sources.
+
+PR9 remains draft pending current integration checks and the required real
+two-computer synchronization/intake acceptance. Synthetic local bare-Git peers
+and harmless runner tests do not prove that live pilot. No watch, runner, provider,
+service, schedule, credentials or permission changes are activated by this work.
+Do not auto-accept canonical tasks from runtime FINISHED/FAILED/UNKNOWN receipts.
+
+## Historical handoff release status (superseded where inconsistent)
+
 # Locally accepted handoff candidate; publication pending
 
 ## Current accepted handoff candidate (2026-10-25)

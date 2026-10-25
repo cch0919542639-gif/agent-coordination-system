@@ -1,0 +1,66 @@
+{
+  "groups": {
+    "tests.scripts.test_parallel_runtime": {
+      "passed": 26
+    },
+    "tests.scripts.test_worker_activation.TestBasicActivation": {
+      "passed": 5
+    },
+    "tests.scripts.test_worker_activation.TestTwoWorkerIsolation": {
+      "passed": 3
+    },
+    "tests.scripts.test_worker_activation.TestFailClosed": {
+      "passed": 7
+    },
+    "tests.scripts.test_worker_activation.TestNoTaskCardMutation": {
+      "passed": 1
+    },
+    "tests.scripts.test_worker_activation.TestNoExternalCalls": {
+      "passed": 2
+    },
+    "tests.scripts.test_worker_poller.TestWorkerRegistration": {
+      "passed": 8
+    },
+    "tests.scripts.test_worker_poller.TestWorkerProjectIsolation": {
+      "passed": 4
+    },
+    "tests.scripts.test_worker_poller.TestPolling": {
+      "passed": 8
+    },
+    "tests.scripts.test_worker_poller.TestAcknowledgement": {
+      "passed": 4
+    },
+    "tests.scripts.test_worker_poller.TestPayloadSafety": {
+      "passed": 3
+    },
+    "tests.scripts.test_worker_poller.TestMalformedState": {
+      "passed": 2
+    },
+    "tests.scripts.test_worker_poller.TestNoSubprocess": {
+      "passed": 6
+    },
+    "tests.scripts.test_worker_poller.TestNoLifecycleMutation": {
+      "passed": 2
+    },
+    "tests.scripts.test_worker_poller.TestCLI": {
+      "passed": 6
+    },
+    "tests.scripts.test_local_agent_loop": {
+      "passed": 23
+    }
+  },
+  "original_failures_retested": [
+    {
+      "name": "test_mode_preview_guards_and_quiescent_disable",
+      "status": "passed"
+    },
+    {
+      "name": "test_registered_project_activation_checks_real_root_before_inbox_ack[enabled]",
+      "status": "passed"
+    },
+    {
+      "name": "test_registered_project_activation_checks_real_root_before_inbox_ack[corrupt]",
+      "status": "passed"
+    }
+  ]
+}

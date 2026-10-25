@@ -15,7 +15,7 @@ import tempfile
 import threading
 import time
 
-from coordination_common import ROOT, load_task, move_task
+from coordination_common import ROOT, load_task, move_task, require_serial
 
 PROJECT = "agent-coordination-system"
 REVIEWER = "LOCAL_LOOP"
@@ -415,6 +415,7 @@ def bounded_process(command, timeout, on_start=None, on_metadata=None):
 
 
 def launch_worker(task_id, owner, payload_id, timeout, on_start=None, on_metadata=None):
+    require_serial(ROOT)
     command = ["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File",
                str(ROOT / "integrations" / WORKERS[owner] / "run-controlled-worker.ps1"),
                "-Run", "-ResumePayload", payload_id]
@@ -447,6 +448,7 @@ def acceptance_checks(task, timeout):
 
 
 def run_loop(plan_path, *, execute=False, resume=False, launch=None):
+    require_serial(ROOT)
     plan = load_plan(plan_path)
     if not execute:
         print(json.dumps({"mode": "preview", "run_id": plan["run_id"], "tasks": plan["tasks"],

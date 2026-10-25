@@ -1,0 +1,14 @@
+{
+  "returncode": 0,
+  "tree_stopped": true,
+  "timed_out": false,
+  "output_overflow": false,
+  "model": "opencode/deepseek-v4.1-flash-free",
+  "elapsed_seconds": 54.531,
+  "reviewed_head": "311dc1f3f03cfc298632d72edc50f0dc2dc70630",
+  "output_bytes": 4593,
+  "authorization": "User explicitly approved one OpenCode independent review after being informed of model data transfer.",
+  "no_tool_events_observed": true,
+  "packet_sha256": "e83d42330fc2119d818e4f6eba3ae71aa74ff513551d1246f0ded3ff7b6d23a6",
+  "scope": "Public fixed-commit code and recorded verification only; qualitative static review, no reviewer test execution."
+}

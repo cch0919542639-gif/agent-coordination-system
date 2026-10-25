@@ -1,3 +1,13 @@
+## Main-integrated handoff candidate (2026-10-25)
+
+This candidate combines accepted handoff source1feeca7/a82c5a7 with mainc3682d3,
+including the reviewed legacy entry guards. It is not the older handoff-only or
+bootstrap-only package. Select the exact final commit supplied by PR9; runtime
+completion still never accepts formal tasks automatically. Original92e1248CP950
+acceptance remains scoped to that release. The current manifest/status replace
+older pin counts and release-pending/HOLD wording below; operational setup steps
+remain useful. No real peer, runner, provider or schedule is activated here.
+
 ## Current accepted handoff candidate (2026-10-25)
 
 The bounded handoff feature is accepted locally at source commit

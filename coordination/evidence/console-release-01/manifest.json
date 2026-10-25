@@ -4,7 +4,7 @@
   "archive_source_commit": "b31267f3ba78edd891dd2fedfa955c2f34dd5d05",
   "main_base": "bfc5163af6dca4b9b7dec6b599563e3cbf984cac",
   "proposed_branch": "codex/console-handoff-sync-01",
-  "publication": "handoff feature locally accepted and unpublished; draft PR6 remains repaired bootstrap92e1248; no main merge",
+  "publication": "Main integrated into PR9 candidate; current regression/clone verification pending; PR9 remains draft and live dual-machine gate not satisfied.",
   "source_pins": [
     {
       "path": "coordination_runtime/__init__.py",
@@ -176,9 +176,21 @@
     },
     {
       "path": "docs/operations/console-download-guide.md",
-      "sha256": "8bcf35cc860fe3a0af235ce051b0103c720c5b58973d01838902506597f21c5c",
-      "git_blob": "8fbb38ff1b0dd73ff5ad9ad178423c46b28d3584",
-      "provenance": "release metadata layer"
+      "sha256": "7ea2106c8c6e8f86231bc796a74907f4f325d277d77b60d60422d708c556d850",
+      "git_blob": "4ef605264a29db7fb8ce0510b0da36dae3715d05",
+      "provenance": "main-integration publication metadata over accepted parent union"
+    },
+    {
+      "path": "scripts/local_agent_loop.py",
+      "sha256": "597f43aabfc049da784c912b4d9c6617bcb5c9e74d2f2526a0043085a18fe808",
+      "git_blob": "29660322ac1ee0e39420f6bcbd4021152f3db772",
+      "provenance": "accepted PR10 source311dc1f; identical stored blob at c3c6a38"
+    },
+    {
+      "path": "scripts/worker_poller.py",
+      "sha256": "f46df96a8e4099a0d839b2c5ff5fe337de5cbd3899fa8f8841de5b549c7d6e7b",
+      "git_blob": "59f8b72bdf49024756ee1fea129e70a14d3f58d8",
+      "provenance": "accepted PR10 source311dc1f; identical stored blob at c3c6a38"
     },
     {
       "path": "coordination_runtime/github_handoff.py",
@@ -309,6 +321,24 @@
       "git_blob": "6d103b24186535fcfa4914d1155768842d7d37b9"
     },
     {
+      "path": "coordination/task-board/done/2026-10-25_console-entry-guards-01_legacy-entry-guards.md",
+      "sha256": "663233c08b5da7a5c5951885d1334d753de9710b45d52107d09489247be54ae1",
+      "git_blob": "80f1209bb38c0f683cb3b7f707a3110b9de6130a",
+      "provenance": "accepted entry-guard task and independent review at a1dd7f6/c3c6a38"
+    },
+    {
+      "path": "coordination/reviews/review-console-entry-guards-01.md",
+      "sha256": "38c04ac4f2aff6814c1ccfa2ce12939f9d950667cd30a5dd507438bb57ca14db",
+      "git_blob": "b8bd8d2bcd48d1e6016af3ffcdb30f9375da5e19",
+      "provenance": "accepted entry-guard task and independent review at a1dd7f6/c3c6a38"
+    },
+    {
+      "path": "coordination/delivery/console-entry-guards-01-delivery-report.md",
+      "sha256": "e234a3f4f958fca3806fe8d47a4a000d1684629769508bd44c3f8366e4953972",
+      "git_blob": "9f3546f67344995a7d2016f650290ae4e16eb529",
+      "provenance": "accepted entry-guard task and independent review at a1dd7f6/c3c6a38"
+    },
+    {
       "path": "coordination/task-board/done/2026-10-25_console-reverification-check-01_verify-published-acceptance.md",
       "sha256": "88d556c14945f53340c6762830c74bd4b1e55c28ebf8aab8ae0ef853c9a87729",
       "git_blob": "8e27b560c442b296595dfd04b84839950b9ef680"
@@ -367,6 +397,24 @@
       "path": "coordination/delivery/console-handoff-review-01-delivery-report.md",
       "sha256": "cfabf979221f2208e59bfbf12c78fa6624310974fc02f425fad17e76804d8aba",
       "git_blob": "cfe12c9e27dbe464d22562e8fdd21d3062a02f96"
+    },
+    {
+      "path": "coordination/task-board/done/2026-10-25_console-main-readiness-01_integrated-console-validation.md",
+      "sha256": "ba4cb4f68a3726cc03883ddb4595f71e674b2f3055f874eca248f747b66ccece",
+      "git_blob": "d5f087fcdc931b6c3ab0d9faef968968487b982a",
+      "provenance": "accepted deterministic main-readiness metadata at83bff3c/c3682d3"
+    },
+    {
+      "path": "coordination/reviews/review-console-main-readiness-01.md",
+      "sha256": "5fc88905e6ad66eb37dd73a7a5282286f9e5d7e576846c279ca853c8c17665af",
+      "git_blob": "407f0becbfedd00435c96393e8e24107cda7e1da",
+      "provenance": "accepted deterministic main-readiness metadata at83bff3c/c3682d3"
+    },
+    {
+      "path": "coordination/delivery/console-main-readiness-01-delivery-report.md",
+      "sha256": "d8130e8288e6ff6c20c8e226344c4d35e2d9ace31a1b5c3ae8484df4aee7b21a",
+      "git_blob": "94cd969337f2bbd6cb60c8a218fce6a438b07959",
+      "provenance": "accepted deterministic main-readiness metadata at83bff3c/c3682d3"
     }
   ],
   "archive_evidence_sha256": {
@@ -381,8 +429,11 @@
     "main_snapshot": 101,
     "original_accepted_console": 4,
     "accepted_encoding_repair": 2,
-    "total": 111,
-    "accepted_reacceptance_and_handoff": 4
+    "total": 114,
+    "accepted_reacceptance_and_handoff": 4,
+    "accepted_entry_guard_repair": 1,
+    "main_readiness_record": 1,
+    "handoff_main_integration_record": 1
   },
   "initial_accepted_bootstrap_commit": "c3020c4d73b6965aa9f03ea2e60eabcaff587c99",
   "original_published_release_commit": "c7f7dee2c356009f51fbe63434ecf0c5400e7571",
@@ -402,6 +453,12 @@
       "path": "docs/operations/console-download-guide.md",
       "sha256": "c08b064e6c8c8b0280c08bdf10dfbfe37f9d1d75eef3258f8f6ee9d3ef9470e6",
       "git_blob": "680eb2f19efd8ed6d2fbed6969793c0524d371e7"
+    },
+    {
+      "path": "docs/operations/console-download-guide.md",
+      "sha256": "41ce7b1b36d9930bdd18b83e5a6aa81e04ea50948272575d865037234b8c7f2b",
+      "git_blob": "22e1cfeb8caafcd105ed1aee4f0eb81fd5f3c184",
+      "provenance": "release guide metadata layer"
     },
     {
       "path": "web/api.py",
@@ -440,12 +497,21 @@
     },
     {
       "path": "docs/operations/console-download-guide.md",
-      "sha256": "41ce7b1b36d9930bdd18b83e5a6aa81e04ea50948272575d865037234b8c7f2b",
-      "git_blob": "22e1cfeb8caafcd105ed1aee4f0eb81fd5f3c184",
-      "provenance": "release guide metadata layer",
-      "superseded_by_source_commit": "1feeca789ccfd6985f9496e1cce123cc67829160"
+      "sha256": "a1aecd7f114e5bc9aa1b57db36b06489a5d599b8e11a8d76defe85e3bb7a5016",
+      "git_blob": "65b8fb881d897edca347c689b330f22ec8a6502f",
+      "provenance": "integrated metadata over accepted c3c6a38; no product logic change"
+    },
+    {
+      "path": "docs/operations/console-download-guide.md",
+      "sha256": "8bcf35cc860fe3a0af235ce051b0103c720c5b58973d01838902506597f21c5c",
+      "git_blob": "8fbb38ff1b0dd73ff5ad9ad178423c46b28d3584",
+      "provenance": "release metadata layer"
     }
   ],
   "repaired_published_release_commit": "92e1248b63dee44a607296b3d63f61207b61f09a",
-  "verified_reacceptance_evidence_commit": "5002422d33d85b3def31541241521de06fd5527b"
+  "verified_reacceptance_evidence_commit": "5002422d33d85b3def31541241521de06fd5527b",
+  "integrated_main_commit": "c3682d330ea847fc0895bff3dee334538a731499",
+  "feature_parent_commit": "a82c5a775efab8b252fb0f23dd1bf627b799c910",
+  "independently_accepted_entry_guard_source": "311dc1f3f03cfc298632d72edc50f0dc2dc70630",
+  "accepted_code_test_commit_scope": "Existing feature increment only; entry guards separately reviewed; integrated source is the accepted-parent union bound by integration evidence."
 }

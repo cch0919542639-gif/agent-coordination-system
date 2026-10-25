@@ -1,0 +1,15 @@
+{
+  "head": "311dc1f3f03cfc298632d72edc50f0dc2dc70630",
+  "base": "92e1248b63dee44a607296b3d63f61207b61f09a",
+  "source_blobs_match_test_publication_map": true,
+  "junit": {
+    "tests": 110,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "native_test_exit": 0,
+  "github_reviews": [],
+  "checks": [],
+  "status": "Ready for independent review; external model execution not yet authorized for this task"
+}
