@@ -50,3 +50,23 @@ coordination/reviews/review-console-encoding-fix-01.md -text
 coordination/reviews/review-console-encoding-review-01.md -text
 coordination/delivery/console-encoding-fix-01-delivery-report.md -text
 coordination/delivery/console-encoding-review-01-delivery-report.md -text
+
+# Preserve accepted handoff source and board snapshot bytes.
+coordination_runtime/github_handoff.py -text
+scripts/github_handoff.py -text
+tests/scripts/test_github_handoff.py -text
+tests/scripts/test_handoff_console.py -text
+docs/operations/github-handoff-guide.md -text
+docs/operations/github-handoff-mvp-contract.md -text
+coordination/task-board/done/2026-10-25_console-reverification-check-01_verify-published-acceptance.md -text
+coordination/reviews/review-console-reverification-check-01.md -text
+coordination/delivery/console-reverification-check-01-delivery-report.md -text
+coordination/task-board/done/2026-10-25_console-github-transport-01.md -text
+coordination/reviews/review-console-github-transport-01.md -text
+coordination/delivery/console-github-transport-01-delivery-report.md -text
+coordination/task-board/done/2026-10-25_console-handoff-ui-01.md -text
+coordination/reviews/review-console-handoff-ui-01.md -text
+coordination/delivery/console-handoff-ui-01-delivery-report.md -text
+coordination/task-board/done/2026-10-25_console-handoff-review-01.md -text
+coordination/reviews/review-console-handoff-review-01.md -text
+coordination/delivery/console-handoff-review-01-delivery-report.md -text
