@@ -1,0 +1,15 @@
+usage: -c [-h] --repo REPO --db DB --workspaces WORKSPACES --project-id
+          PROJECT_ID --auth-file AUTH_FILE [--port PORT] [--duration DURATION]
+
+Explicit, finite, authenticated loopback server; no initialization or
+providers.
+
+options:
+  -h, --help            show this help message and exit
+  --repo REPO
+  --db DB
+  --workspaces WORKSPACES
+  --project-id PROJECT_ID
+  --auth-file AUTH_FILE
+  --port PORT
+  --duration DURATION

@@ -2,7 +2,9 @@
 
 Source c3c6a38 includes accepted PR10 entry guards. Current fixed-source integrated
 regression passed241tests/native0 in156.063seconds (single eight-file invocation).
-Fresh-clone validation is pending. Regression and clone results are recorded in ../console-main-readiness-01/ and its
+Fresh local autocrlf clone at eb312738fadc0fd41ed6fe4577fae90e40c562f8 passed52raw/blob pins,109cards,
+isolated imports, both CLI help entries and validator, with clean status.
+Final metadata acceptance adds no source/test changes. Regression and clone results are recorded in ../console-main-readiness-01/ and its
 delivery report. Earlier92e1248CP950131pass applies to that exact earlier release.
 Manifest now pins31source paths plus21accepted snapshots;18prior snapshots remain
 unchanged. The original failures and optional harness limits below remain history.

@@ -3,7 +3,7 @@
 - Task ID: console-main-readiness-01
 - Agent: ORCHESTRATOR
 - Phase: console-delivery-01
-- Status: IN PROGRESS - CANDIDATE PREPARED
+- Status: DELIVERED FOR REVIEW
 
 ## Changed Files
 
@@ -28,15 +28,15 @@ retains ordinary rules while treating intentional CRLF in -text pins as EOL.
 
 ## Known Residual Risks
 
-Fresh clone remains pending at this preparation commit. Original CP950 second-host
+Fresh local autocrlf clone of eb312738fadc0fd41ed6fe4577fae90e40c562f8 passed52raw/blob pins,109cards, isolated imports, both CLI help and validator; status clean (9.64seconds). Original CP950 second-host
 evidence applies only to92e1248. No new physical-host/production qualification,
 whole-repository green claim, provider or schedule activation. Source-independent
 reviews are inherited; this step is deterministic integration/metadata checking.
 
 ## Acceptance Criteria Coverage
 
-Fixed source regression and pin review passed. Final clone and exact-head gate
-are required before accepting this readiness record or promoting PR6.
+Fixed source regression and pin review passed. Fresh-clone gate passed; exact-head remote verification remains required before
+promoting PR6. This report submits deterministic readiness evidence.
 
 ## Recommended Handoff
 

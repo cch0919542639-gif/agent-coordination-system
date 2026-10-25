@@ -1,0 +1,67 @@
+{
+  "candidate_commit": "eb312738fadc0fd41ed6fe4577fae90e40c562f8",
+  "clone_directory": "C:\\Users\\angel\\AppData\\Local\\Temp\\codex-pr6-fresh-_v5wrk76\\source",
+  "clone_command": [
+    "git",
+    "-c",
+    "core.autocrlf=true",
+    "clone",
+    "--no-local",
+    "--depth",
+    "1",
+    "--single-branch",
+    "--branch",
+    "codex/console-main-readiness-01",
+    "C:\\Users\\angel\\.codex\\worktrees\\console-entry-guards\\codex work",
+    "C:\\Users\\angel\\AppData\\Local\\Temp\\codex-pr6-fresh-_v5wrk76\\source"
+  ],
+  "pin_count": 52,
+  "raw_and_blob_pins": "PASS",
+  "board_cards": 109,
+  "isolated_imports_cli_help_and_validator": [
+    {
+      "command": [
+        "C:\\Users\\angel\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-I",
+        "-B",
+        "-c",
+        "import sys;sys.path.insert(0,sys.argv[1]);import web.api, coordination_runtime.parallel_runtime;print(\"isolated imports passed\")",
+        "C:\\Users\\angel\\AppData\\Local\\Temp\\codex-pr6-fresh-_v5wrk76\\source"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "C:\\Users\\angel\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-I",
+        "-B",
+        "C:\\Users\\angel\\AppData\\Local\\Temp\\codex-pr6-fresh-_v5wrk76\\source\\scripts\\console_setup.py",
+        "--help"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "C:\\Users\\angel\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-I",
+        "-B",
+        "-c",
+        "import sys;sys.path.insert(0,sys.argv[1]);from web.api import main;main([\"--help\"])",
+        "C:\\Users\\angel\\AppData\\Local\\Temp\\codex-pr6-fresh-_v5wrk76\\source"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "C:\\Users\\angel\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "C:\\Users\\angel\\AppData\\Local\\Temp\\codex-pr6-fresh-_v5wrk76\\source\\scripts\\orchestrate.py",
+        "validate"
+      ],
+      "returncode": 0
+    }
+  ],
+  "git_status_clean": true,
+  "elapsed_seconds": 9.64,
+  "qualification": "Fresh local autocrlf clone; no new other-computer acceptance, provider, runtime initialization or service launch."
+}

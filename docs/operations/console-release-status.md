@@ -22,7 +22,10 @@ separate from publication/merge state; select the final supplied commit.
 
 The current integration check result is in
 coordination/evidence/console-main-readiness-01/ and its delivery report. The integrated eight-file regression run passed241tests/native0 in156.063seconds.
-Fresh-clone validation and exact-head promotion remain pending. No live
+Fresh local autocrlf clone verified52raw/blob pins,109cards, isolated imports,
+both CLI help entries and validator; clone remained clean. The readiness record
+is accepted after these deterministic checks. Exact-head main promotion remains
+a separate final operation, recorded in Git/PR6 rather than predicted here. No live
 provider, task dispatch, watch, service or schedule is enabled; default Viewer
 and disabled runtime remain. Real peer operation belongs to separate draftPR9.
 

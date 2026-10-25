@@ -1,3 +1,7 @@
+## PR6整合驗證接受，待精確head發布合併（2026-10-25）
+
+console-main-readiness-01已acceptedDONE：單次8組241pass/native0/156.063秒，52pins/109cards/18舊snapshot完整；freshlocalautocrlfclone eb31273於9.64秒驗證raw/blob pins、isolatedimports、兩CLIhelp、validator及cleanstatus。最終此層僅補驗證／接受紀錄，產品／測試blobs與獨立已接受c3c6a38完全相同。來源審查沿用7份accepted快照及PR10OpenCode靜態審查；此任務是deterministic metadata/integration檢查，不冒稱新的獨立模型審查或新雙機／production驗收。準備nonforce快轉PR6來源分支並以精確head合併main；PR9未整合啟用。
+
 ## PR6整合候選回歸241pass，下載驗證中（2026-10-25）
 
 PR10合併後source c3c6a38，無新增產品／測試邏輯。console-main-readiness-01更新發布metadata：31source+21accepted snapshots共52pins、109cards；保留18原snapshot及原失敗歷史。八組單次pytest241passed/native0/156.063秒（核心131+入口110），原始log/JUnit保留；24產品／測試／靜態檔blob完全等於c3c6a38，既有7份accepted審查快照核實。接續fresh local autocrlf clone／匯入／CLI與validator，完成後再精確head發布及PR6/main合併。這是deterministic integration驗證，未新增外部模型呼叫或冒稱新雙機驗收；PR9與真實watch/provider未啟用。
