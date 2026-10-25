@@ -1,3 +1,11 @@
+## 入口修補提交審查與發布授權（2026-10-25）
+
+使用者已在110項通過後明確授權完整時commit/push。console-entry-guards-01記錄為REVIEW，來源仍是同一受測兩檔；準備發布獨立codex/console-entry-guards-01並建立以codex/console-bootstrap-01為base的草稿PR，PR6/PR9及main不變。新卡與交付並非自行接受。確切提交及遠端狀態以Git/PR讀回為準；下方「尚未commit/push」是測試完成時快照。
+
+## 入口防護修補完成：110項通過（2026-10-25）
+
+使用者明確要求修補入口並重驗原失敗案例。獨立工作樹C:/Users/angel/.codex/worktrees/console-entry-guards/codex work以92e1248為基底，僅改scripts/local_agent_loop.py與scripts/worker_poller.py：run_loop/launch_worker及registered project真正root加既有require_serial檢查，在launch/inbox/ACK副作用前拒絕Parallel Mode marker。原3fail皆通過，正常無marker收件/ACK亦通過；單次parallel_runtime/worker_activation/worker_poller/local_agent_loop共110pass/native0、99.938秒，原失敗log保留。validator與diff-check0、原47pins不變；未冒稱重跑核心131或新發布版本。修補尚未commit/push，PR6/PR9與main未變，無真實provider/watch/排程啟用。證據coordination/evidence/console-entry-guards-20261025/已保留於修補及權威integration工作樹；易讀報告D:/codex work/output/entry-guards-20261025/repair.md。
+
 # Progress
 
 ## Current State

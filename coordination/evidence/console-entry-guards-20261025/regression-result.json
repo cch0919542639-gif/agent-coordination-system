@@ -1,0 +1,25 @@
+{
+  "returncode": 0,
+  "timed_out": false,
+  "command": [
+    "C:\\Users\\angel\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/scripts/test_parallel_runtime.py",
+    "tests/scripts/test_worker_activation.py",
+    "tests/scripts/test_worker_poller.py",
+    "tests/scripts/test_local_agent_loop.py",
+    "-q",
+    "--basetemp",
+    "C:\\Users\\angel\\AppData\\Local\\Temp\\codex-entry-guards-tests-20261025",
+    "--junitxml",
+    "C:\\Users\\angel\\.codex\\worktrees\\console-entry-guards\\codex work\\coordination\\evidence\\console-entry-guards-20261025\\regression.xml"
+  ],
+  "elapsed_seconds": 99.938,
+  "base_commit": "92e1248b63dee44a607296b3d63f61207b61f09a",
+  "source_sha256": {
+    "scripts/local_agent_loop.py": "15d53a961677450e66087b3892f1729b8e8b4af830c5500f9cb5dd3c9a9ee4dc",
+    "scripts/worker_poller.py": "0dd5775b43bd67c602ac7ef1ab5cc098829dd68e9aa217bbcb3376b0c43287a0"
+  }
+}

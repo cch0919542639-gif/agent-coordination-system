@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
-from coordination_common import ROOT, parse_front_matter
+from coordination_common import ROOT, parse_front_matter, require_serial
 
 MONITOR_DIR = ROOT / "coordination" / "monitor"
 WORKERS_FILE = MONITOR_DIR / "workers.json"
@@ -405,6 +405,8 @@ def _resolve_task_card_path(project_id: str, task_id: str) -> str | None:
         repo_root = Path(project.local_path).resolve(strict=True)
     except OSError:
         return None
+
+    require_serial(repo_root)
 
     matches: list[Path] = []
     board = repo_root / "coordination" / "task-board"
