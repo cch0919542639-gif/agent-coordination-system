@@ -1,0 +1,43 @@
+{
+  "accepted_source_review_snapshots": [
+    {
+      "task_id": "console-package-01",
+      "decision": "accepted",
+      "snapshot_sha256": "bc6a6bd4a3a6af743426cb3db619d75c6c2f1b30c0fa1a370990ab9db40ef8de"
+    },
+    {
+      "task_id": "console-package-review-01",
+      "decision": "accepted",
+      "snapshot_sha256": "2330ee5004f116fc9c6938415f5948b091c606b38fed280bc30906054430b32c"
+    },
+    {
+      "task_id": "console-bootstrap-01",
+      "decision": "accepted",
+      "snapshot_sha256": "8f2b89cc8a443b0e72d886a45e062e702d1f833d6dc801ec304d1c09f33f0a25"
+    },
+    {
+      "task_id": "console-bootstrap-review-01",
+      "decision": "accepted",
+      "snapshot_sha256": "8ee98cd9e4c75f516aa108fb21595c7b42417ee038c0777f99102baec6683e53"
+    },
+    {
+      "task_id": "console-encoding-fix-01",
+      "decision": "accepted",
+      "snapshot_sha256": "8c1e1c975fa9c6f593e20ef8bc8609925c90f1bd4e290bc8515aff498e428b98"
+    },
+    {
+      "task_id": "console-encoding-review-01",
+      "decision": "accepted",
+      "snapshot_sha256": "3294584f74cee19220a7dd82c0ba3107cfa4dc49be76a595411163734b823b8f"
+    },
+    {
+      "task_id": "console-entry-guards-01",
+      "decision": "accepted",
+      "snapshot_sha256": "38c04ac4f2aff6814c1ccfa2ce12939f9d950667cd30a5dd507438bb57ca14db"
+    }
+  ],
+  "entry_guard_independent_source": "311dc1f3f03cfc298632d72edc50f0dc2dc70630",
+  "integrated_source": "c3c6a383297326213b3c9904e9bfcfc3b7264fc6",
+  "current_product_test_blob_delta_from_integrated_source": [],
+  "review_mode": "Existing independent source acceptance plus deterministic metadata/integration verification; no new external model call."
+}

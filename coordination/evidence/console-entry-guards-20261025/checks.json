@@ -1,0 +1,24 @@
+{
+  "coordination-validation": {
+    "command": [
+      "C:\\Users\\angel\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "-B",
+      "scripts/orchestrate.py",
+      "validate"
+    ],
+    "returncode": 0
+  },
+  "diff-check": {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "returncode": 0
+  },
+  "original_release_pins": {
+    "count": 47,
+    "unchanged": true,
+    "note": "Original pinned release files preserved; two modified legacy entry scripts are bound separately in regression-result.json, not represented as a published release."
+  }
+}

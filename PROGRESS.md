@@ -1,3 +1,23 @@
+## PR6整合驗證接受，待精確head發布合併（2026-10-25）
+
+console-main-readiness-01已acceptedDONE：單次8組241pass/native0/156.063秒，52pins/109cards/18舊snapshot完整；freshlocalautocrlfclone eb31273於9.64秒驗證raw/blob pins、isolatedimports、兩CLIhelp、validator及cleanstatus。最終此層僅補驗證／接受紀錄，產品／測試blobs與獨立已接受c3c6a38完全相同。來源審查沿用7份accepted快照及PR10OpenCode靜態審查；此任務是deterministic metadata/integration檢查，不冒稱新的獨立模型審查或新雙機／production驗收。準備nonforce快轉PR6來源分支並以精確head合併main；PR9未整合啟用。
+
+## PR6整合候選回歸241pass，下載驗證中（2026-10-25）
+
+PR10合併後source c3c6a38，無新增產品／測試邏輯。console-main-readiness-01更新發布metadata：31source+21accepted snapshots共52pins、109cards；保留18原snapshot及原失敗歷史。八組單次pytest241passed/native0/156.063秒（核心131+入口110），原始log/JUnit保留；24產品／測試／靜態檔blob完全等於c3c6a38，既有7份accepted審查快照核實。接續fresh local autocrlf clone／匯入／CLI與validator，完成後再精確head發布及PR6/main合併。這是deterministic integration驗證，未新增外部模型呼叫或冒稱新雙機驗收；PR9與真實watch/provider未啟用。
+
+## PR10獨立審查通過，準備分支內合併（2026-10-25）
+
+使用者授權單次OpenCode模型資料傳輸及先審查再合併。固定來源311dc1f之OpenCode/deepseek-v4.1-flash-free獨立靜態審查建議accepted、無blocking findings，native0/54.531秒、owned tree停止；未執行工具或另跑測試。Orchestrator核對110JUnit/native0、來源映射及實際caller，確認讀取delivery無前置寫入、acceptance_checks僅run_loop內使用、resolver早退仍在inbox/ACK前拒絕。保留preflight非原子鎖、symlink/relative registry未另測等限制；不把模型review冒稱GitHub APPROVED。console-entry-guards-01已accepted DONE；這層只加入審查證據／狀態，不改來源或測試。下一步依授權核對精確head後將PR10合併至codex/console-bootstrap-01，尚不代表PR6/main或PR9已通過。
+
+## 入口修補提交審查與發布授權（2026-10-25）
+
+使用者已在110項通過後明確授權完整時commit/push。console-entry-guards-01記錄為REVIEW，來源仍是同一受測兩檔；準備發布獨立codex/console-entry-guards-01並建立以codex/console-bootstrap-01為base的草稿PR，PR6/PR9及main不變。新卡與交付並非自行接受。確切提交及遠端狀態以Git/PR讀回為準；下方「尚未commit/push」是測試完成時快照。
+
+## 入口防護修補完成：110項通過（2026-10-25）
+
+使用者明確要求修補入口並重驗原失敗案例。獨立工作樹C:/Users/angel/.codex/worktrees/console-entry-guards/codex work以92e1248為基底，僅改scripts/local_agent_loop.py與scripts/worker_poller.py：run_loop/launch_worker及registered project真正root加既有require_serial檢查，在launch/inbox/ACK副作用前拒絕Parallel Mode marker。原3fail皆通過，正常無marker收件/ACK亦通過；單次parallel_runtime/worker_activation/worker_poller/local_agent_loop共110pass/native0、99.938秒，原失敗log保留。validator與diff-check0、原47pins不變；未冒稱重跑核心131或新發布版本。修補尚未commit/push，PR6/PR9與main未變，無真實provider/watch/排程啟用。證據coordination/evidence/console-entry-guards-20261025/已保留於修補及權威integration工作樹；易讀報告D:/codex work/output/entry-guards-20261025/repair.md。
+
 # Progress
 
 ## Current State

@@ -1,0 +1,350 @@
+{
+  "accepted_code_test_commit": "c3c6a383297326213b3c9904e9bfcfc3b7264fc6",
+  "package_commit": "5daa318d2d9c2b4dd4ff93081396bd452212c4a1",
+  "archive_source_commit": "b31267f3ba78edd891dd2fedfa955c2f34dd5d05",
+  "main_base": "bfc5163af6dca4b9b7dec6b599563e3cbf984cac",
+  "proposed_branch": "codex/console-bootstrap-01",
+  "publication": "PR10 merged into bootstrap at c3c6a38; integrated metadata and validation for PR6 main promotion; exact final state in Git/PR receipts",
+  "source_pins": [
+    {
+      "path": "coordination_runtime/__init__.py",
+      "sha256": "7b004d7a4de1a58463c2061fad6c3840dbf59629fd96d2f84d748486a73b30d4",
+      "git_blob": "c0d9bf69beeefc87e19f6ce61e73f3d1e5e559d8",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "coordination_runtime/board_projection.py",
+      "sha256": "4fde5dbf93ec648fbf3ab0be1e659bd063ec07489238775783b6a432524876d6",
+      "git_blob": "75d1a028bc6c95da3ef5afbdba25c4ee38e774d0",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "coordination_runtime/parallel_policy.py",
+      "sha256": "2aed39253bddc900419691fb906897230c0fe47ff877770ff9659788897c9ccf",
+      "git_blob": "c617c2109cf89e75c9035e3b03f2aa05b256c814",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "coordination_runtime/parallel_runtime.py",
+      "sha256": "f79dd002e7c13dc9361a0da2f85a7090b744390f9247625838dd34dab87162c4",
+      "git_blob": "d18b090f472d62f73d10d8e4ce41dadc088d0245",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "coordination_runtime/recovery_manager.py",
+      "sha256": "c1fe2fef49ad3b8b338d3afcbdca6c63a820eb9a301b496cbeb09da971d5db06",
+      "git_blob": "2909a87f246cafcb1aca1e17460d2a84c7661e25",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "coordination_runtime/resource_guard.py",
+      "sha256": "8676e526ee9fb65af41e79d41c5802ae83d36b867e5e0e16719bc9823913bddc",
+      "git_blob": "5d6a2ae0724b751e5de5c13b9018ea721f6cdbbf",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "coordination_runtime/state_controller.py",
+      "sha256": "a6b2a776337b10f239cce9a5fb02e03294acdaa04b40f8baeab91e4db5da412e",
+      "git_blob": "ffd6e4a6d28bc46cc2600189633c4fa4fcb5e47d",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "coordination_runtime/workspace.py",
+      "sha256": "1de7fbf6f59c04c8ac9635ee17281d21dd5d006ef8a7759b22691e49a692d2e4",
+      "git_blob": "30e0f4ee41a69436501997c39ae0db3ba16268c9",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "docs/operations/board-intent-contract.md",
+      "sha256": "56bb0fc60559667a7e7315422a5f58020df976deacac9df783c577234e5daf34",
+      "git_blob": "25d916eb06f5f2640a2b9cb7016f0627d4a6fb00",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "docs/operations/parallel-mode-contract.md",
+      "sha256": "3f0031e40289182386c3dad3e75e80bf00d62ae259001dd03deed3c1b1798eeb",
+      "git_blob": "d03e8ceac52877f7b4991ea6f05d3d0b5d4661ba",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "docs/operations/recovery-resource-contract.md",
+      "sha256": "c02c3fc2ca91186daee36eec4a971bbf079d1cd8dc71a86cc6c6809916f4c516",
+      "git_blob": "1ea3e780abf4b83d7474ec0a0ed4ad44a6a20e53",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "docs/operations/runtime-state-contract.md",
+      "sha256": "79f055142ef346b75e4a033fa34832af47f6b5c2af6ec2a8ee5abd0ae7c68b57",
+      "git_blob": "728e751b60fe99567875226ae843abc3849caba5",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "docs/operations/web-console-contract.md",
+      "sha256": "9737ea683832fd0127f58698238080901b6b221b4a5839bebba2c10326bb3f9d",
+      "git_blob": "92c5d9601e41aefaf6a61c3896aa8724da7d983d",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "docs/operations/web-console-guide.md",
+      "sha256": "62637b881316a41da4c78be8279369582889dcfa45ca53a8e9f7c88c1293c9fa",
+      "git_blob": "06ad236498ecbda4dc5f253e20e2175e0e91ed1f",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "scripts/coordination_common.py",
+      "sha256": "74770e0062fb9f5277464156a0105fe85cc083d466323442382629abf454301d",
+      "git_blob": "0982097d20e0b92f819d6a831f5facd37a58379a",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "scripts/worker_process_guard.py",
+      "sha256": "829d79d403525d2131f681f9a08f1931bfb0f6ffb856eccdc8a451465b7e2940",
+      "git_blob": "1e18d3d0b94fb339ef52870077265e5ea3c5b13c",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "tests/scripts/test_board_projection.py",
+      "sha256": "ffa35c56a4d2753b18329c79f1ba4fb61d433d1775657f870a15201b959fa928",
+      "git_blob": "4d6f7423b49d0e54762e8eebd6d1a3d9870536c6",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "tests/scripts/test_parallel_runtime.py",
+      "sha256": "ac36d70312bfb4d31dd99a43461413d9f8a386532ee52aeea11981d3c146d97c",
+      "git_blob": "c9cb5d9adc119e2f585ef4b65aac21ec68ae5ac1",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "tests/scripts/test_state_controller.py",
+      "sha256": "0cad3aefd0fb539c24606af1af2a4f2c99041406c584782f93d643e275ffd0c3",
+      "git_blob": "e762cafb26e9f60afb4f2ba029350413e8d2e975",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "tests/scripts/test_web_console.py",
+      "sha256": "7417b8a59423a644649773efc3f6bda22b61ae25aedee09500df006c38260aed",
+      "git_blob": "29767f79c071c8faa61b0f20f33baa929c5c104d",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "web/__init__.py",
+      "sha256": "49828bce1114994432d1b8f9ed1eddbf74c0c0a25f8baa587d8b55c4c451ebc7",
+      "git_blob": "1ef9f8f78ddf6f5f97d0f04c53cfb26a4671d1f0",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "web/api.py",
+      "sha256": "6ce513010d92938d2d3a7cd255603f891360f5eea4a59e4949c9e2325535fc86",
+      "git_blob": "09b0acfe3af1397e13a4427e2f85841538eb4ed6",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "web/read_model.py",
+      "sha256": "9b3ded2d1df7c954d306bda328d425d11f453a2d9de8e559b5e2332ad3dd17dc",
+      "git_blob": "c1ed45d6e34b1ac08585dc1c00a6a83f9af0bec3",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "web/static/app.css",
+      "sha256": "e7ff80f336af87ba3f2c1ea41707e4b8b1f027a2cd3c9a04e113c4630d1bc43d",
+      "git_blob": "c26ef5e22967f61ff67e757e6517471ef9c6d60e",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "web/static/app.js",
+      "sha256": "8ab3ef81431aeeb646447cd6a2b2a7d1dd825200d0a3075ffcd780facea550b8",
+      "git_blob": "d99ee3635e78819a7dd63c52e78db1366d665b02",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "web/static/index.html",
+      "sha256": "40b5ff30fe3447a679b9b52474641bfcb66393bda62eb2a2258d02cbfb4d438f",
+      "git_blob": "5b44c966e4c8cce83e0ccd33e1f4d1522cb8f584",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "scripts/console_setup.py",
+      "sha256": "08d84c81465c97602773b757b544c7c2d3f065731a6475d1e00c1d6e1410c522",
+      "git_blob": "830e77875ffd001cc4b3f3df007f730e1368bb6d",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "tests/scripts/test_console_setup.py",
+      "sha256": "c2e252a66d7c942dca80382ffded8011608bf037c5f99669f8d2718a7bc24db8",
+      "git_blob": "ec980a26445a48aad65fc704b67c7616e203a7b7",
+      "provenance": "accepted code/test commit 8a5bc1693e8f8e8ea0f476424b59d37346f44b8a"
+    },
+    {
+      "path": "docs/operations/console-download-guide.md",
+      "sha256": "a1aecd7f114e5bc9aa1b57db36b06489a5d599b8e11a8d76defe85e3bb7a5016",
+      "git_blob": "65b8fb881d897edca347c689b330f22ec8a6502f",
+      "provenance": "integrated metadata over accepted c3c6a38; no product logic change"
+    },
+    {
+      "path": "scripts/local_agent_loop.py",
+      "sha256": "597f43aabfc049da784c912b4d9c6617bcb5c9e74d2f2526a0043085a18fe808",
+      "git_blob": "29660322ac1ee0e39420f6bcbd4021152f3db772",
+      "provenance": "accepted PR10 source311dc1f; identical stored blob at c3c6a38"
+    },
+    {
+      "path": "scripts/worker_poller.py",
+      "sha256": "f46df96a8e4099a0d839b2c5ff5fe337de5cbd3899fa8f8841de5b549c7d6e7b",
+      "git_blob": "59f8b72bdf49024756ee1fea129e70a14d3f58d8",
+      "provenance": "accepted PR10 source311dc1f; identical stored blob at c3c6a38"
+    }
+  ],
+  "accepted_board_snapshots": [
+    {
+      "path": "coordination/task-board/done/2026-10-23_console-package-01_downloadable-console-source.md",
+      "sha256": "8d990e9c4ea48efceeaa7069d09dca9d5be767f4fabbb8aebb54fb0665161616",
+      "git_blob": "101e32d3c588dafabba66ee391d48996f3e79a6d"
+    },
+    {
+      "path": "coordination/task-board/done/2026-10-23_console-package-review-01_independent-source-review.md",
+      "sha256": "20c5bd3427ad484f5b8f83847e1439673bea0d6da2213c7965a434b948721f84",
+      "git_blob": "2959f42f7ff83cfb841d8444c5f5751f2c183746"
+    },
+    {
+      "path": "coordination/task-board/done/2026-10-23_console-bootstrap-01_local-console-initialization.md",
+      "sha256": "70fdd159b81cd3719ecdae3ab8e6b5a9951bb64f9e169a610af3a60e51964dbe",
+      "git_blob": "d6c957e9fa115b373d212db0ab47e06d7a0f764b"
+    },
+    {
+      "path": "coordination/task-board/done/2026-10-23_console-bootstrap-review-01_independent-bootstrap-review.md",
+      "sha256": "7a99563548e80d87e49b77495b29f1e4e8b291708ec723675438a03bf72913d0",
+      "git_blob": "7d3ecd31457ee8b8dca6d77d8892670d977cd115"
+    },
+    {
+      "path": "coordination/reviews/review-console-package-01.md",
+      "sha256": "bc6a6bd4a3a6af743426cb3db619d75c6c2f1b30c0fa1a370990ab9db40ef8de",
+      "git_blob": "b7eecc3111ac6ce5d9466717ffcdc4e2344a85a4"
+    },
+    {
+      "path": "coordination/reviews/review-console-package-review-01.md",
+      "sha256": "2330ee5004f116fc9c6938415f5948b091c606b38fed280bc30906054430b32c",
+      "git_blob": "e26ea4a7c8d10d009f2f58ee3e35e2c543f90d11"
+    },
+    {
+      "path": "coordination/reviews/review-console-bootstrap-01.md",
+      "sha256": "8f2b89cc8a443b0e72d886a45e062e702d1f833d6dc801ec304d1c09f33f0a25",
+      "git_blob": "6e4c6fb215b1e0da53080e9ee14ca0c5599f553b"
+    },
+    {
+      "path": "coordination/reviews/review-console-bootstrap-review-01.md",
+      "sha256": "8ee98cd9e4c75f516aa108fb21595c7b42417ee038c0777f99102baec6683e53",
+      "git_blob": "59e5d1adf32cb2250e3841757a3e60cfa724a62a"
+    },
+    {
+      "path": "coordination/delivery/console-package-01-delivery-report.md",
+      "sha256": "ab6105254d8bba202e81c324c4fbde0981c2886af1954a62fd07e15347159f17",
+      "git_blob": "3301159e84ed59c7cd7da338ce72a8d84a059bde"
+    },
+    {
+      "path": "coordination/delivery/console-package-review-01-delivery-report.md",
+      "sha256": "01243a69d1bb4dcd79ea7f8ff5fc16b844f1c2a5cf03655e4fde00f7bf41ec6c",
+      "git_blob": "fff2fc5f8be1458c5ce1ade5b06964ea76f4a9cd"
+    },
+    {
+      "path": "coordination/delivery/console-bootstrap-01-delivery-report.md",
+      "sha256": "aaeecc8aaa3d00991e05066bb102f5d6f78992083902002becf37217c561eb26",
+      "git_blob": "334f14b5ac7b4ee99d46bfa2972906607200ea22"
+    },
+    {
+      "path": "coordination/delivery/console-bootstrap-review-01-delivery-report.md",
+      "sha256": "175128a455ef442d30eb76f6aec692eb8cbedce0052bddaf6734519dc77616d2",
+      "git_blob": "f930250e12c327db09cd0c656c1d1173e80d920b"
+    },
+    {
+      "path": "coordination/task-board/done/2026-10-25_console-encoding-fix-01_windows-sid-encoding.md",
+      "sha256": "b714945c66b76c9f3940a8c280305a65d4d9009209c1c905a86656edf5a0e693",
+      "git_blob": "d37c82bdcc2ec19fd944a23dea91c4f1fbb9b6cd"
+    },
+    {
+      "path": "coordination/task-board/done/2026-10-25_console-encoding-review-01_independent-locale-regression-review.md",
+      "sha256": "17b2f163c88ac59691a23aaab2fba21a6b042e9f525447cf4a6af60ec1500bc1",
+      "git_blob": "07acd3e63750a8fc48cf22bbc1331538b7fa3bf8"
+    },
+    {
+      "path": "coordination/reviews/review-console-encoding-fix-01.md",
+      "sha256": "8c1e1c975fa9c6f593e20ef8bc8609925c90f1bd4e290bc8515aff498e428b98",
+      "git_blob": "22988ed6b385e4102d22eb04dd45d1f52e69b838"
+    },
+    {
+      "path": "coordination/reviews/review-console-encoding-review-01.md",
+      "sha256": "3294584f74cee19220a7dd82c0ba3107cfa4dc49be76a595411163734b823b8f",
+      "git_blob": "72cac6c26d4a854f5162e01e96f78b225b44b9d5"
+    },
+    {
+      "path": "coordination/delivery/console-encoding-fix-01-delivery-report.md",
+      "sha256": "f64986af435c82f370fd0fc63957609475a544ae5a2771a1478b6872ebaad014",
+      "git_blob": "3838ab300a1426371ef182d570516c4f23bae7f2"
+    },
+    {
+      "path": "coordination/delivery/console-encoding-review-01-delivery-report.md",
+      "sha256": "e49337ca0550bbaa134a7ba3b6fa850b27ed7c19a7911617b3ae70f2daebdada",
+      "git_blob": "6d103b24186535fcfa4914d1155768842d7d37b9"
+    },
+    {
+      "path": "coordination/task-board/done/2026-10-25_console-entry-guards-01_legacy-entry-guards.md",
+      "sha256": "663233c08b5da7a5c5951885d1334d753de9710b45d52107d09489247be54ae1",
+      "git_blob": "80f1209bb38c0f683cb3b7f707a3110b9de6130a",
+      "provenance": "accepted entry-guard task and independent review at a1dd7f6/c3c6a38"
+    },
+    {
+      "path": "coordination/reviews/review-console-entry-guards-01.md",
+      "sha256": "38c04ac4f2aff6814c1ccfa2ce12939f9d950667cd30a5dd507438bb57ca14db",
+      "git_blob": "b8bd8d2bcd48d1e6016af3ffcdb30f9375da5e19",
+      "provenance": "accepted entry-guard task and independent review at a1dd7f6/c3c6a38"
+    },
+    {
+      "path": "coordination/delivery/console-entry-guards-01-delivery-report.md",
+      "sha256": "e234a3f4f958fca3806fe8d47a4a000d1684629769508bd44c3f8366e4953972",
+      "git_blob": "9f3546f67344995a7d2016f650290ae4e16eb529",
+      "provenance": "accepted entry-guard task and independent review at a1dd7f6/c3c6a38"
+    }
+  ],
+  "archive_evidence_sha256": {
+    "console-package-01/source-manifest.json": "ac14375e5f01587abcfb73cc9db2132cf0132fdad5ae30ac01270f399cce13ed",
+    "console-package-01/final-audit.json": "44e301e90ffb1475f2ac6cc44716eea0dbf876b5908bba246132b533fbada888",
+    "console-bootstrap-01/final-audit.json": "613374828c699e6ad609972562e7ff165d7db760de31418150d5b36fa623e1b4",
+    "console-encoding-fix-01/final-audit.json": "02a96786543ba08443751ab07b71bcc96c8355cd1bed1bdf9053085ccbb11ca8"
+  },
+  "board_tasks": {
+    "main_snapshot": 101,
+    "original_accepted_console": 4,
+    "accepted_encoding_repair": 2,
+    "total": 109,
+    "accepted_entry_guard_repair": 1,
+    "integration_readiness_record": 1
+  },
+  "initial_accepted_bootstrap_commit": "c3020c4d73b6965aa9f03ea2e60eabcaff587c99",
+  "original_published_release_commit": "c7f7dee2c356009f51fbe63434ecf0c5400e7571",
+  "original_failure_evidence_commit": "4a0f61d76c78ac5bf85f61c996c8c77a539ea970",
+  "superseded_pins": [
+    {
+      "path": "scripts/console_setup.py",
+      "sha256": "0d4f964dfe8d821c90cd54c8e803c91349de0e6816cab9ee0a799556d83b228a",
+      "git_blob": "2a31477914ff7dc52ec2d25943032245f3c21688"
+    },
+    {
+      "path": "tests/scripts/test_console_setup.py",
+      "sha256": "180a78266dbc510a1111129f765780e578c2cecaf3c889e5a1384740a4a92a2a",
+      "git_blob": "109c561b099ca8b85531f14c0dd7e8709293006a"
+    },
+    {
+      "path": "docs/operations/console-download-guide.md",
+      "sha256": "c08b064e6c8c8b0280c08bdf10dfbfe37f9d1d75eef3258f8f6ee9d3ef9470e6",
+      "git_blob": "680eb2f19efd8ed6d2fbed6969793c0524d371e7"
+    },
+    {
+      "path": "docs/operations/console-download-guide.md",
+      "sha256": "41ce7b1b36d9930bdd18b83e5a6aa81e04ea50948272575d865037234b8c7f2b",
+      "git_blob": "22e1cfeb8caafcd105ed1aee4f0eb81fd5f3c184",
+      "provenance": "release guide metadata layer"
+    }
+  ],
+  "accepted_entry_guard_source_commit": "311dc1f3f03cfc298632d72edc50f0dc2dc70630",
+  "entry_guard_review_metadata_commit": "a1dd7f6c306f83dc2f287f1ca0d8e855853fede4",
+  "verified_original_environment_release": "92e1248b63dee44a607296b3d63f61207b61f09a",
+  "verified_original_environment_evidence": "5002422d33d85b3def31541241521de06fd5527b"
+}

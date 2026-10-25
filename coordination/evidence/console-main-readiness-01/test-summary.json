@@ -1,0 +1,62 @@
+{
+  "tests.scripts.test_console_setup": {
+    "passed": 39
+  },
+  "tests.scripts.test_web_console": {
+    "passed": 40
+  },
+  "tests.scripts.test_state_controller": {
+    "passed": 24
+  },
+  "tests.scripts.test_board_projection": {
+    "passed": 28
+  },
+  "tests.scripts.test_parallel_runtime": {
+    "passed": 26
+  },
+  "tests.scripts.test_worker_activation.TestBasicActivation": {
+    "passed": 5
+  },
+  "tests.scripts.test_worker_activation.TestTwoWorkerIsolation": {
+    "passed": 3
+  },
+  "tests.scripts.test_worker_activation.TestFailClosed": {
+    "passed": 7
+  },
+  "tests.scripts.test_worker_activation.TestNoTaskCardMutation": {
+    "passed": 1
+  },
+  "tests.scripts.test_worker_activation.TestNoExternalCalls": {
+    "passed": 2
+  },
+  "tests.scripts.test_worker_poller.TestWorkerRegistration": {
+    "passed": 8
+  },
+  "tests.scripts.test_worker_poller.TestWorkerProjectIsolation": {
+    "passed": 4
+  },
+  "tests.scripts.test_worker_poller.TestPolling": {
+    "passed": 8
+  },
+  "tests.scripts.test_worker_poller.TestAcknowledgement": {
+    "passed": 4
+  },
+  "tests.scripts.test_worker_poller.TestPayloadSafety": {
+    "passed": 3
+  },
+  "tests.scripts.test_worker_poller.TestMalformedState": {
+    "passed": 2
+  },
+  "tests.scripts.test_worker_poller.TestNoSubprocess": {
+    "passed": 6
+  },
+  "tests.scripts.test_worker_poller.TestNoLifecycleMutation": {
+    "passed": 2
+  },
+  "tests.scripts.test_worker_poller.TestCLI": {
+    "passed": 6
+  },
+  "tests.scripts.test_local_agent_loop": {
+    "passed": 23
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "source": [
+    {
+      "path": "scripts/local_agent_loop.py",
+      "tested_raw_sha256": "15d53a961677450e66087b3892f1729b8e8b4af830c5500f9cb5dd3c9a9ee4dc",
+      "staged_lf_sha256": "597f43aabfc049da784c912b4d9c6617bcb5c9e74d2f2526a0043085a18fe808",
+      "staged_git_blob": "29660322ac1ee0e39420f6bcbd4021152f3db772",
+      "normalization_only": true
+    },
+    {
+      "path": "scripts/worker_poller.py",
+      "tested_raw_sha256": "0dd5775b43bd67c602ac7ef1ab5cc098829dd68e9aa217bbcb3376b0c43287a0",
+      "staged_lf_sha256": "f46df96a8e4099a0d839b2c5ff5fe337de5cbd3899fa8f8841de5b549c7d6e7b",
+      "staged_git_blob": "59f8b72bdf49024756ee1fea129e70a14d3f58d8",
+      "normalization_only": true
+    }
+  ],
+  "note": "Tested raw Windows CRLF bytes match final source. Git stores the legacy scripts with LF; staged bytes equal CRLF-to-LF normalization of tested bytes. No source logic edits after tests."
+}

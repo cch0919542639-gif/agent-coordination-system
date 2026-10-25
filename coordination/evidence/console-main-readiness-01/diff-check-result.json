@@ -1,0 +1,11 @@
+{
+  "command": [
+    "git",
+    "-c",
+    "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+    "diff",
+    "--check"
+  ],
+  "returncode": 0,
+  "note": "Treat intentional CRLF in -text pinned documents as line endings; preserve ordinary whitespace checks. Default check reported CR-at-EOL on the added guide header, not spaces in product code."
+}
