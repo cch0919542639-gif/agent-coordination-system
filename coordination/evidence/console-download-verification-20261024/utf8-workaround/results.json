@@ -1,0 +1,111 @@
+{
+  "started_utc": "2026-10-24T06:07:44.430414+00:00",
+  "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+  "os": "Windows-11-10.0.26300-SP0",
+  "host": "verification-host",
+  "commit": "c7f7dee2c356009f51fbe63434ecf0c5400e7571",
+  "checks": {
+    "head": {
+      "exit_code": 0,
+      "expected": 0
+    },
+    "manifest": {
+      "passed": 41,
+      "basis": "Git blob SHA256 and LF-normalized checkout"
+    },
+    "init": {
+      "exit_code": 0,
+      "expected": 0
+    },
+    "init-replay": {
+      "exit_code": 0,
+      "expected": 0
+    },
+    "init-conflict": {
+      "exit_code": 2,
+      "expected": 2
+    },
+    "replay-and-conflict-preserve-bytes": true,
+    "serve-0": {
+      "views": {
+        "overview": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "board": {
+          "status": 200,
+          "runtime_available": true,
+          "total": 105
+        },
+        "monitor": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "workspaces": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "reviews": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "events": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "settings": {
+          "status": 200,
+          "runtime_available": true
+        }
+      },
+      "exit_code": 0,
+      "finite_exit": true,
+      "viewer_writes": 403
+    },
+    "serve-1": {
+      "views": {
+        "overview": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "board": {
+          "status": 200,
+          "runtime_available": true,
+          "total": 105
+        },
+        "monitor": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "workspaces": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "reviews": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "events": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "settings": {
+          "status": 200,
+          "runtime_available": true
+        }
+      },
+      "exit_code": 0,
+      "finite_exit": true,
+      "viewer_writes": 403
+    },
+    "schema4-disabled-no-runs-unchanged-private-files": true,
+    "focused-tests": {
+      "exit_code": 1,
+      "expected": 0
+    }
+  },
+  "utf8_workaround": true,
+  "status": "FAIL",
+  "error": "AssertionError: focused-tests: see log",
+  "finished_utc": "2026-10-24T06:08:33.499412+00:00"
+}

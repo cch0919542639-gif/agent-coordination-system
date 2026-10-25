@@ -1,0 +1,26 @@
+{
+  "tested_commit": "c7f7dee2c356009f51fbe63434ecf0c5400e7571",
+  "publication_date": "2026-10-25",
+  "redactions": [
+    "Windows username/home",
+    "hostname",
+    "checkout/private/workspace root paths",
+    "trailing whitespace stripped from XML text",
+    "trailing whitespace stripped from logs"
+  ],
+  "original_evidence_retained_locally": true,
+  "files": {
+    "attempt1-results.json": "584cadd57cd340d9f3a61f3281aa2fc5dd5a040517848849aed0d384fb8de7ff",
+    "encoding-diagnosis.json": "2c18437ad2a9c9e8afd3eb00ed142ffb144db05290a2b711b1a12057b8336bb8",
+    "init.log": "26bf4b293d98b385fe64b95e2a0a07c14fae0b768aa74068ba1d04cac587969d",
+    "results.json": "3a3f3a4b3c2eaf0caaea32e1da1efd9744c770d22f10f6e0b47421ff1067af60",
+    "utf8-workaround/focused-tests.log": "77ef4d391400d571f1b76a7bd2f4de5a4e17aa862d0b06d3b630a99caefedf8f",
+    "utf8-workaround/init-conflict.log": "9d1a256bb112b69e9443584b10318ca8c88b4072073c0dfedd5880dde56be1e5",
+    "utf8-workaround/init-replay.log": "cd2006aaf136237424e8b7235e8c414785d2189150fe26be4ce987b10d94cd28",
+    "utf8-workaround/init.log": "86ebcf70ba09940c31d9625b0bd8181c2588ed3ff45ab33beddc1f1bb137da95",
+    "utf8-workaround/junit.xml": "4bcb82b7d347befc3980528d6047fb978e5aff6511bdce61ac3681fb32f2965e",
+    "utf8-workaround/results.json": "67f3493e1b9a5c73a91158954d342d876fc61adee70eb73e65232d55bf349d8f",
+    "utf8-workaround/serve-0.log": "979c60cf79f506a0f6ecd050b06a281d889067b35fa94f012ec5c286ad3eea7f",
+    "utf8-workaround/serve-1.log": "44cd7a9dc71f7403207b76857a755c737c52e3061ccbcc1c3667830a1130915d"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "started_utc": "2026-10-24T06:07:27.716143+00:00",
+  "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+  "os": "Windows-11-10.0.26300-SP0",
+  "host": "verification-host",
+  "commit": "c7f7dee2c356009f51fbe63434ecf0c5400e7571",
+  "checks": {
+    "head": {
+      "exit_code": 0,
+      "expected": 0
+    },
+    "manifest": {
+      "passed": 41,
+      "basis": "Git blob SHA256 and LF-normalized checkout"
+    },
+    "init": {
+      "exit_code": 1,
+      "expected": 0
+    }
+  },
+  "status": "FAIL",
+  "error": "AssertionError: init: see log",
+  "finished_utc": "2026-10-24T06:07:29.694102+00:00"
+}
