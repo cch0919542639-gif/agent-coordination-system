@@ -1,0 +1,93 @@
+{
+  "task_id": "acs-memory-preflight-01",
+  "tested_date": "2026-10-26",
+  "base_commit": "c3682d330ea847fc0895bff3dee334538a731499",
+  "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+  "tests": {
+    "command": "python -B -m pytest tests/scripts/test_curated_memory.py -q -p no:cacheprovider",
+    "native_exit_code": 0,
+    "tests": 51,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_pytest_seconds": 24.94,
+    "basis": "Publication run after replacing the private endpoint fixture; source code unchanged"
+  },
+  "earlier_failure": {
+    "tests": 50,
+    "passed": 49,
+    "failed": 1,
+    "native_exit_code": 1,
+    "cause": "Interpreter recursion threshold did not reliably bound nested JSON; added explicit 64-level limit"
+  },
+  "coordination_validation": {
+    "native_exit_code": 0,
+    "summary": "Coordination validation passed."
+  },
+  "offline_preview": {
+    "cards": 10,
+    "active": 9,
+    "historical": 1,
+    "batch_sha256": "4714d456dbf9b713b1879b62d8990797d56fe0d86411be3cfec82ef67476b4f9",
+    "network_calls": 0
+  },
+  "status": "LOCAL ADAPTER READY FOR REVIEW; UPSTREAM MODEL/DEPLOYMENT GATE HOLD",
+  "real_provider_calls": 0,
+  "nas_changes": 0,
+  "approved_real_imports": 0,
+  "limitations": [
+    "synthetic HTTP extraction fixture only",
+    "no upstream source/LLM quality proof",
+    "candidate summaries unreviewed",
+    "no persistent NAS service",
+    "no two-device/endurance qualification",
+    "withdrawal enforced only at adapter output",
+    "no independent code review or full-repo regression"
+  ],
+  "evidence_redactions": [
+    "hostname removed from JUnit",
+    "local username replaced in failed JUnit",
+    "trailing whitespace stripped",
+    "Private endpoint replaced by documentation-reserved address in current test and historical JUnit"
+  ],
+  "sha256": {
+    "scripts/curated_memory.py": "5c15997dbad8146f7c6e9c78120e186f816e1234624a7007dbafe189dfbb1f58",
+    "tests/scripts/test_curated_memory.py": "3d3f1a6a93f30c4fd7ded1e688b5c412a4d9dce6e5152b1cef0a9637d1f7185a",
+    "docs/operations/curated-memory-guide.md": "270369fc0d3eb9fbb8c9180c4bddd3fa5f626ed135869f242961bb4d8b7cd961",
+    "docs/specs/acs-agentmemory-integration.md": "bf825d6fd4925ce2f4c3ae8ea56c8f2ee1e599a618a9b60fffd6549a279a78c6",
+    "docs/specs/acs-agentmemory-plan.md": "d0b93bb2989f30cda225827ff0d9e3fcc2edfae638f132040fa8c7cb9a715223",
+    "docs/specs/acs-agentmemory-context.md": "f7a7e155500c93a1cc79dc5f04fc7bc9565f646cdc23e7845105b86945f918da",
+    "coordination/delivery/acs-memory-preflight-01-delivery-report.md": "296adda1cd4d247a1a36da8c83bbe302fe753b71270fbbe42fc57d0bf3154d2b",
+    "coordination/progress/codex-memory-implementation.md": "a996551e48403c5761bd4881dd343315b424a83aa1d038ee66b6f54c57ed394c",
+    "coordination/task-board/review/2026-10-26_acs-memory-preflight-01_curated-memory-integration.md": "df0cd38849ea3c9a680bc8d18e0c3cb96055b107fa1dfd4db9fa9136070cfe58",
+    "PROGRESS.md": "74f608f8c8738659725f4a2e64e877fdb757c7257caed9ed150ae271c40f9236",
+    "coordination/evidence/acs-memory-preflight-01/candidate-batch.json": "2817a68dfcbcad438832196dd97ce804af8344d3fd52f8fe5399e7bc66df83e9",
+    "coordination/evidence/acs-memory-preflight-01/candidate-questions.json": "d2a1285736e6364d115513cd3d8bafb65b47a989862ab6f6a6dcece82bdb62f5",
+    "coordination/evidence/acs-memory-preflight-01/earlier-depth-failure-junit.xml": "bd3375be9bc6e81713b82e8db7668e2448c4fedf1ae1643bf9f4e580e9704014",
+    "coordination/evidence/acs-memory-preflight-01/junit.xml": "28e072395014d5e7b23967f9ba1b1848cc09a0fef24e08ae68fa7508917ea9b2",
+    "coordination/evidence/acs-memory-preflight-01/preview.json": "408472e90d66b075ccafd9c5e70efd3455c0cea34d46200eed97745929a77c64"
+  },
+  "hash_basis": "Git committed blob bytes; Windows checkout newline conversion is excluded",
+  "diff_check": {
+    "command": "git diff --cached --check",
+    "native_exit_code": 0
+  },
+  "evidence_portability_correction": "Initial working-tree byte hashes differed from staged Git blobs for four CRLF-normalized metadata files. Corrected to committed blob hashes; tested source, parsed cards and batch digest unchanged.",
+  "initial_adapter_tests": {
+    "command": "python -B -m pytest tests/scripts/test_curated_memory.py -q -p no:cacheprovider",
+    "native_exit_code": 0,
+    "tests": 51,
+    "failures": 0,
+    "skipped": 0,
+    "elapsed_pytest_seconds": 21.6,
+    "basis": "Completed native run; source unchanged since release-junit.xml"
+  },
+  "publication_authorization": {
+    "date": "2026-10-26",
+    "repository": "cch0919542639-gif/agent-coordination-system",
+    "push": true,
+    "draft_pr": true,
+    "merge": false,
+    "data_mode": "offline synthetic only"
+  }
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "question": "What failed in the original CP950 initialization?",
+    "expected_memory_id": "sid-cp950-historical",
+    "mode": "historical-source-only",
+    "status": "candidate expectations; not reviewed or measured"
+  },
+  {
+    "question": "Did the repaired CP950 release still require a UTF-8 workaround?",
+    "expected_memory_id": "sid-cp950-repaired",
+    "mode": "active-recall-top3",
+    "status": "candidate expectations; not reviewed or measured"
+  },
+  {
+    "question": "Can memory or chat alone mark a task done?",
+    "expected_memory_id": "formal-task-authority",
+    "mode": "active-recall-top3",
+    "status": "candidate expectations; not reviewed or measured"
+  },
+  {
+    "question": "Where should rental product task cards be stored?",
+    "expected_memory_id": "project-boundaries",
+    "mode": "active-recall-top3",
+    "status": "candidate expectations; not reviewed or measured"
+  },
+  {
+    "question": "Can another computer reuse the first computer private console state?",
+    "expected_memory_id": "private-console-setup",
+    "mode": "active-recall-top3",
+    "status": "candidate expectations; not reviewed or measured"
+  },
+  {
+    "question": "Can a Viewer gain write access by changing browser controls?",
+    "expected_memory_id": "viewer-boundary",
+    "mode": "active-recall-top3",
+    "status": "candidate expectations; not reviewed or measured"
+  },
+  {
+    "question": "Does local loop support authorize unbounded worker execution?",
+    "expected_memory_id": "finite-loop-boundary",
+    "mode": "active-recall-top3",
+    "status": "candidate expectations; not reviewed or measured"
+  },
+  {
+    "question": "Does an old passing console test prove the current release is accepted?",
+    "expected_memory_id": "console-version-proof",
+    "mode": "active-recall-top3",
+    "status": "candidate expectations; not reviewed or measured"
+  },
+  {
+    "question": "May a memory tool capture all private transcripts to save tokens?",
+    "expected_memory_id": "privacy-boundary",
+    "mode": "active-recall-top3",
+    "status": "candidate expectations; not reviewed or measured"
+  },
+  {
+    "question": "Should an unfinished integration be described as automatic synchronization?",
+    "expected_memory_id": "manual-before-automation",
+    "mode": "active-recall-top3",
+    "status": "candidate expectations; not reviewed or measured"
+  }
+]

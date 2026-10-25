@@ -1,3 +1,17 @@
+## Curated memory adapter submitted for review（2026-10-26）
+
+acs-memory-preflight-01 implements an optional source-pinned CLI/MCP adapter on
+an isolated main-based branch. Final focused51tests passed/native0/21.60seconds;
+ten real Git source candidates preview offline and remain pending review. Durable
+receipts prevent blind replay; activated queries return only approved source
+cards, excluding raw model persona and stale/foreign candidates. Synthetic HTTP
+tests do not prove upstream model extraction/quality. Real processing/provider,
+NAS persistence and two-device acceptance remain separate gates. The user later
+confirmed synthetic-only offline work and authorized a Draft PR publication,
+without merge, on2026-10-26.
+See coordination/delivery/acs-memory-preflight-01-delivery-report.md. Existing
+workers, task acceptance, runtime state and earlier release records are unchanged.
+
 ## PR6整合驗證接受，待精確head發布合併（2026-10-25）
 
 console-main-readiness-01已acceptedDONE：單次8組241pass/native0/156.063秒，52pins/109cards/18舊snapshot完整；freshlocalautocrlfclone eb31273於9.64秒驗證raw/blob pins、isolatedimports、兩CLIhelp、validator及cleanstatus。最終此層僅補驗證／接受紀錄，產品／測試blobs與獨立已接受c3c6a38完全相同。來源審查沿用7份accepted快照及PR10OpenCode靜態審查；此任務是deterministic metadata/integration檢查，不冒稱新的獨立模型審查或新雙機／production驗收。準備nonforce快轉PR6來源分支並以精確head合併main；PR9未整合啟用。
