@@ -1,3 +1,7 @@
+## PR10獨立審查通過，準備分支內合併（2026-10-25）
+
+使用者授權單次OpenCode模型資料傳輸及先審查再合併。固定來源311dc1f之OpenCode/deepseek-v4.1-flash-free獨立靜態審查建議accepted、無blocking findings，native0/54.531秒、owned tree停止；未執行工具或另跑測試。Orchestrator核對110JUnit/native0、來源映射及實際caller，確認讀取delivery無前置寫入、acceptance_checks僅run_loop內使用、resolver早退仍在inbox/ACK前拒絕。保留preflight非原子鎖、symlink/relative registry未另測等限制；不把模型review冒稱GitHub APPROVED。console-entry-guards-01已accepted DONE；這層只加入審查證據／狀態，不改來源或測試。下一步依授權核對精確head後將PR10合併至codex/console-bootstrap-01，尚不代表PR6/main或PR9已通過。
+
 ## 入口修補提交審查與發布授權（2026-10-25）
 
 使用者已在110項通過後明確授權完整時commit/push。console-entry-guards-01記錄為REVIEW，來源仍是同一受測兩檔；準備發布獨立codex/console-entry-guards-01並建立以codex/console-bootstrap-01為base的草稿PR，PR6/PR9及main不變。新卡與交付並非自行接受。確切提交及遠端狀態以Git/PR讀回為準；下方「尚未commit/push」是測試完成時快照。

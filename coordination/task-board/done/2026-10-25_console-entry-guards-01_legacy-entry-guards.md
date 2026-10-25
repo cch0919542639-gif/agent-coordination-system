@@ -1,7 +1,7 @@
 ---
 task_id: console-entry-guards-01
 phase: console-delivery-01
-status: REVIEW
+status: DONE
 owner: CODEX
 reviewer: ORCHESTRATOR
 priority: high
