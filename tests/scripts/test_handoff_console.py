@@ -17,6 +17,7 @@ class Handoff:
     def __init__(self):
         self.syncs = 0
         self.dispatches = []
+        self.scope_result = dict(allowed_scope=["src/**"], forbidden_scope=["secrets/**"])
         self.data = dict(configured=True, initialized=True, last_sync_ms=1,
             last_error=None, code_revision='a'*40, queue_head='0'*40,
             ready_tasks=[dict(task_id='task-a', owner='worker', card_sha256='b'*64)],
@@ -37,7 +38,8 @@ class Handoff:
             raise ValueError('private failure details are not for HTTP')
         self.dispatches.append(execute)
         return dict(dispatch_id='dispatch-a', task_id=task_id, machine_id=machine_id,
-                    owner='worker', status='RECEIVED' if execute else 'PREVIEW', raw_task='never-return-this')
+                    owner='worker', status='RECEIVED' if execute else 'PREVIEW', raw_task='never-return-this',
+                    **self.scope_result)
 
 
 def attach(c):
@@ -82,8 +84,12 @@ def test_dispatch_sha_strings_preserved_rechecked_and_redacted(console):
     status, preview, _ = request(console, '/api/preview', dict(action='handoff.dispatch', args=args()), admin)
     assert status == 200 and preview['args'] == args()
     assert h.dispatches == [False] and 'raw_task' not in preview['preview']
+    assert preview['preview']['allowed_scope'] == ['src/**']
+    assert preview['preview']['forbidden_scope'] == ['secrets/**']
     status, result, _ = request(console, '/api/execute', dict(plan=preview['plan']), admin)
     assert status == 200 and result['result']['status'] == 'RECEIVED'
+    assert result['result']['allowed_scope'] == ['src/**']
+    assert result['result']['forbidden_scope'] == ['secrets/**']
     assert h.dispatches == [False, True]
 
 
@@ -198,3 +204,39 @@ function respond(req,data){req.resolve({ok:true,status:200,json:async()=>data});
         assert b'Viewer passed' in job.stdout.read()
     finally:
         job.close()
+
+
+@pytest.mark.parametrize('field,bad', [
+    ('allowed_scope', []), ('allowed_scope', 'src/**'),
+    ('allowed_scope', ['src/**']*65), ('allowed_scope', [None]),
+    ('allowed_scope', ['/private/path']), ('allowed_scope', ['C:/private/path']),
+    ('allowed_scope', ['../escape']), ('allowed_scope', ['src/../../escape']),
+    ('allowed_scope', ['src/*']), ('allowed_scope', ['src/**/file.py']),
+    ('allowed_scope', ['src/./file.py']), ('allowed_scope', ['x'*241]),
+    ('forbidden_scope', None), ('forbidden_scope', [{'raw':'private'}]),
+    ('forbidden_scope', ['secrets\\private']), ('forbidden_scope', ['secrets/**']*65),
+])
+def test_dispatch_scope_projection_refuses_malformed_paths(console, field, bad):
+    h=attach(console); h.scope_result[field]=bad
+    admin=login(console,'administrator')
+    status,body,_=request(console,'/api/preview',dict(action='handoff.dispatch',args=args()),admin)
+    assert status==409
+    assert 'private' not in json.dumps(body) and 'raw_task' not in json.dumps(body)
+
+
+def test_dispatch_scope_preserves_relative_unicode_and_empty_forbidden(console):
+    h=attach(console); h.scope_result=dict(allowed_scope=['src/資料.py','docs/**'],forbidden_scope=[])
+    admin=login(console,'administrator')
+    status,body,_=request(console,'/api/preview',dict(action='handoff.dispatch',args=args()),admin)
+    assert status==200 and body['preview']['allowed_scope']==['src/資料.py','docs/**']
+    assert body['preview']['forbidden_scope']==[]
+
+
+@pytest.mark.parametrize('base_length,expected_status', [(240,200),(241,409)])
+def test_dispatch_scope_glob_bound_matches_backend(console, base_length, expected_status):
+    h=attach(console); scope='x'*base_length+'/**'
+    h.scope_result=dict(allowed_scope=[scope],forbidden_scope=[])
+    admin=login(console,'administrator')
+    status,body,_=request(console,'/api/preview',dict(action='handoff.dispatch',args=args()),admin)
+    assert status==expected_status
+    if status==200: assert body['preview']['allowed_scope']==[scope]

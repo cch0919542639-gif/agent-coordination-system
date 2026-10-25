@@ -14,6 +14,7 @@ import time
 from urllib.parse import parse_qs, urlsplit
 
 from coordination_runtime.parallel_runtime import ParallelController
+from coordination_runtime.parallel_policy import path_key
 from coordination_runtime.recovery_manager import RecoveryManager
 from coordination_runtime.resource_guard import ResourceController
 from coordination_runtime.state_controller import StateController, StateError, _id, _integer
@@ -158,7 +159,20 @@ class Console:
                 if not isinstance(args[name], str) or not re.fullmatch('[a-f0-9]{' + str(size) + '}', args[name]):
                     raise Refused()
             result = self.handoff.dispatch(**args, execute=execute)
-            return {k: result.get(k) for k in ('dispatch_id', 'task_id', 'machine_id', 'owner', 'status')}
+            projected = {k: result.get(k) for k in ('dispatch_id', 'task_id', 'machine_id', 'owner', 'status')}
+            for key, minimum in [('allowed_scope', 1), ('forbidden_scope', 0)]:
+                values = result.get(key)
+                if not isinstance(values, list) or not minimum <= len(values) <= 64:
+                    raise ValueError()
+                for value in values:
+                    if not isinstance(value, str):
+                        raise ValueError()
+                    base = value.removesuffix('/**')
+                    path_key(base)
+                    if any(c in base for c in '*?[]{}'):
+                        raise ValueError()
+                projected[key] = list(values)
+            return projected
         except (ValueError, TypeError, KeyError):
             raise StateError('Handoff refused; refresh and preview again.') from None
 

@@ -79,8 +79,11 @@ sync does not start the receiver or a runner.
 
 Select an existing READY task and a peer with the same owner. The UI displays
 task_id, machine_id, expected_card_sha256 (64hex), expected_revision (40hex) and
-expected_queue_head (40hex), all strings. Review the task's actual allowed scope
-and those exact card/version bindings before confirming. The server rechecks all
+expected_queue_head (40hex), all strings. The returned preview also displays
+allowed_scope and forbidden_scope from that exact hash-bound READY card. Inspect
+both displayed repository-relative scope lists and the exact card/version bindings
+before confirming; caller-supplied scope lists cannot replace the card's scope.
+The server rechecks all
 five fields at execution: changed card/code/queue, expired/used/other-session plans
 refuse. Refresh and preview again after a change. Dispatch publishes an immutable
 assignment/card snapshot using queue fast-forward CAS without committing local

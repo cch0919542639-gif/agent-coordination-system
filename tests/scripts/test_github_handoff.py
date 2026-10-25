@@ -5,6 +5,7 @@ from pathlib import Path
 import sqlite3
 import subprocess
 import sys
+import time
 
 import pytest
 
@@ -53,7 +54,9 @@ def dispatched(pilot):
         expected_revision=pilot['revision'], expected_queue_head=summary['queue_head'])
     preview = sender.dispatch(**args)
     assert preview['status'] == 'PREVIEW' and summary['queue_head'] == ZERO
+    assert preview['allowed_scope'] == ['src/**'] and preview['forbidden_scope'] == ['secrets/**']
     result = sender.dispatch(**args, execute=True)
+    assert result['allowed_scope'] == preview['allowed_scope'] and result['forbidden_scope'] == preview['forbidden_scope']
     return sender, result['dispatch_id'], args
 
 
@@ -181,6 +184,25 @@ def test_discovery_hash_native_junit_revision_and_offline_status(pilot, monkeypa
     assert summary['last_sync_ms'] == before and summary['last_error'] == 'TRANSPORT_FAILED'
 
 
+def test_invalid_evidence_member_paths_are_safe_categories(pilot, monkeypatch):
+    service = pilot['service']('invalid-paths', evidence_ref_prefix='refs/heads/docs/console-')
+    service.initialize()
+    with monkeypatch.context() as m:
+        m.setattr(service, '_git', lambda *a, **k: (_ for _ in ()).throw(AssertionError('invalid path contacted Git')))
+        with pytest.raises(HandoffError, match='INVALID_EVIDENCE'):
+            service._blob(ZERO, '../outside')
+    publish_evidence(pilot, 'good')
+    path = pilot['source'] / 'coordination/evidence/fixture/publication-manifest.json'
+    original = json.loads(path.read_bytes())
+    for member in ('../outside', '/private/path', 'C:/private/path'):
+        manifest = dict(original, files=original['files'] | {member: '0'*64})
+        path.write_bytes(encoded(manifest))
+        git(pilot['source'], 'add', '.')
+        git(pilot['source'], 'commit', '-qm', 'invalid evidence member')
+        git(pilot['source'], 'push', '-q', 'origin', 'HEAD:refs/heads/docs/console-fixture')
+        assert service.sync_once()['acceptance'][0]['status'] == 'INVALID'
+
+
 def test_timeout_is_failed_stopped_and_not_retried(pilot):
     pilot['runner'].write_text('import time\ntime.sleep(30)\n')
     sender, key, args = dispatched(pilot)
@@ -201,3 +223,60 @@ def test_cli_summary_and_watch_budget(pilot):
     assert result.returncode == 0 and not json.loads(result.stdout)['initialized']
     result = subprocess.run(command + ['watch','--cycles','121'], capture_output=True, timeout=20)
     assert result.returncode == 2 and not service.state.exists()
+
+
+def test_scope_preview_is_hash_bound_and_rejects_nonrelative_paths(pilot, monkeypatch):
+    sender = pilot['service']('scopes'); sender.initialize(); summary = sender.sync_once()
+    args = dict(task_id='task-one', machine_id='B', expected_card_sha256=digest(pilot['card'].read_bytes()),
+        expected_revision=pilot['revision'], expected_queue_head=summary['queue_head'])
+    monkeypatch.setattr(sender, '_git', lambda *a, **k: (_ for _ in ()).throw(AssertionError('preview contacted Git')))
+    preview = sender.dispatch(**args)
+    assert preview['allowed_scope'] == ['src/**'] and preview['forbidden_scope'] == ['secrets/**']
+    assert 'Synthetic task' not in json.dumps(preview)
+    pilot['card'].write_text(pilot['card'].read_text().replace('secrets/**', '../outside/**'))
+    with pytest.raises(HandoffError, match='INVALID_CARD'): sender.dispatch(**args)
+
+
+@pytest.mark.parametrize('phase', ['outbox', 'constructor', 'resume', 'cleanup-failure', 'valid'])
+def test_deadline_recheck_never_resumes_expired_job_and_cleanup_is_honest(pilot, monkeypatch, phase):
+    worker = pilot['service']('deadline-' + phase, worker=True)
+    assignment = dict(dispatch_id='a'*64, project_id='project', task_id='task-one', machine_id='B',
+        owner='worker', schema_version=1, card_sha256='b'*64)
+    monkeypatch.setattr(worker, '_workspace', lambda a: pilot['source'])
+    receipts = []; events = []
+    monkeypatch.setattr(worker, '_record', lambda *args: receipts.append(args))
+    def outbox():
+        if phase == 'outbox': worker.deadline = time.monotonic() - 1
+    monkeypatch.setattr(worker, '_outbox', outbox)
+    class Job:
+        def __init__(self, *args, **kwargs):
+            events.append('constructed')
+            if phase in {'constructor', 'cleanup-failure'}: worker.deadline = time.monotonic() - 1
+        def resume(self):
+            assert worker.deadline > time.monotonic()
+            events.append('resumed')
+            if phase == 'resume': worker.deadline = time.monotonic() - 1
+        def wait(self, timeout):
+            if timeout:
+                assert worker.deadline > time.monotonic() and 0 < timeout <= worker.c['runner']['timeout_seconds']
+                events.append('waited')
+            return 0 if phase == 'valid' else 1
+        def wait_empty(self, timeout): return True
+        def stop(self):
+            events.append('stopped')
+            if phase == 'cleanup-failure': raise RuntimeError('synthetic unconfirmed tree')
+        def close(self): events.append('closed')
+    monkeypatch.setattr(implementation, 'JobProcess', Job)
+    worker.deadline = time.monotonic() + 30
+    worker._run(assignment, 'c'*32)
+    final = receipts[-1]
+    if phase == 'valid':
+        assert final[2:] == ('FINISHED', 0, True)
+        assert events == ['constructed', 'resumed', 'waited', 'closed']
+    else:
+        assert final[2] == 'UNKNOWN' and 'waited' not in events
+        if phase == 'outbox': assert not events and final[3:] == (None, False)
+        elif phase == 'cleanup-failure': assert events == ['constructed', 'stopped', 'closed'] and final[3:] == (None, False)
+        else:
+            assert events[-2:] == ['stopped', 'closed'] and final[3:] == (1, True)
+            assert ('resumed' in events) == (phase == 'resume')

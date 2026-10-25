@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from coordination_common import parse_front_matter
 from worker_process_guard import JobProcess
 from .parallel_policy import path_key
+from .state_controller import StateError
 
 ZERO = '0' * 40
 ID = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]{0,99}')
@@ -227,7 +228,7 @@ class HandoffService:
             if not isinstance(deps, list) or len(deps) > 32: fail('INVALID_CARD')
             for item in deps: identifier(item)
             return header
-        except (KeyError, TypeError, AttributeError, UnicodeError, ValueError): fail('INVALID_CARD')
+        except (KeyError, TypeError, AttributeError, UnicodeError, ValueError, StateError): fail('INVALID_CARD')
 
     def _ready(self):
         result = []
@@ -268,7 +269,7 @@ class HandoffService:
 
     def _blob(self, head, path, limit=2 * 1024**2):
         try: path_key(path)
-        except ValueError: fail('INVALID_EVIDENCE')
+        except (ValueError, StateError): fail('INVALID_EVIDENCE')
         if int(self._git(['cat-file', '-s', head + ':' + path]).strip()) > limit: fail('SIZE_LIMIT')
         return self._git(['show', head + ':' + path])
 
@@ -430,7 +431,7 @@ class HandoffService:
                     for suite in suites:
                         if any(int(suite.get(k, '-1')) != 0 for k in ('failures', 'errors', 'skipped')) or int(suite.get('tests', '-1')) != len(list(suite.iter('testcase'))): fail('INVALID_EVIDENCE')
                     row.update(status='VERIFIED_PASS', test_count=len(cases))
-                except (HandoffError, ValueError, KeyError, TypeError, RecursionError, ET.ParseError): pass
+                except (HandoffError, ValueError, KeyError, TypeError, RecursionError, ET.ParseError, StateError): pass
                 reports.append(row)
         return reports
 
@@ -468,11 +469,15 @@ class HandoffService:
         peers = [p for p in self.c['peers'] if p['machine_id'] == machine_id]
         if len(tasks) != 1 or len(peers) != 1 or tasks[0]['owner'] != peers[0]['owner'] or tasks[0]['card_sha256'] != expected_card_sha256: fail('ASSIGNMENT_REFUSED')
         row = tasks[0]
+        raw = bounded(self.root / 'coordination/task-board/ready' / row['filename'])
+        if digest(raw) != expected_card_sha256: fail('STALE_CARD')
+        card = self._card(raw, task_id, row['owner'])
         assignment = dict(schema_version=1, project_id=self.c['project_id'], task_id=task_id, owner=row['owner'], machine_id=machine_id,
                           base_revision=expected_revision, card_sha256=expected_card_sha256, card_filename=row['filename'])
         dispatch_id = digest(encoded(assignment)); assignment['dispatch_id'] = dispatch_id
         preview = dict(task_id=task_id, machine_id=machine_id, expected_card_sha256=expected_card_sha256,
-            expected_revision=expected_revision, expected_queue_head=expected_queue_head, dispatch_id=dispatch_id, owner=row['owner'], status='PREVIEW')
+            expected_revision=expected_revision, expected_queue_head=expected_queue_head, dispatch_id=dispatch_id, owner=row['owner'], status='PREVIEW',
+            allowed_scope=list(card['allowed_scope']), forbidden_scope=list(card['forbidden_scope']))
         if execute:
             if self._head(self.c['code_ref']) != expected_revision: fail('STALE_REVISION')
             raw = bounded(self.root / 'coordination/task-board/ready' / row['filename'])
@@ -552,19 +557,24 @@ class HandoffService:
         payload = self.state / 'inbox' / assignment['dispatch_id'] / 'payload.json'
         self._immutable(payload, encoded(dict(schema_version=1, assignment=assignment, run_id=run_id,
             task_file=str(payload.parent / 'task.md'), workspace=str(workspace))))
-        timeout = runner['timeout_seconds']
-        if self.deadline is not None:
-            timeout = min(timeout, self.deadline - time.monotonic() - 5)
-            if timeout <= 0: fail('DEADLINE')
+        def remaining_budget():
+            timeout = runner['timeout_seconds']
+            if self.deadline is not None:
+                timeout = min(timeout, self.deadline - time.monotonic() - 5)
+                if timeout <= 0: fail('DEADLINE')
+            return timeout
+        remaining_budget()
         self._record(assignment, run_id, 'RUNNING')
         self._outbox()
         process = None; code = None; stopped = False; status = 'UNKNOWN'
         try:
             if digest(bounded(canonical(runner['script']), 1024**2)) != runner['sha256']: fail('RUNNER_CHANGED')
+            remaining_budget()  # RUNNING/outbox work cannot authorize a later launch.
             process = JobProcess([*runner['argv'], str(payload)], cwd=workspace, capture_output=False)
+            remaining_budget()  # Constructor returned an owned suspended process.
             process.resume()
             try:
-                code = process.wait(timeout)
+                code = process.wait(remaining_budget())
                 stopped = process.wait_empty(2)
                 status = 'FINISHED' if code == 0 and stopped else 'FAILED' if stopped else 'UNKNOWN'
                 if not stopped:
