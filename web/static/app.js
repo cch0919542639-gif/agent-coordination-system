@@ -7,9 +7,11 @@ const pages = {
   workspaces: ['工作區', '已登記的隔離工作區與固定基底，保留候選成果。'],
   reviews: ['審查中心', '正式審查紀錄與 SHA 收據；執行操作時仍需重新核對。'],
   events: ['事件紀錄', '依序列增量讀取，每次最多 50 筆，畫面保留最近 100 筆。'],
+  handoff: ['跨機交接', 'GitHub 證據與派發收據快照；自動接單由對方的前景 watch 執行。'],
   settings: ['設定與操作', '查看目前設定，透過 Controller 預覽及確認受控操作。']
 };
 let session = null, view = 'overview', offset = 0, cursor = 0, eventRows = [];
+let handoffSnapshot = null, handoffSignature = '';
 let timer = null, pending = null, generation = 0, plan = null, actionBusy = false, revision = 0, authGeneration = 0;
 function node(tag, content, cls) { const n = document.createElement(tag); if (content !== undefined) n.textContent = content; if (cls) n.className = cls; return n; }
 function showError(message) { $('error').textContent = message; }
@@ -26,6 +28,7 @@ async function api(path, body, signal) {
 }
 function signedOut() {
   authGeneration++; session = null; generation++; clearTimeout(timer); if (pending) pending.abort(); pending = null;
+  handoffSnapshot = null; handoffSignature = '';
   clearPlan(); $('console').hidden = true; $('login').hidden = false; $('token').value = '';
   $('action-result').textContent = ''; $('action-result').hidden = true; $('confirm').hidden = true;
   $('content').replaceChildren(); eventRows = []; cursor = 0; $('username').focus();
@@ -41,7 +44,10 @@ function navigate(name) {
   view = name; offset = 0; cursor = 0; eventRows = []; clearPlan();
   $('title').textContent = pages[name][0]; $('subtitle').textContent = pages[name][1];
   for (const button of document.querySelectorAll('nav button')) { if (button.dataset.view === name) button.setAttribute('aria-current','page'); else button.removeAttribute('aria-current'); }
-  $('operations').hidden = name !== 'settings' || session.role === 'viewer';
+  $('operations').hidden = !['settings','handoff'].includes(name) || session.role === 'viewer';
+  $('action-form').hidden = name !== 'settings'; $('inspect-form').hidden = name !== 'settings';
+  $('handoff-controls').hidden = name !== 'handoff';
+  if (name === 'handoff') { handoffSnapshot = null; handoffSignature = ''; $('handoff-controls').hidden = true; }
   $('confirm').hidden = true; $('action-result').hidden = true; $('action-message').textContent = '';
   $('content').replaceChildren(node('p', '讀取實際狀態中…', 'note'));
   refresh();
@@ -62,7 +68,7 @@ function render(data) {
   $('updated').textContent = '更新於 ' + new Date(data.sampled_ms).toLocaleTimeString('zh-TW');
   $('previous').hidden = view === 'events' || offset === 0; $('next').hidden = !data.more;
   $('page-info').textContent = data.total === undefined ? '' : `第 ${Math.floor(offset / 100) + 1} 頁 · 共 ${data.total} 筆`;
-  if (!data.runtime_available) $('content').append(node('p', '找不到指定的 runtime 資料庫。尚未啟用的資料不會顯示為零或健康。', 'note'));
+  if (view !== 'handoff' && !data.runtime_available) $('content').append(node('p', '找不到指定的 runtime 資料庫。尚未啟用的資料不會顯示為零或健康。', 'note'));
   if (view === 'overview') {
     const stats = node('div', undefined, 'stats');
     for (const [label,value,hint] of [['任務總數',data.board_total,'正式任務卡'],['進行中',(data.board_counts || {}).IN_PROGRESS || 0,'任務板狀態'],['待審查',(data.board_counts || {}).REVIEW || 0,'等待正式審查'],['Runtime 登記執行',data.active_runs ?? '—','含待恢復；須即時核對']]) { const box = node('div', undefined, 'stat'); box.append(node('div',label,'stat-label'),node('div',String(value),'stat-value'),node('div',hint,'stat-hint')); stats.append(box); }
@@ -81,12 +87,60 @@ function render(data) {
     const seen = new Set(eventRows.map(r => r.sequence)); eventRows.push(...(data.rows || []).filter(r => !seen.has(r.sequence))); eventRows = eventRows.slice(-100); cursor = data.cursor ?? cursor;
     table('Controller 事件', eventRows, [['sequence','序列'],['event_type','事件'],['task_id','任務'],['run_id','執行'],['agent_id','來源'],['timestamp_ms','時間 ms']]);
     $('next').textContent = '讀取後續事件'; $('page-info').textContent = `游標 ${cursor} · 顯示 ${eventRows.length} 筆`;
+  } else if (view === 'handoff') {
+    renderHandoff(data.handoff);
   } else if (view === 'settings') {
     const keys = [['mode','執行模式'],['capacity','容量'],['schema_version','Runtime schema'],['breaker','資源保護'],['minimum_disk_bytes','最低磁碟 bytes'],['minimum_memory_bytes','最低可用記憶體 bytes'],['maximum_memory_load','最高記憶體負載 %'],['visible_poll_seconds','前景輪詢秒'],['hidden_poll_seconds','背景輪詢秒']];
     table('目前設定（唯讀）', data.runtime_available ? keys.map(([key,label]) => ({label,value:data[key]})) : [], [['label','設定'],['value','目前值']]);
     if (session.role === 'viewer') $('content').append(node('p', 'Viewer 僅有檢視權限。操作與執行權限會由伺服器再次檢查。', 'note'));
   }
   if (view !== 'events') $('next').textContent = '下一頁';
+}
+function dispatchArgs() {
+  if (!handoffSnapshot) return null;
+  const task = (handoffSnapshot.ready_tasks || []).find(t => t.task_id === $('handoff-task').value);
+  const peer = (handoffSnapshot.peers || []).find(p => p.machine_id === $('handoff-peer').value);
+  if (!task || !peer || task.owner !== peer.owner || !handoffSnapshot.code_revision || !handoffSnapshot.queue_head) return null;
+  return {task_id:task.task_id,machine_id:peer.machine_id,expected_card_sha256:task.card_sha256,
+    expected_revision:handoffSnapshot.code_revision,expected_queue_head:handoffSnapshot.queue_head};
+}
+function handoffBinding() {
+  const args = dispatchArgs(); $('handoff-binding').textContent = args ? JSON.stringify(args,null,2) : '尚無可派發且負責人相符的任務／目標。先完成外部設定並明確同步。';
+  $('handoff-preview').disabled = !args;
+}
+function handoffPeers() {
+  const selected = $('handoff-peer').value;
+  const task = (handoffSnapshot.ready_tasks || []).find(t => t.task_id === $('handoff-task').value);
+  $('handoff-peer').replaceChildren();
+  for (const peer of handoffSnapshot.peers || []) if (task && peer.owner === task.owner) {
+    const option = node('option', `${peer.machine_id} · ${peer.owner}`); option.value = peer.machine_id; $('handoff-peer').append(option);
+  }
+  if ([...$('handoff-peer').options].some(o => o.value === selected)) $('handoff-peer').value = selected;
+  handoffBinding();
+}
+function renderHandoff(h) {
+  handoffSnapshot = h;
+  $('connection').textContent = h.configured ? '本機快照 · 非即時在線狀態' : '跨機交接尚未設定';
+  const synced = h.last_sync_ms ? new Date(h.last_sync_ms).toLocaleString('zh-TW') : '尚未成功同步';
+  const age = h.last_sync_ms ? `${Math.max(0, Math.floor((Date.now()-h.last_sync_ms)/1000))} 秒前` : '未知';
+  const p = panel('同步狀態與版本');
+  p.append(node('p', `最近成功同步：${synced}（${age}）`), node('p', `程式版本：${h.code_revision || '未知'} · 佇列版本：${h.queue_head || '未知'}`));
+  if (h.last_error) p.append(node('p', `最近錯誤：${h.last_error}。保留的快照不代表目前可連線。`, 'error'));
+  if (!h.configured || !h.initialized) p.append(node('p','尚未完成外部 handoff 設定／初始化。依 GitHub handoff 操作指南準備自己的設定，明確執行 CLI init；控制台不會建立憑證或自動啟動。','note'));
+  p.append(node('p', '瀏覽與每 5 秒更新只讀取本機快照，不會 fetch、派工或啟動 Agent。週期同步／接單由獨立前景 watch 負責。'));
+  table('驗收證據（依版本保留 PASS／FAIL／INVALID／STALE）', h.acceptance || [], [['ref','證據分支'],['tested_commit','測試版本'],['evidence_commit','證據版本'],['status','驗證狀態'],['test_count','測試數'],['verified_ms','驗證時間 ms']]);
+  table('派發與執行收據（不是正式 DONE）', h.dispatches || [], [['task_id','任務'],['machine_id','電腦'],['owner','負責人'],['status','RECEIVED／RUNNING／FINISHED／FAILED／UNKNOWN'],['exit_code','退出碼'],['dispatch_id','派發 ID']]);
+  table('既有 READY 卡片', h.ready_tasks || [], [['task_id','任務'],['owner','負責人'],['card_sha256','卡片 SHA256']]);
+  if (session.role === 'viewer') p.append(node('p','Viewer 僅能檢視快照；Operator 可預覽，Administrator 才能自行確認一次執行。','note'));
+  $('handoff-controls').hidden = !h.configured || !h.initialized || session.role === 'viewer';
+  const signature = JSON.stringify([h.configured,h.initialized,h.code_revision,h.queue_head,h.ready_tasks,h.peers]);
+  if (signature !== handoffSignature) {
+    handoffSignature = signature; clearPlan();
+    const selected = $('handoff-task').value; $('handoff-task').replaceChildren();
+    for (const task of h.ready_tasks || []) { const option = node('option',`${task.task_id} · ${task.owner}`); option.value = task.task_id; $('handoff-task').append(option); }
+    if ([...$('handoff-task').options].some(o => o.value === selected)) $('handoff-task').value = selected;
+    handoffPeers();
+  }
 }
 async function refresh() {
   if (!session || pending) return;
@@ -131,6 +185,10 @@ for (const button of document.querySelectorAll('nav button')) button.addEventLis
 $('refresh').addEventListener('click', refresh);
 $('next').addEventListener('click', () => { if (pending) return; if (view !== 'events') offset += 100; refresh(); });
 $('previous').addEventListener('click', () => { if (pending) return; offset = Math.max(0, offset - 100); refresh(); });
+$('handoff-task').addEventListener('change', () => { clearPlan(); handoffPeers(); });
+$('handoff-peer').addEventListener('change', () => { clearPlan(); handoffBinding(); });
+$('handoff-sync').addEventListener('click', () => { clearPlan(); operation('/api/preview',{action:'handoff.sync',args:{}}); });
+$('handoff-form').addEventListener('submit', event => { event.preventDefault(); clearPlan(); const args = dispatchArgs(); if (args) operation('/api/preview',{action:'handoff.dispatch',args}); });
 $('action').addEventListener('change', fields); $('action-fields').addEventListener('input', clearPlan);
 $('action-form').addEventListener('submit', event => { event.preventDefault(); clearPlan(); const args = {}; for (const name of actionFields[$('action').value]) args[name] = name.startsWith('expected_') ? Number($('arg-' + name).value) : $('arg-' + name).value; operation('/api/preview',{action:$('action').value,args}); });
 $('inspect-form').addEventListener('submit', event => { event.preventDefault(); clearPlan(); operation('/api/inspect',{run_id:$('run-id').value}); });
