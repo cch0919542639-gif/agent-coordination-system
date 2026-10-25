@@ -1,3 +1,14 @@
+## Current integrated candidate (2026-10-25)
+
+PR10's independently reviewed entry guards are integrated at c3c6a38. The original
+CP950 acceptance of exact92e1248 is verified by evidence5002422; the SID technical
+HOLD is closed. This candidate additionally refuses legacy loop/activation entry
+when a Parallel Mode marker exists. Select the final exact commit supplied in PR6
+or its merge receipt; the metadata commit is intentionally not self-referenced.
+Use console-release-status.md and the release manifest for current pins and gates.
+The following locale-repair section is preserved history, not a current HOLD.
+No new other-computer run or production qualification is implied by integration.
+
 ## Locale repair and required acceptance rerun (2026-10-25)
 
 Select the repaired release commit supplied in the handoff; its accepted code/test

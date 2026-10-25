@@ -1,10 +1,10 @@
 {
-  "accepted_code_test_commit": "8a5bc1693e8f8e8ea0f476424b59d37346f44b8a",
+  "accepted_code_test_commit": "c3c6a383297326213b3c9904e9bfcfc3b7264fc6",
   "package_commit": "5daa318d2d9c2b4dd4ff93081396bd452212c4a1",
   "archive_source_commit": "b31267f3ba78edd891dd2fedfa955c2f34dd5d05",
   "main_base": "bfc5163af6dca4b9b7dec6b599563e3cbf984cac",
   "proposed_branch": "codex/console-bootstrap-01",
-  "publication": "original c7f7dee published; repaired candidate not published, authorization pending",
+  "publication": "PR10 merged into bootstrap at c3c6a38; integrated metadata and validation for PR6 main promotion; exact final state in Git/PR receipts",
   "source_pins": [
     {
       "path": "coordination_runtime/__init__.py",
@@ -176,9 +176,21 @@
     },
     {
       "path": "docs/operations/console-download-guide.md",
-      "sha256": "41ce7b1b36d9930bdd18b83e5a6aa81e04ea50948272575d865037234b8c7f2b",
-      "git_blob": "22e1cfeb8caafcd105ed1aee4f0eb81fd5f3c184",
-      "provenance": "release guide metadata layer"
+      "sha256": "a1aecd7f114e5bc9aa1b57db36b06489a5d599b8e11a8d76defe85e3bb7a5016",
+      "git_blob": "65b8fb881d897edca347c689b330f22ec8a6502f",
+      "provenance": "integrated metadata over accepted c3c6a38; no product logic change"
+    },
+    {
+      "path": "scripts/local_agent_loop.py",
+      "sha256": "597f43aabfc049da784c912b4d9c6617bcb5c9e74d2f2526a0043085a18fe808",
+      "git_blob": "29660322ac1ee0e39420f6bcbd4021152f3db772",
+      "provenance": "accepted PR10 source311dc1f; identical stored blob at c3c6a38"
+    },
+    {
+      "path": "scripts/worker_poller.py",
+      "sha256": "f46df96a8e4099a0d839b2c5ff5fe337de5cbd3899fa8f8841de5b549c7d6e7b",
+      "git_blob": "59f8b72bdf49024756ee1fea129e70a14d3f58d8",
+      "provenance": "accepted PR10 source311dc1f; identical stored blob at c3c6a38"
     }
   ],
   "accepted_board_snapshots": [
@@ -271,6 +283,24 @@
       "path": "coordination/delivery/console-encoding-review-01-delivery-report.md",
       "sha256": "e49337ca0550bbaa134a7ba3b6fa850b27ed7c19a7911617b3ae70f2daebdada",
       "git_blob": "6d103b24186535fcfa4914d1155768842d7d37b9"
+    },
+    {
+      "path": "coordination/task-board/done/2026-10-25_console-entry-guards-01_legacy-entry-guards.md",
+      "sha256": "663233c08b5da7a5c5951885d1334d753de9710b45d52107d09489247be54ae1",
+      "git_blob": "80f1209bb38c0f683cb3b7f707a3110b9de6130a",
+      "provenance": "accepted entry-guard task and independent review at a1dd7f6/c3c6a38"
+    },
+    {
+      "path": "coordination/reviews/review-console-entry-guards-01.md",
+      "sha256": "38c04ac4f2aff6814c1ccfa2ce12939f9d950667cd30a5dd507438bb57ca14db",
+      "git_blob": "b8bd8d2bcd48d1e6016af3ffcdb30f9375da5e19",
+      "provenance": "accepted entry-guard task and independent review at a1dd7f6/c3c6a38"
+    },
+    {
+      "path": "coordination/delivery/console-entry-guards-01-delivery-report.md",
+      "sha256": "e234a3f4f958fca3806fe8d47a4a000d1684629769508bd44c3f8366e4953972",
+      "git_blob": "9f3546f67344995a7d2016f650290ae4e16eb529",
+      "provenance": "accepted entry-guard task and independent review at a1dd7f6/c3c6a38"
     }
   ],
   "archive_evidence_sha256": {
@@ -283,7 +313,9 @@
     "main_snapshot": 101,
     "original_accepted_console": 4,
     "accepted_encoding_repair": 2,
-    "total": 107
+    "total": 109,
+    "accepted_entry_guard_repair": 1,
+    "integration_readiness_record": 1
   },
   "initial_accepted_bootstrap_commit": "c3020c4d73b6965aa9f03ea2e60eabcaff587c99",
   "original_published_release_commit": "c7f7dee2c356009f51fbe63434ecf0c5400e7571",
@@ -303,6 +335,16 @@
       "path": "docs/operations/console-download-guide.md",
       "sha256": "c08b064e6c8c8b0280c08bdf10dfbfe37f9d1d75eef3258f8f6ee9d3ef9470e6",
       "git_blob": "680eb2f19efd8ed6d2fbed6969793c0524d371e7"
+    },
+    {
+      "path": "docs/operations/console-download-guide.md",
+      "sha256": "41ce7b1b36d9930bdd18b83e5a6aa81e04ea50948272575d865037234b8c7f2b",
+      "git_blob": "22e1cfeb8caafcd105ed1aee4f0eb81fd5f3c184",
+      "provenance": "release guide metadata layer"
     }
-  ]
+  ],
+  "accepted_entry_guard_source_commit": "311dc1f3f03cfc298632d72edc50f0dc2dc70630",
+  "entry_guard_review_metadata_commit": "a1dd7f6c306f83dc2f287f1ca0d8e855853fede4",
+  "verified_original_environment_release": "92e1248b63dee44a607296b3d63f61207b61f09a",
+  "verified_original_environment_evidence": "5002422d33d85b3def31541241521de06fd5527b"
 }

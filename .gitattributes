@@ -50,3 +50,10 @@ coordination/reviews/review-console-encoding-fix-01.md -text
 coordination/reviews/review-console-encoding-review-01.md -text
 coordination/delivery/console-encoding-fix-01-delivery-report.md -text
 coordination/delivery/console-encoding-review-01-delivery-report.md -text
+
+# Preserve reviewed entry-guard bytes in the integrated release.
+scripts/local_agent_loop.py -text
+scripts/worker_poller.py -text
+coordination/task-board/done/2026-10-25_console-entry-guards-01_legacy-entry-guards.md -text
+coordination/reviews/review-console-entry-guards-01.md -text
+coordination/delivery/console-entry-guards-01-delivery-report.md -text

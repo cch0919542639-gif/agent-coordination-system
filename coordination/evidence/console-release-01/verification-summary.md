@@ -1,3 +1,14 @@
+# Integrated candidate verification (2026-10-25)
+
+Source c3c6a38 includes accepted PR10 entry guards. Current fixed-source integrated
+regression passed241tests/native0 in156.063seconds (single eight-file invocation).
+Fresh-clone validation is pending. Regression and clone results are recorded in ../console-main-readiness-01/ and its
+delivery report. Earlier92e1248CP950131pass applies to that exact earlier release.
+Manifest now pins31source paths plus21accepted snapshots;18prior snapshots remain
+unchanged. The original failures and optional harness limits below remain history.
+
+## Historical verification summaries
+
 # Encoding repair verification continuation (2026-10-25)
 
 Current accepted code/test tip:8a5bc1693e8f8e8ea0f476424b59d37346f44b8a.

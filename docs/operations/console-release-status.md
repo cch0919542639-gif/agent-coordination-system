@@ -1,3 +1,38 @@
+# Integrated console candidate for main review
+
+Updated2026-10-25. PR10 is merged into the bootstrap branch at
+c3c6a383297326213b3c9904e9bfcfc3b7264fc6. Its product/test blobs are the reviewed
+source311dc1f plus unchanged console/SID source. Entry guards passed110 relevant
+regressions/native0 and independent OpenCode static review with no blocking finding.
+The following metadata layer preserves those source blobs and refreshes the guide
+and integrity inventory. Exact final publication state is recorded by Git/PR6.
+
+Original92e1248 passed131tests in the original CP950/no-UTF8-override environment
+(evidence5002422), including two finite login/restart cycles and private byte
+preservation. This closes the original SID technical HOLD. It does not claim a
+new second-machine run against this integrated candidate. Originalc7FAIL114/1,
+optional reviewer harness failures and previous partial runs remain history.
+
+The current manifest pins31 source/test/doc/static paths and21 accepted snapshots
+(seven DONE cards, seven canonical reviews, seven deliveries). The original18
+snapshot bytes remain unchanged. The two legacy entry scripts and new snapshots
+use explicit -text attributes; their stored blobs are unchanged from c3c6a38.
+The board has109cards including the integration-readiness record. Task state is
+separate from publication/merge state; select the final supplied commit.
+
+The current integration check result is in
+coordination/evidence/console-main-readiness-01/ and its delivery report. The integrated eight-file regression run passed241tests/native0 in156.063seconds.
+Fresh-clone validation and exact-head promotion remain pending. No live
+provider, task dispatch, watch, service or schedule is enabled; default Viewer
+and disabled runtime remain. Real peer operation belongs to separate draftPR9.
+
+The reused marker guard is a preflight check, not an atomic cross-process lock.
+Whole-repository, broader junction/symlink and production qualification remain
+outside the claims. Browser refresh reads the local checkout; create private
+state separately per computer and never copy tokens, DBs or ACKs.
+
+## Historical release status (superseded)
+
 # Repaired console candidate: acceptance HOLD
 
 2026-10-25: the Windows SID encoding repair is accepted locally at code/test

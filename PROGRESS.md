@@ -1,3 +1,7 @@
+## PR6整合候選回歸241pass，下載驗證中（2026-10-25）
+
+PR10合併後source c3c6a38，無新增產品／測試邏輯。console-main-readiness-01更新發布metadata：31source+21accepted snapshots共52pins、109cards；保留18原snapshot及原失敗歷史。八組單次pytest241passed/native0/156.063秒（核心131+入口110），原始log/JUnit保留；24產品／測試／靜態檔blob完全等於c3c6a38，既有7份accepted審查快照核實。接續fresh local autocrlf clone／匯入／CLI與validator，完成後再精確head發布及PR6/main合併。這是deterministic integration驗證，未新增外部模型呼叫或冒稱新雙機驗收；PR9與真實watch/provider未啟用。
+
 ## PR10獨立審查通過，準備分支內合併（2026-10-25）
 
 使用者授權單次OpenCode模型資料傳輸及先審查再合併。固定來源311dc1f之OpenCode/deepseek-v4.1-flash-free獨立靜態審查建議accepted、無blocking findings，native0/54.531秒、owned tree停止；未執行工具或另跑測試。Orchestrator核對110JUnit/native0、來源映射及實際caller，確認讀取delivery無前置寫入、acceptance_checks僅run_loop內使用、resolver早退仍在inbox/ACK前拒絕。保留preflight非原子鎖、symlink/relative registry未另測等限制；不把模型review冒稱GitHub APPROVED。console-entry-guards-01已accepted DONE；這層只加入審查證據／狀態，不改來源或測試。下一步依授權核對精確head後將PR10合併至codex/console-bootstrap-01，尚不代表PR6/main或PR9已通過。
