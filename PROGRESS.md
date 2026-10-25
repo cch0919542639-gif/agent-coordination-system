@@ -12,6 +12,16 @@
 
 # Progress
 
+## Console Original-Environment Reverification (2026-10-25)
+
+Fresh GitHub download92e1248 passed init/replay/login/same-port finite restart
+on the original failing Windows / Python3.13.15 host with CP950, UTF-8 mode0,
+and no PYTHONUTF8/PYTHONIOENCODING workaround. All47 manifest pins matched;
+the same four-file focused suite passed131 tests with native exit0. Prior
+c7f7dee failure evidence remains historical. No product code, formal task
+acceptance or P1 HOLD decision changes here; see
+`coordination/delivery/console-reverification-20261025-report.md`.
+
 ## Current State
 
 - Central monitor and owner-strict routing are active for the local

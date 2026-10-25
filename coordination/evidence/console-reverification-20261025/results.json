@@ -1,0 +1,119 @@
+{
+  "started_utc": "2026-10-24T23:52:01.707437+00:00",
+  "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+  "os": "Windows-11-10.0.26300-SP0",
+  "host": "verification-host",
+  "commit": "92e1248b63dee44a607296b3d63f61207b61f09a",
+  "checks": {
+    "head": {
+      "exit_code": 0,
+      "expected": 0
+    },
+    "manifest": {
+      "passed": 47,
+      "basis": "Git blob SHA256 and LF-normalized checkout"
+    },
+    "init": {
+      "exit_code": 0,
+      "expected": 0
+    },
+    "init-replay": {
+      "exit_code": 0,
+      "expected": 0
+    },
+    "init-conflict": {
+      "exit_code": 2,
+      "expected": 2
+    },
+    "replay-and-conflict-preserve-bytes": true,
+    "serve-0": {
+      "views": {
+        "overview": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "board": {
+          "status": 200,
+          "runtime_available": true,
+          "total": 107
+        },
+        "monitor": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "workspaces": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "reviews": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "events": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "settings": {
+          "status": 200,
+          "runtime_available": true
+        }
+      },
+      "exit_code": 0,
+      "finite_exit": true,
+      "viewer_writes": 403
+    },
+    "serve-1": {
+      "views": {
+        "overview": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "board": {
+          "status": 200,
+          "runtime_available": true,
+          "total": 107
+        },
+        "monitor": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "workspaces": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "reviews": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "events": {
+          "status": 200,
+          "runtime_available": true
+        },
+        "settings": {
+          "status": 200,
+          "runtime_available": true
+        }
+      },
+      "exit_code": 0,
+      "finite_exit": true,
+      "viewer_writes": 403
+    },
+    "schema4-disabled-no-runs-unchanged-private-files": true,
+    "focused-tests": {
+      "exit_code": 0,
+      "expected": 0
+    },
+    "git-status": {
+      "exit_code": 0,
+      "expected": 0
+    }
+  },
+  "environment": {
+    "preferred_encoding": "cp950",
+    "utf8_mode": 0,
+    "PYTHONUTF8": null,
+    "PYTHONIOENCODING": null
+  },
+  "status": "PASS",
+  "finished_utc": "2026-10-24T23:53:01.823920+00:00"
+}
