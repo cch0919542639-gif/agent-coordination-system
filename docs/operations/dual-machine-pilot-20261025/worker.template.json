@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "mode": "worker",
+  "project_id": "agent-coordination-system",
+  "repository": "REPLACE_WITH_CANONICAL_FRESH_CHECKOUT",
+  "state_dir": "REPLACE_WITH_EXTERNAL_NEW_STATE_DIRECTORY",
+  "remote_url": "https://github.com/cch0919542639-gif/agent-coordination-system.git",
+  "code_ref": "refs/heads/codex/console-handoff-sync-01",
+  "queue_ref": "refs/heads/codex/handoff-dual-intake-20261025-01",
+  "machine_id": "gigabyte-202509",
+  "owner": "handoff-pilot-receiver",
+  "peers": [
+    {
+      "machine_id": "gigabyte-202509",
+      "owner": "handoff-pilot-receiver"
+    }
+  ],
+  "evidence_ref_prefix": null,
+  "evidence_revision": null,
+  "min_tests": 1,
+  "runner": null,
+  "execution_enabled": false
+}

@@ -1,0 +1,13 @@
+{
+  "pilot_id": "dual-intake-20261025-01",
+  "code_revision": "1d7b85b60b56299a161aba90a53d0078120d84af",
+  "stage": "PREPARED_NOT_ACTIVATED",
+  "files": {
+    "approval-scope.json": "a417178b26416a31fe07ab9c82da77fc440df5310d158e2562c8268bc4e03160",
+    "coordinator.template.json": "04c76a83e01069e730e5b51c41351162ec352828c982c29112ed99cd32c5683e",
+    "other-computer-prompt.txt": "97f3240948eebfb0bb0c6a2384a57f52c7502d1853b9dc8f8e703ab4fe38b9f8",
+    "pilot-task.md": "04eafa22a3a8794e7a43d1c36286d4508491d886b2e01102e0fd67f1ead5171a",
+    "README.md": "3ad2dccfea8fd7da7bc3183c99c202293b8b8d3b836c60b2a22658a4cac4da20",
+    "worker.template.json": "d0ead7af8c65e303427ce86c6b3c90e51ebe8a3413e5d9b6cdfeca2d65164236"
+  }
+}

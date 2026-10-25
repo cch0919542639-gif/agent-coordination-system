@@ -1,0 +1,15 @@
+{
+  "machine_id": "angeline",
+  "mode": "coordinator",
+  "head": "1d7b85b60b56299a161aba90a53d0078120d84af",
+  "canonical_userprofile_root": true,
+  "local_fresh_clone": "PASS",
+  "config_created": true,
+  "summary_exit": 0,
+  "initialized": false,
+  "state_created": false,
+  "runner": null,
+  "execution_enabled": false,
+  "queue_created": false,
+  "actual_handoff_activation": false
+}

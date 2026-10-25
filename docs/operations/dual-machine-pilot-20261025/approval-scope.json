@@ -1,0 +1,53 @@
+{
+  "stage": "PREPARED_NOT_ACTIVATED",
+  "pilot_id": "dual-intake-20261025-01",
+  "code_revision": "1d7b85b60b56299a161aba90a53d0078120d84af",
+  "code_ref": "refs/heads/codex/console-handoff-sync-01",
+  "project_id": "agent-coordination-system",
+  "remote_url": "https://github.com/cch0919542639-gif/agent-coordination-system.git",
+  "queue_ref": "refs/heads/codex/handoff-dual-intake-20261025-01",
+  "expected_initial_queue_head": "0000000000000000000000000000000000000000",
+  "task_id": "dual-intake-20261025-01",
+  "task_filename": "2026-10-25_dual-intake-20261025-01_transport-only.md",
+  "card_sha256": "04eafa22a3a8794e7a43d1c36286d4508491d886b2e01102e0fd67f1ead5171a",
+  "coordinator": {
+    "machine_id": "angeline",
+    "owner": "handoff-pilot-coordinator"
+  },
+  "receiver": {
+    "human_label": "技嘉202509",
+    "machine_id": "gigabyte-202509",
+    "owner": "handoff-pilot-receiver"
+  },
+  "runner": null,
+  "execution_enabled": false,
+  "evidence_discovery": "disabled; no reuse of92e1248 acceptance for current code",
+  "proposed_operations": {
+    "coordinator": [
+      "new-store init",
+      "sync",
+      "exact-field dispatch preview",
+      "one dispatch --execute",
+      "sync RECEIVED and replay evidence"
+    ],
+    "receiver": [
+      "new-store init",
+      "receive without --execute",
+      "second receive without --execute"
+    ]
+  },
+  "remote_writes": "Only assignment/card and claim/RECEIVED receipt on the dedicated queue; never main/code refs.",
+  "local_writes": "Fresh dedicated clones, external pilot config/state, sender copied READY card only.",
+  "forbidden": [
+    "runner execution",
+    "watch",
+    "providers",
+    "schedules",
+    "credential/permission changes",
+    "formal lifecycle transitions",
+    "PR9 merge"
+  ],
+  "retry_policy": "Stop and preserve state on failure; no automatic retry/reset/reclaim.",
+  "approval": "Exact live initialization/synchronization/dispatch/receipt activation still requires operator confirmation.",
+  "host_attestation": "Human confirms distinct physical computers; configured IDs alone are not hardware proof."
+}

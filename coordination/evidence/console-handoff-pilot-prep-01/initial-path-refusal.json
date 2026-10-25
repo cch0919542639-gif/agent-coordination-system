@@ -1,0 +1,9 @@
+{
+  "stage": "initial local coordinator preparation",
+  "summary_native_exit": 2,
+  "reason": "AppData virtualization alias differs from resolved repository/config/state paths; safe INVALID_PATH refusal.",
+  "state_initialized": false,
+  "remote_queue_created": false,
+  "retained": true,
+  "fix": "Use new USERPROFILE pilot root, resolve actual physical root after creation, regenerate config in fresh target. No source change or permission change."
+}

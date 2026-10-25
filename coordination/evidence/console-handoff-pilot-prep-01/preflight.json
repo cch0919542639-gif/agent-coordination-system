@@ -1,0 +1,46 @@
+{
+  "package_hashes": "PASS",
+  "payload_card_sha256": "04eafa22a3a8794e7a43d1c36286d4508491d886b2e01102e0fd67f1ead5171a",
+  "schema_checks": [
+    {
+      "role": "coordinator",
+      "config_constructor": "PASS",
+      "payload_card": "PASS",
+      "uninitialized_readonly_summary": "PASS",
+      "state_created": false,
+      "runner": null,
+      "execution_enabled": false
+    },
+    {
+      "role": "worker",
+      "config_constructor": "PASS",
+      "payload_card": "PASS",
+      "uninitialized_readonly_summary": "PASS",
+      "state_created": false,
+      "runner": null,
+      "execution_enabled": false
+    }
+  ],
+  "git_calls_in_service": [
+    [
+      "config",
+      "--get",
+      "remote.origin.url"
+    ],
+    [
+      "config",
+      "--get",
+      "remote.origin.url"
+    ]
+  ],
+  "only_local_origin_reads": true,
+  "remote_preflight": {
+    "code_ref": "refs/heads/codex/console-handoff-sync-01",
+    "revision": "1d7b85b60b56299a161aba90a53d0078120d84af",
+    "queue_ref": "refs/heads/codex/handoff-dual-intake-20261025-01",
+    "queue_absent": true
+  },
+  "real_two_host_attestation": "PENDING",
+  "live_activation": "NOT_AUTHORIZED_OR_STARTED",
+  "actual_handoff_init_sync_dispatch_receive_watch_calls": 0
+}

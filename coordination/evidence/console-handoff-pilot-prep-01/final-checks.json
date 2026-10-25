@@ -1,0 +1,9 @@
+{
+  "package_manifest_sha256": "2eafe39191d3deb7c30d4bee80e1581973f4bac1e90313f3530f7643cfbc690d",
+  "all6payload_file_hashes_match": true,
+  "program_test_delta_from1d7b85b": [],
+  "coordinator_prepared_without_state": true,
+  "receiver_preparation": "PENDING on actual other computer",
+  "live_scope_approval": "PENDING",
+  "initial_path_refusal": "native2 preserved; canonical USERPROFILE preparation summary0"
+}

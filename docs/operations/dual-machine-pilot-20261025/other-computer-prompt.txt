@@ -1,0 +1,7 @@
+這一輪在技嘉202509準備雙機GitHub收件驗收，先只做準備，不啟動handoff。
+公開驗收包：repo cch0919542639-gif/agent-coordination-system，branch codex/console-handoff-pilot-prep-01，docs/operations/dual-machine-pilot-20261025/。
+閱讀README.md與approval-scope.json。使用新的專用clone，程式固定1d7b85b60b56299a161aba90a53d0078120d84af，mode worker，machine_id gigabyte-202509，owner handoff-pilot-receiver，runner null，execution_enabled false。
+用每台自己的USERPROFILE路徑，先按README建立後解析canonical實體路徑，避免MSIX/AppData別名；不複製任何別台的token／auth／DB／ACK，不改既有checkout或Viewer權限。
+先照README「準備」段產生本機設定並只跑summary，回報固定HEAD與worker準備就緒；summary未初始化屬預期，不當成網路健康。
+尚未取得本輪明確啟動同意且ANGELINE未確認派發前，不執行init/sync/receive/watch，不建立遠端queue，不推送額外分支或發送訊息。
+後續如使用者明確啟動此輪，才依README做init及兩次receive，兩次都不加--execute；記錄原始exit與RECEIVED、inbox單列與run_id不變，workspace未建立。不要claim/執行/submit/accept正式任務，不啟動provider／runner／排程，不自行合併PR。

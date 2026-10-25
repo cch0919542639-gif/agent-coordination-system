@@ -1,3 +1,7 @@
+## 雙機transport-only驗收包備妥，未啟動（2026-10-25）
+
+console-handoff-pilot-prep-01準備文件/模板/READY payload與精確approval-scope，程式固定1d7b85b、queue codex/handoff-dual-intake-20261025-01（讀查不存在）、angeline→gigabyte-202509，runnernull/executionfalse，不做watch或正式lifecycle。兩份config/card現有API驗證、6payload hashes、4PowerShell語法通過；actualcoordinator專用新clone/config於canonical USERPROFILE準備完成，summary native0/uninitialized且未建state。初次LOCALAPPDATA遇MSIX alias安全拒絕native2已保留，改用新實體USERPROFILE路徑修正操作文件；無產品程式變更。另一台尚待實際準備與人確認不同主機，本輪live init/dispatch/receive範圍尚待明確同意。文件分支將獨立發布，不移動PR9code_ref/main。Prep acceptedDONE不等於livepilot或PR9merge接受。
+
 ## PR9 main整合驗證完成，保留雙機驗收關卡（2026-10-25）
 
 固定085bb59正常merge mainc3682d3與featurea82c5a7，115product/test paths完全等於已接受父系聯集，5metadata衝突修正不新增產品邏輯。Core/legacy241pass/native0/191.969s、另handoff48pass/native0/258.703s，各300s上限；不是單次合併suite，也不冒稱全repo。37source+36accepted snapshots=73pins、114cards；保留兩邊21/30snapshot身份（18共用）。Freshlocalautocrlfclone73raw/blob pins、imports、兩CLIhelp、validator/clean通過。整合任務已acceptedDONE，準備FF發布PR9並retargetmain但保持draft。實際雙機同步/收件驗收仍pending，未啟用watch/runner/provider/排程或權限。本輪未新增外部模型呼叫，沿用既有獨立source審查加deterministic整合驗證。

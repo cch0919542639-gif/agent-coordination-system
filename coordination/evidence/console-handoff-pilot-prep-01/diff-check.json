@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "-c",
+    "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+    "diff",
+    "--cached",
+    "--check"
+  ],
+  "returncode": 0,
+  "default_check_exit": 2,
+  "note": "Portable -text packet preserves native CRLF and payload digests; default check flagged CR as trailing whitespace. Final check retains ordinary whitespace rules with CRLF treated as EOL."
+}
