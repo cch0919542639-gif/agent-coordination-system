@@ -11,9 +11,12 @@ Manifest now pins37source/test/doc/static files and36accepted snapshots
 all prior30feature and21main snapshot identities (18shared). The board has114cards
 including this integration record. A new fixed-candidate regression/clone result
 is recorded under coordination/evidence/console-handoff-main-integration-01/.
-Earlier131/110/241checks below remain scoped to their prior exact sources.
+Current fixed085bb59 candidate: core/legacy241pass/native0 in191.969s and
+handoff48pass/native0 in258.703s, two distinct bounded invocations. Fresh local
+autocrlfclone verified73raw/blob pins,114cards,imports,twoCLIhelp and validator,
+with clean status. Earlier checks below remain historical source-specific runs.
 
-PR9 remains draft pending current integration checks and the required real
+Current integration checks pass. PR9 remains draft pending the required real
 two-computer synchronization/intake acceptance. Synthetic local bare-Git peers
 and harmless runner tests do not prove that live pilot. No watch, runner, provider,
 service, schedule, credentials or permission changes are activated by this work.

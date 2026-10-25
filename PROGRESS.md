@@ -1,3 +1,7 @@
+## PR9 main整合驗證完成，保留雙機驗收關卡（2026-10-25）
+
+固定085bb59正常merge mainc3682d3與featurea82c5a7，115product/test paths完全等於已接受父系聯集，5metadata衝突修正不新增產品邏輯。Core/legacy241pass/native0/191.969s、另handoff48pass/native0/258.703s，各300s上限；不是單次合併suite，也不冒稱全repo。37source+36accepted snapshots=73pins、114cards；保留兩邊21/30snapshot身份（18共用）。Freshlocalautocrlfclone73raw/blob pins、imports、兩CLIhelp、validator/clean通過。整合任務已acceptedDONE，準備FF發布PR9並retargetmain但保持draft。實際雙機同步/收件驗收仍pending，未啟用watch/runner/provider/排程或權限。本輪未新增外部模型呼叫，沿用既有獨立source審查加deterministic整合驗證。
+
 ## PR9整合main，產品維持已接受雙親聯集（2026-10-25）
 
 console-handoff-main-integration-01以a82c5a7正常merge mainc3682d3，5個metadata衝突已整合，沒有重寫歷史或新增產品邏輯。保留main入口guard與feature1feeca7功能；目標37source+36accepted snapshots共73pins、114cards，兩邊舊snapshot身份保留。接著在固定merge候選做兩組有界回歸與freshclone。PR9保持draft，實際雙機同步／收件驗收未完成，無真實watch/runner/provider/排程或權限變更。

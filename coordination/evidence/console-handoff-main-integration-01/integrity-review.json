@@ -1,0 +1,23 @@
+{
+  "raw_pins_pass": true,
+  "pin_count": 73,
+  "source_pins": 37,
+  "accepted_snapshots": 36,
+  "canonical_reviews": [
+    "coordination/reviews/review-console-package-01.md",
+    "coordination/reviews/review-console-package-review-01.md",
+    "coordination/reviews/review-console-bootstrap-01.md",
+    "coordination/reviews/review-console-bootstrap-review-01.md",
+    "coordination/reviews/review-console-encoding-fix-01.md",
+    "coordination/reviews/review-console-encoding-review-01.md",
+    "coordination/reviews/review-console-entry-guards-01.md",
+    "coordination/reviews/review-console-reverification-check-01.md",
+    "coordination/reviews/review-console-github-transport-01.md",
+    "coordination/reviews/review-console-handoff-ui-01.md",
+    "coordination/reviews/review-console-handoff-review-01.md",
+    "coordination/reviews/review-console-main-readiness-01.md"
+  ],
+  "all_prior_main21_and_feature30_snapshot_bytes_preserved": true,
+  "live_dual_machine_gate": "PENDING; no real peer/watch/runner/provider activation",
+  "review_mode": "Existing independent source reviews plus deterministic conflict/integration checks; no new external model review."
+}

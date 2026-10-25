@@ -1,0 +1,12 @@
+usage: github_handoff.py [-h] --config CONFIG
+                         {init,sync,summary,dispatch,receive,watch} ...
+
+Explicit Git handoff commands and finite foreground watch; no provider
+activation.
+
+positional arguments:
+  {init,sync,summary,dispatch,receive,watch}
+
+options:
+  -h, --help            show this help message and exit
+  --config CONFIG

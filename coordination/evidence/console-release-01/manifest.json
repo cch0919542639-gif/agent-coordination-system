@@ -4,7 +4,7 @@
   "archive_source_commit": "b31267f3ba78edd891dd2fedfa955c2f34dd5d05",
   "main_base": "bfc5163af6dca4b9b7dec6b599563e3cbf984cac",
   "proposed_branch": "codex/console-handoff-sync-01",
-  "publication": "Main integrated into PR9 candidate; current regression/clone verification pending; PR9 remains draft and live dual-machine gate not satisfied.",
+  "publication": "Main integrated into PR9 candidate; current core241 and separate handoff48 native regressions and fresh73pin clone pass; PR9 remains draft and real dual-machine gate is pending.",
   "source_pins": [
     {
       "path": "coordination_runtime/__init__.py",
