@@ -1,0 +1,28 @@
+## Recommendation
+
+**Accepted — no blocking findings.** The guard is placed ahead of the scoped side effects and uses the registered project root for activation.
+
+- `local_agent_loop.launch_worker:418` — guard precedes command construction and `bounded_process`.
+- `local_agent_loop.run_loop:451` — guard precedes `load_plan`, `process_lock()`, registration checks, state reads, and any launch.
+- `worker_poller._resolve_task_card_path:409` — guard runs after `project_registry.get_project(...).local_path` is resolved (`:405`) and before board scanning. It is reached from `_build_activation_payload:363`, which precedes `_write_activation_inbox:334` and `acknowledge(...):349`; payload-build failure is caught at `:328` and returns failure without inbox/ACK mutation.
+- Marker-absent path is preserved (`require_serial` returns, activation succeeds, inbox written, record acknowledged) and is explicitly covered by the parametrized test.
+
+## Non-blocking findings
+
+1. **Guard is transitive, not explicit at the activation write boundary.** `_build_activation_payload:356` relies on `_resolve_task_card_path` for the guard, and that function early-returns before the guard on missing ids (`:396-397`), registry miss (`:401-403`), and path-resolution failure (`:404-407`). No side effect occurs because the payload builder then raises at `:364-365`, but the safety property depends on resolver internals. An explicit `require_serial(repo_root)` in `_build_activation_payload` (or a documented invariant) would make the ordering locally verifiable.
+
+2. **Registered-project root vs central side-effect target.** The guard checks the registered project (`worker_poller.py:405-409`), while the inbox write (`:334`) and ACK (`:349`) mutate central coordination state (`MONITOR_DIR`/delivery). If the central repo is in parallel mode while the registered project is not, activation still writes central state. Per the stated review expectation this root choice is correct; noting it as a coverage decision, not a regression.
+
+3. **Corrupt vs enabled marker are indistinguishable here.** `coordination_common.require_serial:27-30` treats any existing/symlinked marker as parallel, so a corrupt marker surfaces as the same `ValueError` rejection via `:328`. Fail-closed and consistent with the reused helper; diagnostics are ambiguous only.
+
+4. **Preview is guarded too.** `run_loop:451` blocks even `execute=False` preview (`:453-456`), which is stricter than side-effect ordering alone. The test at `:78-79` asserts this, so it appears intentional; flagging only as a behavior broadening.
+
+5. **`acceptance_checks:425` executes subprocesses with no local guard**; it is protected only when called through `run_loop`. If it is a public entry point elsewhere, that path is outside this packet’s guard coverage.
+
+TOCTOU remains: the marker can appear between `require_serial` and launch/inbox/ACK. This is the documented preflight-only property, not treated as a new regression.
+
+## Limits / unresolved risks
+
+- No execution or inspection beyond the packet: other call sites of `_resolve_task_card_path`, CLI wrappers that may write inbox/delivery directly, test fixture definitions, and whether `_load_delivery_records` mutates state could not be verified.
+- Symlinked markers and relative `project.local_path` entries were not exercised beyond the supplied cases; `resolve(strict=True)` behavior for such registry entries is unresolved.
+- Validation relies on the recorded aggregate (`110` tests, `0` failures/errors/skips, native exit `0`); Core131 was not rerun and no production runtime was activated.

@@ -1,0 +1,21 @@
+diff --git a/scripts/local_agent_loop.py b/scripts/local_agent_loop.py
+index 878f052..2966032 100644
+--- a/scripts/local_agent_loop.py
++++ b/scripts/local_agent_loop.py
+@@ -18 +18 @@ import time
+-from coordination_common import ROOT, load_task, move_task
++from coordination_common import ROOT, load_task, move_task, require_serial
+@@ -417,0 +418 @@ def launch_worker(task_id, owner, payload_id, timeout, on_start=None, on_metadat
++    require_serial(ROOT)
+@@ -449,0 +451 @@ def run_loop(plan_path, *, execute=False, resume=False, launch=None):
++    require_serial(ROOT)
+diff --git a/scripts/worker_poller.py b/scripts/worker_poller.py
+index cea071b..59f8b72 100644
+--- a/scripts/worker_poller.py
++++ b/scripts/worker_poller.py
+@@ -21 +21 @@ from pathlib import Path
+-from coordination_common import ROOT, parse_front_matter
++from coordination_common import ROOT, parse_front_matter, require_serial
+@@ -408,0 +409,2 @@ def _resolve_task_card_path(project_id: str, task_id: str) -> str | None:
++    require_serial(repo_root)
++
