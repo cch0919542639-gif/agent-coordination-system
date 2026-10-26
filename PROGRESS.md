@@ -5,8 +5,12 @@ replay packet and updates current release status/verification summary/publicatio
 GitHub receipt verification is distinguished from receiver human-reported local
 facts. Preserve original needs_fix review and historical failures. No product/test
 change, new pilot, model call, runner/provider activation, draft transition or merge.
-Validation and publication outcome: coordination/evidence/console-handoff-live-intake-01/
-publication-verification.json (added after deterministic checks).
+Fresh local autocrlf clone passed:73raw/blob pins,114cards,10published artifact
+hashes,115product/test paths unchanged,37tested raw identities per suite,validator,
+imports,twoCLIhelp and clean status. Results: coordination/evidence/
+console-handoff-live-intake-01/publication-verification.json. That record identifies
+the first metadata candidate; this final evidence-only commit adds the check record.
+PR9 source publication and exact finalhead/GitHub download recheck follow; no merge.
 
 ## PR9 main整合驗證完成，保留雙機驗收關卡（2026-10-25）
 

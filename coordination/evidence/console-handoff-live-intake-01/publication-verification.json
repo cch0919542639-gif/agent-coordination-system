@@ -1,0 +1,38 @@
+{
+  "checked_at": "2026-10-27",
+  "candidate_head": "5988654c1cb81c4fda98b0f52744be284c73e9df",
+  "baseline": "1d7b85b60b56299a161aba90a53d0078120d84af",
+  "product_test_paths": 115,
+  "product_test_delta": [],
+  "manifest_other_fields_unchanged": true,
+  "raw_blob_pins": 73,
+  "board_cards": 114,
+  "published_packet_hashes": 9,
+  "regression_identity": {
+    "core": {
+      "tests": 241,
+      "native_exit": 0,
+      "seconds": 191.969,
+      "tested_raw_hashes": 37,
+      "hashes_match": true,
+      "rerun": false
+    },
+    "handoff": {
+      "tests": 48,
+      "native_exit": 0,
+      "seconds": 258.703,
+      "tested_raw_hashes": 37,
+      "hashes_match": true,
+      "rerun": false
+    }
+  },
+  "validator_imports_two_cli_native_exits": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "clean_status": true,
+  "clone_kind": "Fresh local clone with core.autocrlf=true",
+  "verification_harness_note": "Initial import probe used the wrong module namespace for scripts.local_agent_loop/worker_poller and exited1; corrected probe and all final commands exited0. This was a verifier path error, not a product failure."
+}

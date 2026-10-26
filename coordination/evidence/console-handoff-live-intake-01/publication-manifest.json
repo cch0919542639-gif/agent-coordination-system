@@ -41,6 +41,10 @@
     {
       "path": "verified-dual-intake.json",
       "sha256": "4c9ba25893a205aecb8bc1588ef0dd0029136d3945c3b6068fbc7680f8c7a2d9"
+    },
+    {
+      "path": "publication-verification.json",
+      "sha256": "ba95808162dc6d902d4308f6a15cf21928c06066000b15fdfa1a2c510f770b66"
     }
   ]
 }
