@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from coordination_runtime.parallel_runtime import ParallelController
 from coordination_runtime.state_controller import StateController, StateError, _id
 from coordination_runtime.workspace import path_digest
-from web.api import Console, Server, ROLES, TOKEN
+from web.api import Console, Server, ROLES, TOKEN, handoff_service
 
 FILES = {'config.json', 'auth.json', 'runtime.db', 'login.txt'}
 
@@ -198,10 +198,11 @@ def initialize(config):
     return True
 
 
-def serve(state_dir, port=8766, duration=300):
+def serve(state_dir, port=8766, duration=300, handoff_config=None):
     if type(port) is not int or not 1024 <= port <= 65535 or type(duration) is not int or not 10 <= duration <= 1800:
         raise StateError('Port must be1024..65535 and duration10..1800 seconds.')
     app = load(state_dir)
+    app.handoff = handoff_service(handoff_config, app.p)
     try:
         server = Server(app, port)
     except OSError:
@@ -228,6 +229,7 @@ def main(argv=None):
     init.add_argument('--role', choices=sorted(ROLES), default='viewer')
     run = sub.add_parser('serve')
     run.add_argument('--state-dir', required=True)
+    run.add_argument('--handoff-config')
     run.add_argument('--port', type=int, default=8766)
     run.add_argument('--duration', type=int, default=300)
     args = vars(parser.parse_args(argv)); command = args.pop('command')

@@ -1,0 +1,19 @@
+[
+  {
+    "commit": "32bc05f4f7fb38426405f72db8530080dae83c57",
+    "claim_present": false,
+    "status_present": false
+  },
+  {
+    "commit": "f9d7f3f3741a2135c99bcb16fd844786eb385382",
+    "claim_present": true,
+    "status_present": false,
+    "run_id": "8c93ec305c76443f8e0237269d4ee102"
+  },
+  {
+    "commit": "ce8a62eaa88b15072e65e17307bbe3d348aa47fe",
+    "claim_present": true,
+    "status_present": true,
+    "run_id": "8c93ec305c76443f8e0237269d4ee102"
+  }
+]

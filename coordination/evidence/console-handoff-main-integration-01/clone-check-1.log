@@ -1,0 +1,10 @@
+usage: console_setup.py [-h] {init,serve} ...
+
+Explicit local console initialization and finite foreground serving (Python
+3.12+).
+
+positional arguments:
+  {init,serve}
+
+options:
+  -h, --help    show this help message and exit

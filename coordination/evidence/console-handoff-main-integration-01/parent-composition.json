@@ -1,0 +1,20 @@
+{
+  "main_parent": "c3682d330ea847fc0895bff3dee334538a731499",
+  "feature_parent": "a82c5a775efab8b252fb0f23dd1bf627b799c910",
+  "all_product_test_paths": 115,
+  "feature_delta_paths": [
+    "coordination_runtime/github_handoff.py",
+    "scripts/console_setup.py",
+    "scripts/github_handoff.py",
+    "tests/scripts/test_github_handoff.py",
+    "tests/scripts/test_handoff_console.py",
+    "web/api.py",
+    "web/static/app.css",
+    "web/static/app.js",
+    "web/static/index.html"
+  ],
+  "unexpected_product_test_delta": [],
+  "pins": 73,
+  "board_cards": 114,
+  "prior_parent_snapshot_records_preserved": true
+}
