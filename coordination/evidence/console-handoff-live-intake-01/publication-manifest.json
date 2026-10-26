@@ -1,0 +1,46 @@
+{
+  "published_at": "2026-10-27",
+  "accepted_at": "2026-10-26",
+  "tested_live_code_revision": "1d7b85b60b56299a161aba90a53d0078120d84af",
+  "scope": "Transport/intake/replay acceptance only; publication changes no product/test code.",
+  "provenance": "Coordinator independently verified GitHub assignment/claim/status/history; receiver exits, local state and host identity are human reports. Receiver raw files were not opened here.",
+  "selection": "Allowlisted acceptance summaries and public queue receipts; excludes configurations, databases, credentials, private filesystem paths and private transcripts. Existing selected files copied byte-for-byte.",
+  "files": [
+    {
+      "path": "acceptance-report.md",
+      "sha256": "7db1ff69167a2b1ee4d9506ca55774ddf656cee2f5ce3d441eb02c53708e2337"
+    },
+    {
+      "path": "acceptance-review.md",
+      "sha256": "0729c5b03f0441c9868186d4ba1cf021587859b8bd0a1fd173533c9d6d3d0921"
+    },
+    {
+      "path": "queue-history.json",
+      "sha256": "1e3af718031731c72800c3476869f7c7ff4e66173c478faea8764795b15602c0"
+    },
+    {
+      "path": "receipt-sync-result.json",
+      "sha256": "57e5f218d93836f509fd3886a79db0224ebe2008adfdfed61dcd148f9469c78f"
+    },
+    {
+      "path": "receipt-sync-stdout.json",
+      "sha256": "6e684eb00b4c405d86c7588435c0166a6d50dcb1c3a8d1b3a29c645c1e3b02e9"
+    },
+    {
+      "path": "remote-assignment.json",
+      "sha256": "adba4921398f833063ba1c64540822c35946e244a3a5c92f0c42c2332c767402"
+    },
+    {
+      "path": "remote-claim.json",
+      "sha256": "c2932dded1f430bc3510e7dc9d0a3e3e2710c8a82d7ed815590e2c651a48ca64"
+    },
+    {
+      "path": "remote-status.json",
+      "sha256": "f1642babb1acc75164a899f95c560006f5da094a0a44e632ba8fb4e463765cd9"
+    },
+    {
+      "path": "verified-dual-intake.json",
+      "sha256": "4c9ba25893a205aecb8bc1588ef0dd0029136d3945c3b6068fbc7680f8c7a2d9"
+    }
+  ]
+}

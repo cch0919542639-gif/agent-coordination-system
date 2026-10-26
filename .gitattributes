@@ -79,3 +79,6 @@ coordination/delivery/console-handoff-review-01-delivery-report.md -text
 coordination/task-board/done/2026-10-25_console-main-readiness-01_integrated-console-validation.md -text
 coordination/reviews/review-console-main-readiness-01.md -text
 coordination/delivery/console-main-readiness-01-delivery-report.md -text
+
+# Preserve the sanitized live transport evidence bytes across Windows clones.
+coordination/evidence/console-handoff-live-intake-01/* -text

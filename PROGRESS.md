@@ -1,3 +1,13 @@
+## PR9 publication evidence/status closeout (2026-10-27)
+
+User-requested metadata fix bundles the accepted exact1d7b85b live transport/intake/
+replay packet and updates current release status/verification summary/publication.
+GitHub receipt verification is distinguished from receiver human-reported local
+facts. Preserve original needs_fix review and historical failures. No product/test
+change, new pilot, model call, runner/provider activation, draft transition or merge.
+Validation and publication outcome: coordination/evidence/console-handoff-live-intake-01/
+publication-verification.json (added after deterministic checks).
+
 ## PR9 main整合驗證完成，保留雙機驗收關卡（2026-10-25）
 
 固定085bb59正常merge mainc3682d3與featurea82c5a7，115product/test paths完全等於已接受父系聯集，5metadata衝突修正不新增產品邏輯。Core/legacy241pass/native0/191.969s、另handoff48pass/native0/258.703s，各300s上限；不是單次合併suite，也不冒稱全repo。37source+36accepted snapshots=73pins、114cards；保留兩邊21/30snapshot身份（18共用）。Freshlocalautocrlfclone73raw/blob pins、imports、兩CLIhelp、validator/clean通過。整合任務已acceptedDONE，準備FF發布PR9並retargetmain但保持draft。實際雙機同步/收件驗收仍pending，未啟用watch/runner/provider/排程或權限。本輪未新增外部模型呼叫，沿用既有獨立source審查加deterministic整合驗證。

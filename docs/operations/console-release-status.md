@@ -16,10 +16,22 @@ handoff48pass/native0 in258.703s, two distinct bounded invocations. Fresh local
 autocrlfclone verified73raw/blob pins,114cards,imports,twoCLIhelp and validator,
 with clean status. Earlier checks below remain historical source-specific runs.
 
-Current integration checks pass. PR9 remains draft pending the required real
-two-computer synchronization/intake acceptance. Synthetic local bare-Git peers
-and harmless runner tests do not prove that live pilot. No watch, runner, provider,
-service, schedule, credentials or permission changes are activated by this work.
+Publication closeout updated 2026-10-27: the real two-computer transport/intake/
+replay gate was accepted on 2026-10-26 at exact code revision
+`1d7b85b60b56299a161aba90a53d0078120d84af`. The downloadable sanitized
+[acceptance packet](../../coordination/evidence/console-handoff-live-intake-01/acceptance-report.md)
+includes the accepted review, queue assignment/claim/RECEIVED status and stable
+replay summary, with file hashes in publication-manifest.json. Coordinator GitHub
+verification is independent; receiver native exits, local inbox/workspace checks
+and physical-host identity remain explicitly human-reported. Receiver raw local
+files were retained by the receiver and were not independently opened here.
+
+PR9 remains draft/unmerged for the separate merge decision; the live intake gate
+is no longer pending. This publication changes no product/test code and does not
+rerun the physical pilot at the later metadata commit. Runner/provider execution,
+watch, service, schedule, credentials, permissions and production qualification
+are outside this acceptance. Both runner=null and execution_enabled=false remain.
+Runtime RECEIVED does not accept the payload task; its formal card remains READY.
 Do not auto-accept canonical tasks from runtime FINISHED/FAILED/UNKNOWN receipts.
 
 ## Historical handoff release status (superseded where inconsistent)

@@ -7,7 +7,17 @@ handoff48tests pass/native0 in258.703s. Fresh local clone verifies73raw/blob pin
 console-handoff-main-integration-01;
 old241main and focused handoff results below are historical source-specific runs.
 Manifest has37source pins and36accepted snapshots,73total, with114board cards.
-The live two-computer synchronization/intake gate remains pending; no activation.
+Publication closeout (2026-10-27): live transport/intake/replay accepted on
+2026-10-26 at exact1d7b85b60b56299a161aba90a53d0078120d84af. See the
+[sanitized acceptance packet](../console-handoff-live-intake-01/acceptance-report.md)
+and its publication-manifest.json hashes. GitHub assignment/claim/RECEIVED/history
+were independently checked by the coordinator; receiver init/receive/receive0,
+inbox0/1/1, stable replay and local filesystem/host facts are human-reported.
+Receiver raw files were not opened here. No runner/provider/production acceptance
+or new physical pilot is claimed at the later publication commit. Product/test
+content,73pins and114cards remain unchanged; the241/48 native runs above are reused
+by exact source/hash identity, not rerun. PR9 stays draft/unmerged pending a separate
+merge decision. The intake gate is complete; payload lifecycle remains READY.
 
 ## Historical handoff verification (preserved)
 
