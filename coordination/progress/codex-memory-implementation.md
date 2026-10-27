@@ -33,3 +33,7 @@ and MCP Git-timeout handling;54focused tests pass/native0/24.58seconds. Three
 new cases failed before repair. Publish the bounded repair on the same Draft PR;
 leave task REVIEW and await independent/user review. Candidate sources remain
 unapproved, with no real processing/NAS activation. See evidence followup-self-check.md.
+
+Final remote comparison: main advanced to d6c4578; merge-tree reports one
+PROGRESS.md conflict. Base synchronization and combined-branch validation remain
+pending; no merge performed and no integration acceptance claimed.

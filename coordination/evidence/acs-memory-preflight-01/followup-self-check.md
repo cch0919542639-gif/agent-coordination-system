@@ -34,3 +34,10 @@ The PR remains Draft and task remains REVIEW. Candidate summaries are pending
 human review; the active ten-question benchmark is still unfrozen. Actual
 AgentMemory extraction/source correlation, upstream cleanup, protected persistent
 NAS deployment, two-device handoff and endurance have not been qualified.
+
+Final publication check found main advanced to
+`d6c4578d5278f92444b83ffa1949ec5b40891c33`. A read-only
+`git merge-tree --write-tree origin/main HEAD` simulation reported one conflict,
+`PROGRESS.md` (exit1). The worktree was not merged. The updated main also carries
+console/handoff changes outside this adapter slice. Integrating that base and
+validating the combined branch remains a separate next step before merge review.
