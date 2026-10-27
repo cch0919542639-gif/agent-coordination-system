@@ -78,7 +78,7 @@ def service(monkeypatch):
             elif self.path.endswith('/conversation/add'):
                 key = body['session_id']
                 state['conversations'].setdefault(key, []).extend(body['messages'])
-                data = {'message_ids': ['message-fixture']}
+                data = {'accepted_ids': ['message-fixture'], 'accepted_versions': ['v1'], 'total_count': 1}
                 if state['drop_reply']:
                     self.connection.shutdown(socket.SHUT_RDWR)
                     self.connection.close()
@@ -526,3 +526,37 @@ def test_oversized_git_blob_is_refused_before_content_read(source, monkeypatch):
     monkeypatch.setattr(memory, 'git', observed)
     with pytest.raises(memory.Refused, match='not loaded'): memory.validate(repo, batch)
     assert not any(c[0] == 'show' for c in calls)
+
+
+@pytest.mark.parametrize('remote_message', ['assistant', None])
+def test_reconcile_refuses_wrong_role_or_malformed_message(source, service, tmp_path, monkeypatch, remote_message):
+    repo, batch = source
+    client, state, _ = service
+    with memory.ledger(tmp_path / 'state.db', repo, create=True) as db:
+        state['drop_reply'] = True
+        with pytest.raises(memory.Refused):
+            memory.import_cards(db, client, batch, memory.digest(batch))
+        row = {'role': remote_message, 'content': memory.payload(batch['cards'][0])} if remote_message else None
+        monkeypatch.setattr(client, 'call', lambda *args: {'messages': [row], 'total': 1})
+        with pytest.raises(memory.Refused, match='cannot be proven'):
+            memory.reconcile(db, client, batch)
+        assert memory.receipt(db, client, batch['cards'][0])[0] == 'uncertain'
+
+
+def test_mcp_git_timeout_returns_error_and_keeps_session_alive(source, service, tmp_path, monkeypatch, capsys):
+    repo, batch = source
+    client, state, _ = service
+    path = tmp_path / 'batch.json'
+    path.write_text(memory.canonical(batch), encoding='utf-8')
+    requests = [dict(jsonrpc='2.0', id=1, method='tools/call',
+                     params=dict(name='acs_memory_recall', arguments={'query': 'SID'})),
+                dict(jsonrpc='2.0', id=2, method='ping')]
+    def timeout(*args):
+        raise subprocess.TimeoutExpired('git', 15)
+    monkeypatch.setattr(memory, 'git', timeout)
+    monkeypatch.setattr(sys, 'stdin', io.StringIO('\n'.join(memory.canonical(r) for r in requests)))
+    with memory.ledger(tmp_path / 'state.db', repo, create=True) as db:
+        memory.mcp(db, client, repo, path)
+    replies = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert len(replies) == 2 and 'error' in replies[0] and replies[1]['result'] == {}
+    assert not state['calls']

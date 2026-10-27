@@ -114,8 +114,8 @@ is lost, import refuses blind resend. Run the explicit read-only reconciliation:
 py -3.13 -B scripts/curated_memory.py reconcile --repo "<CHECKOUT>" --batch "<REVIEWED_BATCH>" --connection "<PRIVATE_CONNECTION_JSON>" --state "<PRIVATE_RECEIPTS_DB>"
 ```
 
-Reconcile accepts only one exact source-envelope message in that deterministic
-session. Missing, duplicate or changed remote data remains uncertain. It does
+Reconcile accepts only one object with role `user`, integer total1 and exact
+source-envelope content in that deterministic session. Missing, duplicate or changed remote data remains uncertain. It does
 not reset the receipt, submit another message or ask a model to guess delivery.
 
 ## Query and revoke context
@@ -155,3 +155,6 @@ still holds an ordinary user key, so keep connection/state files protected and
 do not mistake tool listing for server-side least privilege. NAS operation,
 key management, tunnels, backups, real model qualification and24hour/two-machine
 acceptance remain separate gated work.
+
+Git subprocess failures during MCP calls return the same safe unavailable error;
+the session remains available for subsequent requests.

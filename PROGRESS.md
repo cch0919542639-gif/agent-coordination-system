@@ -1,3 +1,12 @@
+## Curated-memory follow-up self-check (2026-10-27)
+
+Draft PR11 remains review-only. Receipt reconciliation now rejects wrong-role or
+malformed messages, and MCP survives Git subprocess timeouts with a safe error.
+Three added regressions failed before repair;54focused cases pass/native0 in
+24.58seconds. This author self-check does not approve candidate sources or formal
+acceptance. No provider, persistent NAS service, hooks or real import enabled.
+See coordination/evidence/acs-memory-preflight-01/followup-self-check.md.
+
 ## Curated memory adapter submitted for review（2026-10-26）
 
 acs-memory-preflight-01 implements an optional source-pinned CLI/MCP adapter on

@@ -317,7 +317,9 @@ def reconcile(db, client, batch):
             continue
         data = client.call('conversation/query', {'session_id': session(card), 'limit': 100})
         rows = data.get('messages')
-        if not isinstance(rows, list) or data.get('total') != 1 or len(rows) != 1 or rows[0].get('content') != payload(card):
+        if (not isinstance(rows, list) or type(data.get('total')) is not int or data['total'] != 1 or
+                len(rows) != 1 or not isinstance(rows[0], dict) or rows[0].get('role') != 'user' or
+                rows[0].get('content') != payload(card)):
             raise Refused('Delivery cannot be proven uniquely; keep receipt uncertain.')
         with db:
             db.execute('UPDATE receipts SET state=? WHERE scope=? AND card_hash=?',
@@ -430,7 +432,7 @@ def mcp(db, client, repo, batch_path):
             else:
                 raise Refused('Unsupported method.')
             reply = dict(jsonrpc='2.0', id=request['id'], result=result)
-        except (Refused, OSError, sqlite3.Error, ValueError, TypeError, KeyError):
+        except (Refused, OSError, sqlite3.Error, ValueError, TypeError, KeyError, subprocess.SubprocessError):
             reply = dict(jsonrpc='2.0', id=request['id'], error={'code': -32000, 'message': 'Memory unavailable/refused; use formal repository evidence.'})
         emit(reply)
 

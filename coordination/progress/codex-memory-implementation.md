@@ -4,7 +4,7 @@
 - Active Task: acs-memory-preflight-01
 - Phase: acs-memory-pilot
 - Status: REVIEW
-- Last Updated: 2026-10-26
+- Last Updated: 2026-10-27
 
 ## Current Step
 
@@ -28,6 +28,8 @@ therefore NAS persistence, real ingestion and two-machine acceptance are HOLD.
 
 ## Next Step
 
-User confirmed offline synthetic-only work and authorized GitHub push plus a
-Draft PR on2026-10-26; do not merge. Publish this bounded adapter for review.
-Candidate sources remain unapproved, with no real processing/NAS activation.
+Draft PR11 is published. Follow-up self-check repaired receipt role/row checks
+and MCP Git-timeout handling;54focused tests pass/native0/24.58seconds. Three
+new cases failed before repair. Publish the bounded repair on the same Draft PR;
+leave task REVIEW and await independent/user review. Candidate sources remain
+unapproved, with no real processing/NAS activation. See evidence followup-self-check.md.

@@ -82,3 +82,14 @@ ten-question benchmark, and decide model endpoint, processing scope and spend.
 Next perform actual0.4.3 ingestion/source-correlation and withdrawal qualification.
 If official extraction cannot preserve trustworthy correlation, hold deployment
 and compare the existing Markdown search before adding another subsystem.
+
+## Follow-up self-check (2026-10-27)
+
+At the user's next-step request, checked Draft PR11 (no reviews, threads or CI
+records at inspection), reviewed the adapter and pinned upstream response fields,
+and repaired reconciliation role/row validation and MCP Git-timeout handling.
+Three added regressions failed before repair; final54tests passed/native0 in
+24.58seconds. Author self-check does not replace independent acceptance.
+See `coordination/evidence/acs-memory-preflight-01/followup-self-check.md` and
+`review-junit.xml`. The original publication evidence remains intact. Publication
+continues on the same authorized Draft PR; no merge or real processing.
