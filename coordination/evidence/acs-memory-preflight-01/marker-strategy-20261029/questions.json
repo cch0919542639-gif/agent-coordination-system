@@ -1,0 +1,42 @@
+[
+  {
+    "expected": "synthetic-review",
+    "question": "虛構任務 T1 的審核狀態是什麼？"
+  },
+  {
+    "expected": "synthetic-preview",
+    "question": "虛構專案 B 新增資料前要做什麼？"
+  },
+  {
+    "expected": "synthetic-backup",
+    "question": "虛構系統 C 什麼時候備份？"
+  },
+  {
+    "expected": "synthetic-owner",
+    "question": "虛構專案 D 的負責人是誰？"
+  },
+  {
+    "expected": "synthetic-release",
+    "question": "虛構專案 E 哪天發布？"
+  },
+  {
+    "expected": "synthetic-retention",
+    "question": "虛構專案 F 的錯誤紀錄保存幾天？"
+  },
+  {
+    "expected": "synthetic-settings",
+    "question": "虛構系統 G 更新設定之前要做什麼？"
+  },
+  {
+    "expected": "synthetic-schedule",
+    "question": "虛構系統 H 排程啟用需要什麼？"
+  },
+  {
+    "expected": "synthetic-approval",
+    "question": "虛構專案 J 什麼時候可以標記完成？"
+  },
+  {
+    "expected": "synthetic-cancelled",
+    "question": "虛構作業 K 的狀態是什麼？"
+  }
+]

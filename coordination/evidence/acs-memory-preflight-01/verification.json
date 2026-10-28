@@ -53,14 +53,14 @@
   "sha256": {
     "scripts/curated_memory.py": "efb0c11d1bc242984c67faa8ecefc95f50eba588bc63c24865e36f80f14171cf",
     "tests/scripts/test_curated_memory.py": "38767d788f3d60730fc2553d914c0373537be82e43696ed91b25ba1503808aef",
-    "docs/operations/curated-memory-guide.md": "7e6154529b65f6b8daf68666dfdef89db64218cb1fff92e6af330e78248a90a1",
-    "docs/specs/acs-agentmemory-integration.md": "bf825d6fd4925ce2f4c3ae8ea56c8f2ee1e599a618a9b60fffd6549a279a78c6",
+    "docs/operations/curated-memory-guide.md": "5941a8a44542df9b1004af1b6571f4ad46cd9c5e20b6e24b8c45f1ec6950d99d",
+    "docs/specs/acs-agentmemory-integration.md": "b7d061dafe7683d7e386c186b1155fb11b24a4c0bf7077c7837ae631fdff88b4",
     "docs/specs/acs-agentmemory-plan.md": "d0b93bb2989f30cda225827ff0d9e3fcc2edfae638f132040fa8c7cb9a715223",
     "docs/specs/acs-agentmemory-context.md": "f7a7e155500c93a1cc79dc5f04fc7bc9565f646cdc23e7845105b86945f918da",
-    "coordination/delivery/acs-memory-preflight-01-delivery-report.md": "21e702cc153787b783282353daea4fa85d5ba348e40604891f5f916d2abd9480",
-    "coordination/progress/codex-memory-implementation.md": "f558096e031bcee2b2e9b325e2b21562fae30730bd3d1dd83582496f9d03e3bf",
+    "coordination/delivery/acs-memory-preflight-01-delivery-report.md": "5493639b5067700c54f7850be185668af3c14b9543b47f376743444b591a96ac",
+    "coordination/progress/codex-memory-implementation.md": "9e41fb22f9f6b7ed2d3cc63ac5435ccb61395d41a17af69a91f65b101dbdaf98",
     "coordination/task-board/review/2026-10-26_acs-memory-preflight-01_curated-memory-integration.md": "8f69705c843803e193ff174ada85d7a08f0562180c4af9365b3fe47afd2a2618",
-    "PROGRESS.md": "b57f2fd99a9da130a232eb9d84cb8c70aaa0f4115e2574b4c51caafdb7d53335",
+    "PROGRESS.md": "c3efd63ce7d61c15c8e361de5174ab93e2a4f7c93e4d4d215b344ecc737aa881",
     "coordination/evidence/acs-memory-preflight-01/candidate-batch.json": "2817a68dfcbcad438832196dd97ce804af8344d3fd52f8fe5399e7bc66df83e9",
     "coordination/evidence/acs-memory-preflight-01/candidate-questions.json": "d2a1285736e6364d115513cd3d8bafb65b47a989862ab6f6a6dcece82bdb62f5",
     "coordination/evidence/acs-memory-preflight-01/earlier-depth-failure-junit.xml": "bd3375be9bc6e81713b82e8db7668e2448c4fedf1ae1643bf9f4e580e9704014",
@@ -74,7 +74,10 @@
     "coordination/evidence/acs-memory-preflight-01/integration-20261028/report.md": "996120bf52a061ace4a2d78821c21ed35f77696da400044b2b57da4f62cedb73",
     "coordination/evidence/acs-memory-preflight-01/integration-20261028/result.json": "e8601c82abb8fde998a1ded07a891f6f94c293bc8bdcff4e97d2a416d775afed",
     "coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029/report.md": "4838c781e9843c00022dc05e21e1b8885ee248799214ad8977dee88099beb917",
-    "coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029/result.json": "63c2b13ea70849e7d0a709cc3be555090a3d562f811721333c1604f6898c2205"
+    "coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029/result.json": "63c2b13ea70849e7d0a709cc3be555090a3d562f811721333c1604f6898c2205",
+    "coordination/evidence/acs-memory-preflight-01/marker-strategy-20261029/report.md": "711bf26a22b2235d24ef5ce1d68d5ed9a9e4c0c84fd8346750646566f6649449",
+    "coordination/evidence/acs-memory-preflight-01/marker-strategy-20261029/result.json": "961ab95172a0ee0a9022d733e68054f3abac0fdfab115f7401d367e4022515b5",
+    "coordination/evidence/acs-memory-preflight-01/marker-strategy-20261029/questions.json": "d18ffb4b0cc0a1b1655a45cec7c9294d2bdca7e868b7a1ade0bb0fb490dd0b91"
   },
   "hash_basis": "Git committed blob bytes; Windows checkout newline conversion is excluded",
   "diff_check": {
@@ -155,5 +158,18 @@
     "remote_provider_calls": 0,
     "deployment": "HOLD",
     "evidence": "coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029"
+  },
+  "upstream_marker_strategy_trial": {
+    "date": "2026-10-29",
+    "dedicated_instance": true,
+    "dedup_enabled_three_card": "one merged atom; no markers; adapter refused",
+    "dedup_disabled_three_card": "three verified; replay and withdrawal pass",
+    "dedup_disabled_ten_card": "ten verified; 10/10 synthetic non-blind top3; replay withdrawal supersession pass",
+    "elapsed_seconds": 311.52,
+    "real_documents": 0,
+    "external_model_calls": 0,
+    "formal_acceptance": false,
+    "deployment": "HOLD",
+    "evidence": "coordination/evidence/acs-memory-preflight-01/marker-strategy-20261029"
   }
 }

@@ -22,9 +22,10 @@ does not mark the larger NAS/model integration accepted.
 
 ## Blocker Status
 
-Real upstream extraction omitted the required source marker in both synthetic
-trials. Adapter activation is blocked by source correlation. Real card review,
-actual source processing, NAS persistence and two-machine acceptance are HOLD.
+Default upstream extraction omitted source markers; a dedicated synthetic
+instance using an agent-scoped marker strategy and L1 dedup disabled passed a
+ten-card preliminary trial. Real card review, formal benchmark, NAS persistence
+and two-machine acceptance remain HOLD.
 
 ## Next Step
 
@@ -42,3 +43,11 @@ Two temporary WSL runs of real0.4.3 and local3B model produced an L1 atom but om
 Next: evaluate a source-correlation design that covers upstream deduplication,
 updates and withdrawal; keep the marker requirement until another contract is
 proven. Do not enable real-document processing or persistent NAS service.
+
+## Synthetic marker strategy candidate (2026-10-29)
+
+A dedicated test instance with L1 dedup disabled and an agent-scoped marker strategy passed10/10 synthetic top3, replay, adapter withdrawal and one supersession. Dedup-enabled three-card trial merged distinct facts and lost markers. The trial is non-blind and does not authorize global settings, real documents or NAS deployment. See marker-strategy-20261029/report.md; PR11 stays Draft and task REVIEW.
+
+Current next step: independent review of the candidate configuration and its
+instance-wide deduplication tradeoff, followed by source-card review and the
+separate deployment and two-device gates. Preserve fail-closed marker checks.

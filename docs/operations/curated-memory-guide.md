@@ -10,9 +10,21 @@ The implemented path is preview → explicit import → extraction verification 
 verified recall. Original contract tests used a synthetic HTTP fixture. Two
 subsequent synthetic-only WSL trials used the real AgentMemory 0.4.3 core and a
 local model: extraction and direct recall worked, but the exact source marker
-was absent both times, so this adapter refused activation. Upstream source-marker
-preservation, model quality and deployment acceptance remain **HOLD**. See
-`coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029/`.
+was absent both times, so this adapter refused activation. Later synthetic trials
+used an agent-scoped L1 source-marker strategy and disabled L1 deduplication on
+the dedicated test instance. Ten of ten short synthetic questions found their
+expected verified card in the top three; replay, adapter withdrawal and one
+supersession also passed. This is preliminary evidence, not formal benchmark,
+independent review, actual-document approval or NAS deployment acceptance. See
+`coordination/evidence/acs-memory-preflight-01/marker-strategy-20261029/`.
+
+The tested instance used `memory.extraction.enableDedup: false` in its YAML and
+an admin-applied L1 strategy scoped to the synthetic agent. Disabling deduplication
+affects the whole instance, so it is appropriate only for a dedicated pilot after
+separate deployment approval. The exact strategy and API sequence are in the
+evidence report. Missing markers still refuse activation; there is no fallback to
+unverified output. Upstream L2/L3 and raw recall remain outside the adapter's
+withdrawal boundary, and storage may grow faster with deduplication disabled.
 
 Only AgentMemory0.4.3 through an explicit numeric loopback HTTP endpoint is
 accepted. This endpoint is intended to be the local end of a separately approved

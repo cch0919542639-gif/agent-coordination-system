@@ -1,3 +1,7 @@
+## AgentMemory synthetic marker strategy candidate (2026-10-29)
+
+A dedicated temporary0.4.3 instance with L1 dedup disabled and an agent-scoped marker strategy preserved all ten source markers, passed10/10 non-blind synthetic top3 queries, replay, adapter withdrawal and one supersession. Dedup-enabled three-card trial had merged facts and lost markers. Formal card review, NAS and two-device gates remain HOLD; PR11 stays Draft. See coordination/evidence/acs-memory-preflight-01/marker-strategy-20261029/report.md.
+
 ## AgentMemory synthetic upstream gate HOLD (2026-10-29)
 
 Two isolated real0.4.3/local3B runs extracted one synthetic L1 atom each but both omitted the required source marker. The adapter refused activation; direct upstream recall worked in the second run. Source correlation, real documents and NAS deployment remain HOLD. See coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029/report.md for limits and preliminary default-startup incident. PR11 remains Draft, task REVIEW.

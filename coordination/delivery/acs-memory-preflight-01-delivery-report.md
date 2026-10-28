@@ -119,3 +119,7 @@ See coordination/evidence/acs-memory-preflight-01/integration-20261028/. PR rema
 ## Synthetic upstream qualification (2026-10-29)
 
 Two real0.4.3 core/local-3B-model runs extracted one synthetic atom each; both omitted the exact source marker and the adapter refused activation. Direct upstream recall worked in the second run. Deployment remains HOLD; see coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029/report.md for limits and the preliminary startup incident. No real documents or remote model calls.
+
+## Source marker strategy qualification (2026-10-29)
+
+A scoped L1 marker strategy alone passed one synthetic card but three dedup-enabled cards were merged and lost markers. On dedicated instances with L1 dedup disabled the three-card and ten-card synthetic trials passed marker validation, replay and adapter withdrawal; the ten-card trial also passed one supersession and10/10 synthetic top3 questions. This is non-blind preliminary local evidence, not real-card or NAS acceptance. See coordination/evidence/acs-memory-preflight-01/marker-strategy-20261029/report.md.

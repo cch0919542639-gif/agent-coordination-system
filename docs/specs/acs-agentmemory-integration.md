@@ -35,8 +35,10 @@ unavailable/refused, not zero history; formal Git work can continue without memo
 2. User chooses model endpoint, processing boundaries and spend limit. Synthetic
    HTTP tests establish adapter behavior only; no upstream LLM/source-preservation
    or recall-quality claim follows from them.
-3. Run the actual0.4.3 ingestion/extraction/recall gate and measure top3quality.
-   If source markers disappear or correlation is ambiguous, hold deployment.
+3. Qualify actual0.4.3 ingestion/extraction/recall against the reviewed cards.
+   A dedicated synthetic run with L1 dedup disabled and a scoped marker strategy
+   reached10/10 top3, but the real-card benchmark and independent review remain
+   pending. If markers disappear or correlation is ambiguous, hold deployment.
 4. Verify upstream withdrawal/rebuild if native access will be offered. Prove
    ordinary-user isolation, protected keys, backup/restore and bounded NAS load.
 5. Then qualify persistent NAS service, two-device handoff and24hour operation.
