@@ -1,0 +1,43 @@
+{
+  "code_revision": "1d7b85b60b56299a161aba90a53d0078120d84af",
+  "task_id": "dual-intake-20261025-01",
+  "dispatch_id": "25c1a9c8caaac61240760c178f7de8bd8f9bf03314606e833b0b0e30f1e7013c",
+  "run_id": "8c93ec305c76443f8e0237269d4ee102",
+  "machine_id": "gigabyte-202509",
+  "owner": "handoff-pilot-receiver",
+  "queue_head": "ce8a62eaa88b15072e65e17307bbe3d348aa47fe",
+  "sender_observes": "RECEIVED",
+  "sync_native_exit": 0,
+  "assignment_count": 1,
+  "claim_count": 1,
+  "status_receipt_count": 1,
+  "queue_commit_count": 3,
+  "immutable_claim_history": true,
+  "dispatch_card_bytes_unchanged": true,
+  "sender_formal_card": "READY",
+  "sender_index_unchanged": true,
+  "runner": null,
+  "execution_enabled": false,
+  "receiver_user_report": {
+    "init_exit": 0,
+    "first_receive_exit": 0,
+    "second_receive_exit": 0,
+    "inbox_rows": [
+      0,
+      1,
+      1
+    ],
+    "statuses": [
+      null,
+      "RECEIVED",
+      "RECEIVED"
+    ],
+    "same_run_id": true,
+    "workspace_absent": true,
+    "checkout_clean": true,
+    "config_unchanged": true,
+    "raw_logs_retained_on_receiver": true
+  },
+  "verification_limits": "GitHub assignment/claim/status/history independently checked by coordinator; receiver native exits, local inbox snapshots, workspace absence and host identity are human-reported; receiver raw filesystem evidence not opened by this machine.",
+  "qualification": "Transport/intake/replay only; no runner/provider/production or full execution qualification."
+}

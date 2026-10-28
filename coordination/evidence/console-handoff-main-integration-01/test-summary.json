@@ -1,0 +1,18 @@
+{
+  "core": {
+    "tests": 241,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "native_exit": 0,
+    "elapsed_seconds": 191.969
+  },
+  "handoff": {
+    "tests": 48,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "native_exit": 0,
+    "elapsed_seconds": 258.703
+  }
+}

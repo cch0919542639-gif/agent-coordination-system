@@ -14,12 +14,13 @@ import time
 from urllib.parse import parse_qs, urlsplit
 
 from coordination_runtime.parallel_runtime import ParallelController
+from coordination_runtime.parallel_policy import path_key
 from coordination_runtime.recovery_manager import RecoveryManager
 from coordination_runtime.resource_guard import ResourceController
 from coordination_runtime.state_controller import StateController, StateError, _id, _integer
 from .read_model import ReadModel
 
-VIEWS = {'overview', 'board', 'monitor', 'workspaces', 'reviews', 'events', 'settings'}
+VIEWS = {'overview', 'board', 'monitor', 'workspaces', 'reviews', 'events', 'settings', 'handoff'}
 ROLES = {'viewer': 0, 'operator': 1, 'administrator': 2}
 TOKEN = re.compile(r'[A-Za-z0-9_-]{43}')
 STATIC = {'/': ('index.html', 'text/html'), '/app.css': ('app.css', 'text/css'),
@@ -46,8 +47,9 @@ def unique(pairs):
 
 
 class Console:
-    def __init__(self, parallel, auth_file):
+    def __init__(self, parallel, auth_file, handoff=None):
         self.p = parallel
+        self.handoff = handoff
         path = Path(auth_file).absolute()
         if (path.resolve() != path or path.is_relative_to(parallel.root)
                 or path.is_relative_to(parallel.workspace.root)):
@@ -104,7 +106,79 @@ class Console:
         self.sessions[sid] = session
         return sid, session
 
+    def handoff_summary(self):
+        if self.handoff is None:
+            return dict(configured=False, initialized=False, last_sync_ms=None,
+                        last_error=None, code_revision=None, queue_head=None,
+                        ready_tasks=[], peers=[], dispatches=[], acceptance=[])
+        try:
+            data = self.handoff.summary()
+            # Keep HTTP projections limited to the frozen safe summary fields.
+            lists = {'ready_tasks': ('task_id', 'owner', 'card_sha256'),
+                     'peers': ('machine_id', 'owner'),
+                     'dispatches': ('dispatch_id', 'task_id', 'machine_id', 'owner', 'status', 'exit_code'),
+                     'acceptance': ('ref', 'evidence_commit', 'tested_commit', 'status', 'test_count', 'verified_ms')}
+            result = {k: data.get(k) for k in ('configured', 'initialized', 'last_sync_ms',
+                                             'last_error', 'code_revision', 'queue_head')}
+            for key, fields in lists.items():
+                rows = data.get(key, [])
+                if not isinstance(rows, list) or len(rows) > 256:
+                    raise ValueError()
+                result[key] = [{k: row.get(k) for k in fields} for row in rows]
+            if result['last_error'] is not None:
+                category = result['last_error']
+                result['last_error'] = category if isinstance(category, str) and re.fullmatch('[a-zA-Z_]{1,64}', category) else 'handoff_error'
+            for row in [result, *[item for rows in lists for item in result[rows]]]:
+                for key, value in row.items():
+                    if key in lists:
+                        continue
+                    if isinstance(value, str):
+                        pattern = r'refs/[a-zA-Z0-9_./-]{1,200}' if key == 'ref' else r'[a-zA-Z0-9_. -]{1,128}'
+                        if not re.fullmatch(pattern, value):
+                            raise ValueError()
+                    elif value is not None and type(value) not in (int, bool):
+                        raise ValueError()
+            return result
+        except (ValueError, TypeError, KeyError, AttributeError):
+            raise StateError('Handoff snapshot unavailable.') from None
+
+    def handoff_action(self, action, args, execute):
+        if self.handoff is None:
+            raise StateError('Handoff is not configured.')
+        try:
+            if action == 'handoff.sync':
+                shape(args, set())
+                if execute:
+                    self.handoff.sync_once()
+                return self.handoff_summary()
+            shape(args, {'task_id', 'machine_id', 'expected_card_sha256',
+                         'expected_revision', 'expected_queue_head'})
+            _id(args['task_id']); _id(args['machine_id'])
+            for name, size in [('expected_card_sha256', 64), ('expected_revision', 40),
+                               ('expected_queue_head', 40)]:
+                if not isinstance(args[name], str) or not re.fullmatch('[a-f0-9]{' + str(size) + '}', args[name]):
+                    raise Refused()
+            result = self.handoff.dispatch(**args, execute=execute)
+            projected = {k: result.get(k) for k in ('dispatch_id', 'task_id', 'machine_id', 'owner', 'status')}
+            for key, minimum in [('allowed_scope', 1), ('forbidden_scope', 0)]:
+                values = result.get(key)
+                if not isinstance(values, list) or not minimum <= len(values) <= 64:
+                    raise ValueError()
+                for value in values:
+                    if not isinstance(value, str):
+                        raise ValueError()
+                    base = value.removesuffix('/**')
+                    path_key(base)
+                    if any(c in base for c in '*?[]{}'):
+                        raise ValueError()
+                projected[key] = list(values)
+            return projected
+        except (ValueError, TypeError, KeyError):
+            raise StateError('Handoff refused; refresh and preview again.') from None
+
     def action(self, action, args, execute=False):
+        if action in ('handoff.sync', 'handoff.dispatch'):
+            return self.handoff_action(action, args, execute)
         fields = {'recovery.reconcile': {'run_id', 'request_id', 'expected_version', 'expected_fence', 'reason'},
                   'resource.probe': set(), 'resource.reset': {'expected_sequence'},
                   'board.reconcile': {'request_id'}, 'board.cancel': {'request_id'},
@@ -274,13 +348,22 @@ class Handler(BaseHTTPRequestHandler):
                     if not re.fullmatch(r'[0-9]{1,19}', value):
                         raise Refused()
                     numbers[key] = int(value); _integer(numbers[key], low, high)
+                if name == 'handoff':
+                    return self.reply(200, dict(view=name, project_id=app.p.project_id,
+                        sampled_ms=time.time_ns() // 1_000_000, handoff=app.handoff_summary()))
                 return self.reply(200, app.model.view(name, **numbers))
             if self.command == 'POST' and route in {'/api/inspect', '/api/preview', '/api/execute'}:
                 if ROLES[session['role']] < (2 if route == '/api/execute' else 1):
                     raise Refused(403)
                 # Verify bound database even before planning a controller action.
-                with app.p.controller._db() as db:
-                    app.model.binding(db)
+                is_handoff = (route == '/api/preview' and isinstance(body, dict)
+                              and body.get('action') in ('handoff.sync', 'handoff.dispatch'))
+                if route == '/api/execute' and isinstance(body, dict) and isinstance(body.get('plan'), str):
+                    saved = session['plans'].get(body['plan'], {})
+                    is_handoff = saved.get('action') in ('handoff.sync', 'handoff.dispatch')
+                if not is_handoff:
+                    with app.p.controller._db() as db:
+                        app.model.binding(db)
                 if route == '/api/inspect':
                     shape(body, {'run_id'}); _id(body['run_id'])
                     return self.reply(200, RecoveryManager(app.p).inspect(body['run_id']))
@@ -321,10 +404,21 @@ class Handler(BaseHTTPRequestHandler):
     do_POST = handle_request
 
 
+def handoff_service(config, parallel):
+    if config is None:
+        return None
+    try:
+        from coordination_runtime.github_handoff import HandoffService
+        return HandoffService(config, parallel.root, parallel.project_id)
+    except (ImportError, ValueError, OSError):
+        raise StateError('Handoff configuration unavailable.') from None
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('repo', 'db', 'workspaces', 'project-id', 'auth-file'):
         parser.add_argument('--' + name, required=True)
+    parser.add_argument('--handoff-config')
     parser.add_argument('--port', type=int, default=8765)
     parser.add_argument('--duration', type=int, default=300)
     args = parser.parse_args(argv)
@@ -333,7 +427,7 @@ def main(argv=None):
     server = None
     try:
         p = ParallelController(StateController(args.db), args.repo, args.workspaces, args.project_id)
-        server = Server(Console(p, args.auth_file), args.port)
+        server = Server(Console(p, args.auth_file, handoff=handoff_service(args.handoff_config, p)), args.port)
         timer = threading.Timer(args.duration, server.shutdown); timer.daemon = True; timer.start()
         print(json.dumps(dict(origin=server.origin, duration=args.duration)), flush=True)
         server.serve_forever(poll_interval=0.25)

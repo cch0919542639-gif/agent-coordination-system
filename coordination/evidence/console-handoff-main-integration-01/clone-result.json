@@ -1,0 +1,52 @@
+{
+  "candidate_commit": "085bb59623791c34d3558849b53496595d259403",
+  "pin_count": 73,
+  "raw_blob_pins": "PASS",
+  "board_cards": 114,
+  "checks": [
+    {
+      "command": [
+        "C:\\Users\\angel\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-I",
+        "-B",
+        "-c",
+        "import sys;sys.path.insert(0,sys.argv[1]);import web.api,coordination_runtime.github_handoff;print(\"imports passed\")",
+        "C:\\Users\\angel\\AppData\\Local\\Temp\\codex-pr9-fresh-wd196aer\\source"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "C:\\Users\\angel\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-I",
+        "-B",
+        "C:\\Users\\angel\\AppData\\Local\\Temp\\codex-pr9-fresh-wd196aer\\source\\scripts\\console_setup.py",
+        "--help"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "C:\\Users\\angel\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-I",
+        "-B",
+        "C:\\Users\\angel\\AppData\\Local\\Temp\\codex-pr9-fresh-wd196aer\\source\\scripts\\github_handoff.py",
+        "--help"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "C:\\Users\\angel\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-B",
+        "C:\\Users\\angel\\AppData\\Local\\Temp\\codex-pr9-fresh-wd196aer\\source\\scripts\\orchestrate.py",
+        "validate"
+      ],
+      "returncode": 0
+    }
+  ],
+  "git_status_clean": true,
+  "elapsed_seconds": 15.547,
+  "clone_directory": "C:\\Users\\angel\\AppData\\Local\\Temp\\codex-pr9-fresh-wd196aer\\source",
+  "qualification": "Local fresh clone only; tests still separate, no real peer/watch/runner/provider activation."
+}

@@ -21,6 +21,28 @@ without merge, on2026-10-26.
 See coordination/delivery/acs-memory-preflight-01-delivery-report.md. Existing
 workers, task acceptance, runtime state and earlier release records are unchanged.
 
+## PR9 publication evidence/status closeout (2026-10-27)
+
+User-requested metadata fix bundles the accepted exact1d7b85b live transport/intake/
+replay packet and updates current release status/verification summary/publication.
+GitHub receipt verification is distinguished from receiver human-reported local
+facts. Preserve original needs_fix review and historical failures. No product/test
+change, new pilot, model call, runner/provider activation, draft transition or merge.
+Fresh local autocrlf clone passed:73raw/blob pins,114cards,10published artifact
+hashes,115product/test paths unchanged,37tested raw identities per suite,validator,
+imports,twoCLIhelp and clean status. Results: coordination/evidence/
+console-handoff-live-intake-01/publication-verification.json. That record identifies
+the first metadata candidate; this final evidence-only commit adds the check record.
+PR9 source publication and exact finalhead/GitHub download recheck follow; no merge.
+
+## PR9 main整合驗證完成，保留雙機驗收關卡（2026-10-25）
+
+固定085bb59正常merge mainc3682d3與featurea82c5a7，115product/test paths完全等於已接受父系聯集，5metadata衝突修正不新增產品邏輯。Core/legacy241pass/native0/191.969s、另handoff48pass/native0/258.703s，各300s上限；不是單次合併suite，也不冒稱全repo。37source+36accepted snapshots=73pins、114cards；保留兩邊21/30snapshot身份（18共用）。Freshlocalautocrlfclone73raw/blob pins、imports、兩CLIhelp、validator/clean通過。整合任務已acceptedDONE，準備FF發布PR9並retargetmain但保持draft。實際雙機同步/收件驗收仍pending，未啟用watch/runner/provider/排程或權限。本輪未新增外部模型呼叫，沿用既有獨立source審查加deterministic整合驗證。
+
+## PR9整合main，產品維持已接受雙親聯集（2026-10-25）
+
+console-handoff-main-integration-01以a82c5a7正常merge mainc3682d3，5個metadata衝突已整合，沒有重寫歷史或新增產品邏輯。保留main入口guard與feature1feeca7功能；目標37source+36accepted snapshots共73pins、114cards，兩邊舊snapshot身份保留。接著在固定merge候選做兩組有界回歸與freshclone。PR9保持draft，實際雙機同步／收件驗收未完成，無真實watch/runner/provider/排程或權限變更。
+
 ## PR6整合驗證接受，待精確head發布合併（2026-10-25）
 
 console-main-readiness-01已acceptedDONE：單次8組241pass/native0/156.063秒，52pins/109cards/18舊snapshot完整；freshlocalautocrlfclone eb31273於9.64秒驗證raw/blob pins、isolatedimports、兩CLIhelp、validator及cleanstatus。最終此層僅補驗證／接受紀錄，產品／測試blobs與獨立已接受c3c6a38完全相同。來源審查沿用7份accepted快照及PR10OpenCode靜態審查；此任務是deterministic metadata/integration檢查，不冒稱新的獨立模型審查或新雙機／production驗收。準備nonforce快轉PR6來源分支並以精確head合併main；PR9未整合啟用。

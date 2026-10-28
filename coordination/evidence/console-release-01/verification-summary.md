@@ -1,15 +1,87 @@
-# Integrated candidate verification (2026-10-25)
+# Main-integrated handoff verification (2026-10-25)
 
-Source c3c6a38 includes accepted PR10 entry guards. Current fixed-source integrated
-regression passed241tests/native0 in156.063seconds (single eight-file invocation).
-Fresh local autocrlf clone at eb312738fadc0fd41ed6fe4577fae90e40c562f8 passed52raw/blob pins,109cards,
-isolated imports, both CLI help entries and validator, with clean status.
-Final metadata acceptance adds no source/test changes. Regression and clone results are recorded in ../console-main-readiness-01/ and its
-delivery report. Earlier92e1248CP950131pass applies to that exact earlier release.
-Manifest now pins31source paths plus21accepted snapshots;18prior snapshots remain
-unchanged. The original failures and optional harness limits below remain history.
+Candidate is a product/test-preserving merge of mainc3682d3 and featurea82c5a7.
+Current fixed085bb59 core/legacy241tests pass/native0 in191.969s, and separate
+handoff48tests pass/native0 in258.703s. Fresh local clone verifies73raw/blob pins,
+114cards,imports,twoCLIhelp,validator and clean status. Full results belong to
+console-handoff-main-integration-01;
+old241main and focused handoff results below are historical source-specific runs.
+Manifest has37source pins and36accepted snapshots,73total, with114board cards.
+Publication closeout (2026-10-27): live transport/intake/replay accepted on
+2026-10-26 at exact1d7b85b60b56299a161aba90a53d0078120d84af. See the
+[sanitized acceptance packet](../console-handoff-live-intake-01/acceptance-report.md)
+and its publication-manifest.json hashes. GitHub assignment/claim/RECEIVED/history
+were independently checked by the coordinator; receiver init/receive/receive0,
+inbox0/1/1, stable replay and local filesystem/host facts are human-reported.
+Receiver raw files were not opened here. No runner/provider/production acceptance
+or new physical pilot is claimed at the later publication commit. Product/test
+content,73pins and114cards remain unchanged; the241/48 native runs above are reused
+by exact source/hash identity, not rerun. PR9 stays draft/unmerged pending a separate
+merge decision. The intake gate is complete; payload lifecycle remains READY.
 
-## Historical verification summaries
+## Historical handoff verification (preserved)
+
+# Handoff verification continuation
+
+## Current accepted handoff candidate (2026-10-25)
+
+The bounded handoff feature is accepted locally at source commit
+`1feeca789ccfd6985f9496e1cce123cc67829160` on
+`codex/console-handoff-sync-01`. This feature remains unpublished. Existing draft
+PR6 still contains repaired bootstrap `92e1248b63dee44a607296b3d63f61207b61f09a`;
+no feature push or main merge has occurred. Use the exact later release commit
+supplied by the handoff when publication is authorized.
+
+The other computer's evidence `5002422d33d85b3def31541241521de06fd5527b`
+technically requalifies92e1248:131JUnit passes/native0 under CP950, utf8mode0 and
+no PYTHONUTF8 override, two finite login/view/restart cycles, private bytes
+unchanged. Human identifies the other computer; no cryptographic physical-host
+or production qualification is claimed. The SID revalidation HOLD is released.
+Originalc7f7dee evidence4a0f61d remains FAIL114/1; its UTF8 workaround is not
+acceptance. These outcomes apply to different versions.
+
+Actual read-only GitHub discovery using the new backend independently returned
+FAIL for originalc7f7dee and VERIFIED_PASS131 for92e1248, with last_error null
+(11.038seconds). It used disposable external state and existing read access;
+no queue write, dispatch, receive, watch or runner ran. This does not qualify
+real cross-computer execution of the new feature.
+
+Default console_setup init creates a Viewer account, which cannot dispatch.
+Dispatch execution requires an explicitly provisioned Administrator who creates
+and confirms the plan in that same session; Operator can preview only.
+Choose roles during explicit new local setup. Existing credentials are not
+upgraded or migrated here. See the [external authentication and role guide]
+(../../../docs/operations/web-console-guide.md#external-authentication) for deliberate operator setup.
+
+See the [handoff guide](../../../docs/operations/github-handoff-guide.md) for external per-computer
+configuration, explicit initialization, role-bound preview/confirmation and
+finite foreground watch. Each computer needs its own locally activated watch
+terminal; navigation and5second console refresh only read local cached summary.
+A coordinator watch syncs; a worker syncs/receives its own assignment. Execution
+requires both locally approved bound runner/execution_enabled and --execute.
+No service, schedule or autostart is installed. Existing READY assigned cards
+can be handed off; task-authoring UI remains absent. Runtime FINISHED/FAILED/
+UNKNOWN never means formal reviewed/DONE. No real provider or peer activation,
+new credentials or automatic review/merge is authorized by this release.
+
+Current focused source evidence: backend9pass/7deselected/native0; separate
+UI19pass/13deselected/native0. Independent delta6pass/1fixture-fail/native1 is
+retained honestly; separate actual-backend HTTP probe native0/6.970seconds
+verifies scope preview/confirmation. The minimal reviewer controller fixture
+failed before original HTTP scope assertions; the earlier execution claim was
+corrected. No7green or combined full-suite claim. Older backend60+1, UI30/92,
+repair131/16 and original failure runs remain distinct historical executions.
+
+Portable manifest contains35source/test/doc/static pins and30accepted snapshots
+(10DONE cards,10canonical decisions,10deliveries),65files and111board cards.
+All prior18snapshots remain byte-exact. New snapshots cover remote reacceptance,
+backend, UI and independent review. Their archive evidence links are historical
+and unbundled unless pinned; no private logs, tokens, DBs or transcripts ship.
+Manifest hashes provide integrity, not independent authenticity. Whole-repository
+and broader symlink/junction qualification remain outside scope.
+
+Earlier sections below are dated history: old HOLD/publication-pending wording
+does not describe current92acceptance or this local feature status.
 
 # Encoding repair verification continuation (2026-10-25)
 

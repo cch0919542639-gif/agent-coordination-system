@@ -1,97 +1,104 @@
-# Integrated console candidate for main review
+# Handoff candidate integrated with main
 
-Updated2026-10-25. PR10 is merged into the bootstrap branch at
-c3c6a383297326213b3c9904e9bfcfc3b7264fc6. Its product/test blobs are the reviewed
-source311dc1f plus unchanged console/SID source. Entry guards passed110 relevant
-regressions/native0 and independent OpenCode static review with no blocking finding.
-The following metadata layer preserves those source blobs and refreshes the guide
-and integrity inventory. Exact final publication state is recorded by Git/PR6.
+Updated2026-10-25. Mainc3682d3 includes merged PR6 and reviewed PR10 guards.
+This candidate merges it into PR9a82c5a7 without rewriting either history.
+Product/test content is the accepted parent union: handoff source1feeca7 plus
+main's guarded legacy loop/activation. Five metadata conflicts are resolved here;
+no new product logic is introduced. Exact final commit/publication is in PR9/Git.
 
-Original92e1248 passed131tests in the original CP950/no-UTF8-override environment
-(evidence5002422), including two finite login/restart cycles and private byte
-preservation. This closes the original SID technical HOLD. It does not claim a
-new second-machine run against this integrated candidate. Originalc7FAIL114/1,
-optional reviewer harness failures and previous partial runs remain history.
+Manifest now pins37source/test/doc/static files and36accepted snapshots
+(twelve DONE cards, canonical reviews and deliveries),73paths total. It preserves
+all prior30feature and21main snapshot identities (18shared). The board has114cards
+including this integration record. A new fixed-candidate regression/clone result
+is recorded under coordination/evidence/console-handoff-main-integration-01/.
+Current fixed085bb59 candidate: core/legacy241pass/native0 in191.969s and
+handoff48pass/native0 in258.703s, two distinct bounded invocations. Fresh local
+autocrlfclone verified73raw/blob pins,114cards,imports,twoCLIhelp and validator,
+with clean status. Earlier checks below remain historical source-specific runs.
 
-The current manifest pins31 source/test/doc/static paths and21 accepted snapshots
-(seven DONE cards, seven canonical reviews, seven deliveries). The original18
-snapshot bytes remain unchanged. The two legacy entry scripts and new snapshots
-use explicit -text attributes; their stored blobs are unchanged from c3c6a38.
-The board has109cards including the integration-readiness record. Task state is
-separate from publication/merge state; select the final supplied commit.
+Publication closeout updated 2026-10-27: the real two-computer transport/intake/
+replay gate was accepted on 2026-10-26 at exact code revision
+`1d7b85b60b56299a161aba90a53d0078120d84af`. The downloadable sanitized
+[acceptance packet](../../coordination/evidence/console-handoff-live-intake-01/acceptance-report.md)
+includes the accepted review, queue assignment/claim/RECEIVED status and stable
+replay summary, with file hashes in publication-manifest.json. Coordinator GitHub
+verification is independent; receiver native exits, local inbox/workspace checks
+and physical-host identity remain explicitly human-reported. Receiver raw local
+files were retained by the receiver and were not independently opened here.
 
-The current integration check result is in
-coordination/evidence/console-main-readiness-01/ and its delivery report. The integrated eight-file regression run passed241tests/native0 in156.063seconds.
-Fresh local autocrlf clone verified52raw/blob pins,109cards, isolated imports,
-both CLI help entries and validator; clone remained clean. The readiness record
-is accepted after these deterministic checks. Exact-head main promotion remains
-a separate final operation, recorded in Git/PR6 rather than predicted here. No live
-provider, task dispatch, watch, service or schedule is enabled; default Viewer
-and disabled runtime remain. Real peer operation belongs to separate draftPR9.
+PR9 remains draft/unmerged for the separate merge decision; the live intake gate
+is no longer pending. This publication changes no product/test code and does not
+rerun the physical pilot at the later metadata commit. Runner/provider execution,
+watch, service, schedule, credentials, permissions and production qualification
+are outside this acceptance. Both runner=null and execution_enabled=false remain.
+Runtime RECEIVED does not accept the payload task; its formal card remains READY.
+Do not auto-accept canonical tasks from runtime FINISHED/FAILED/UNKNOWN receipts.
 
-The reused marker guard is a preflight check, not an atomic cross-process lock.
-Whole-repository, broader junction/symlink and production qualification remain
-outside the claims. Browser refresh reads the local checkout; create private
-state separately per computer and never copy tokens, DBs or ACKs.
+## Historical handoff release status (superseded where inconsistent)
 
-## Historical release status (superseded)
+# Locally accepted handoff candidate; publication pending
 
-# Repaired console candidate: acceptance HOLD
+## Current accepted handoff candidate (2026-10-25)
 
-2026-10-25: the Windows SID encoding repair is accepted locally at code/test
-commit `8a5bc1693e8f8e8ea0f476424b59d37346f44b8a`. This metadata layer prepares
-a repaired release; it has not been published. P1 acceptance remains HOLD until
-fresh exact-release download/init/replay/login/stop/restart in the original failing
-environment succeeds. P2/P3 planning waits for that result. Task creation/assignment
-is not available through the console.
+The bounded handoff feature is accepted locally at source commit
+`1feeca789ccfd6985f9496e1cce123cc67829160` on
+`codex/console-handoff-sync-01`. This feature remains unpublished. Existing draft
+PR6 still contains repaired bootstrap `92e1248b63dee44a607296b3d63f61207b61f09a`;
+no feature push or main merge has occurred. Use the exact later release commit
+supplied by the handoff when publication is authorized.
 
-Original release `c7f7dee2c356009f51fbe63434ecf0c5400e7571` was published on
-origin `codex/console-bootstrap-01` with draft PR6 into main; no main merge is
-claimed. Evidence `4a0f61d76c78ac5bf85f61c996c8c77a539ea970` reports its original
-initialization acceptance FAIL:114passed/1failed under CP950/non-ASCII account
-output. The later PYTHONUTF8 workaround does not qualify that acceptance.
-Physical host identity is unproven; this repair does not prove two distinct hosts.
+The other computer's evidence `5002422d33d85b3def31541241521de06fd5527b`
+technically requalifies92e1248:131JUnit passes/native0 under CP950, utf8mode0 and
+no PYTHONUTF8 override, two finite login/view/restart cycles, private bytes
+unchanged. Human identifies the other computer; no cryptographic physical-host
+or production qualification is claimed. The SID revalidation HOLD is released.
+Originalc7f7dee evidence4a0f61d remains FAIL114/1; its UTF8 workaround is not
+acceptance. These outcomes apply to different versions.
 
-## Use the repaired source
+Actual read-only GitHub discovery using the new backend independently returned
+FAIL for originalc7f7dee and VERIFIED_PASS131 for92e1248, with last_error null
+(11.038seconds). It used disposable external state and existing read access;
+no queue write, dispatch, receive, watch or runner ran. This does not qualify
+real cross-computer execution of the new feature.
 
-The [download/setup guide](console-download-guide.md) covers exact-version
-selection, Python3.12+ selectors, new private initialization, local login and
-finite foreground stop/restart. The SID repair requires no PYTHONUTF8 workaround:
-command output stays bytes, only a validated ASCII SID field is decoded, and
-account-name bytes are never decoded. Existing permissions/ACL checks remain.
-Runtime uses Python's standard library and Git; pytest is needed for tests only.
+Default console_setup init creates a Viewer account, which cannot dispatch.
+Dispatch execution requires an explicitly provisioned Administrator who creates
+and confirms the plan in that same session; Operator can preview only.
+Choose roles during explicit new local setup. Existing credentials are not
+upgraded or migrated here. See the [external authentication and role guide]
+(web-console-guide.md#external-authentication) for deliberate operator setup.
 
-Accepted initial bootstrap: `c3020c4d73b6965aa9f03ea2e60eabcaff587c99`;
-P1a packaging: `5daa318d2d9c2b4dd4ff93081396bd452212c4a1`;
-main base: `bfc5163af6dca4b9b7dec6b599563e3cbf984cac`. The repair changes setup
-and its tests; the guide now adds revalidation instructions. The release handoff
-supplies the later metadata commit; no document contains its own commit SHA.
-Repaired publication to origin `codex/console-bootstrap-01` and draft PR6 update
-require a separate exact-target authorization; no remote action occurs here.
+See the [handoff guide](github-handoff-guide.md) for external per-computer
+configuration, explicit initialization, role-bound preview/confirmation and
+finite foreground watch. Each computer needs its own locally activated watch
+terminal; navigation and5second console refresh only read local cached summary.
+A coordinator watch syncs; a worker syncs/receives its own assignment. Execution
+requires both locally approved bound runner/execution_enabled and --execute.
+No service, schedule or autostart is installed. Existing READY assigned cards
+can be handed off; task-authoring UI remains absent. Runtime FINISHED/FAILED/
+UNKNOWN never means formal reviewed/DONE. No real provider or peer activation,
+new credentials or automatic review/merge is authorized by this release.
 
-## Portable board and evidence
+Current focused source evidence: backend9pass/7deselected/native0; separate
+UI19pass/13deselected/native0. Independent delta6pass/1fixture-fail/native1 is
+retained honestly; separate actual-backend HTTP probe native0/6.970seconds
+verifies scope preview/confirmation. The minimal reviewer controller fixture
+failed before original HTTP scope assertions; the earlier execution claim was
+corrected. No7green or combined full-suite claim. Older backend60+1, UI30/92,
+repair131/16 and original failure runs remain distinct historical executions.
 
-This checkout contains main's101card snapshot plus four earlier accepted console
-cards and two accepted encoding source/review cards:107total. It is separate from
-the larger integration board currently viewed on angeline. Each computer views
-its own checkout/runtime; explicit Git operations exchange tracked changes.
-Browser refresh does not synchronize computers. Create new private state per
-computer; do not copy live accounts, tokens, runtime DBs or ACKs.
+Portable manifest contains35source/test/doc/static pins and30accepted snapshots
+(10DONE cards,10canonical decisions,10deliveries),65files and111board cards.
+All prior18snapshots remain byte-exact. New snapshots cover remote reacceptance,
+backend, UI and independent review. Their archive evidence links are historical
+and unbundled unless pinned; no private logs, tokens, DBs or transcripts ship.
+Manifest hashes provide integrity, not independent authenticity. Whole-repository
+and broader symlink/junction qualification remain outside scope.
 
-[Manifest](../../coordination/evidence/console-release-01/manifest.json) pins29
-source/test/doc/static files and18exact snapshots (six DONE cards, six canonical
-reviews, six deliveries). Two source/test pins supersede c7f7dee; the guide pin
-identifies this metadata layer separately. Prior12snapshots remain unchanged.
-[Verification summary](../../coordination/evidence/console-release-01/verification-summary.md)
-retains failure and test lineage. Copied reports/cards are historical snapshots:
-archive evidence/progress paths or absolute source-provenance references outside
-the manifest are not bundled live links. Their prior pending wording remains
-history; copied canonical decisions record local acceptance. No raw logs, private
-initialization receipts, transcripts or live private configuration are bundled.
+Earlier releases remain in Git history and the verification summary. Their old
+HOLD wording does not describe current92acceptance or this local feature status.
 
-Final Python3.13 affected131tests captured native0; independent isolated3.13 SID16
-captured native0. Earlier red14fail/2pass and focused3.12bootstrap39 are separate.
-Optional independent boundary probes have two harness failures and remain
-incomplete, not green. These local checks do not replace original-environment
-acceptance. Whole-repository and broader symlink/junction qualification remain
-outside scope. No daemon, worker launch or task dispatch endpoint is added.
+
+The [portable manifest](../../coordination/evidence/console-release-01/manifest.json)
+and [verification summary](../../coordination/evidence/console-release-01/verification-summary.md)
+bind this metadata layer to accepted source and copied canonical decisions.
