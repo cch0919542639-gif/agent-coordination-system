@@ -1,0 +1,115 @@
+{
+  "candidate_commit": "3a8dfb5a80e7fd53fc525683ec954e4dfabc6258",
+  "raw_and_blob_pins": 73,
+  "clean_clone": true,
+  "offline_preview_cards": 10,
+  "preview_batch_sha256": "4714d456dbf9b713b1879b62d8990797d56fe0d86411be3cfec82ef67476b4f9",
+  "encoding_overrides": "unset",
+  "checkout_autocrlf": true,
+  "checks": [
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.autocrlf=true",
+        "clone",
+        "--no-hardlinks",
+        "<SOURCE_CHECKOUT>",
+        "<FRESH_CLONE>"
+      ],
+      "native_exit_code": 0
+    },
+    {
+      "command": [
+        "git",
+        "-C",
+        "<FRESH_CLONE>",
+        "remote",
+        "set-url",
+        "origin",
+        "https://github.com/cch0919542639-gif/agent-coordination-system.git"
+      ],
+      "native_exit_code": 0
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "native_exit_code": 0
+    },
+    {
+      "command": [
+        "<PYTHON>",
+        "-B",
+        "scripts/validate_coordination_files.py"
+      ],
+      "native_exit_code": 0
+    },
+    {
+      "command": [
+        "<PYTHON>",
+        "-I",
+        "-B",
+        "scripts/console_setup.py",
+        "--help"
+      ],
+      "native_exit_code": 0
+    },
+    {
+      "command": [
+        "<PYTHON>",
+        "-I",
+        "-B",
+        "scripts/github_handoff.py",
+        "--help"
+      ],
+      "native_exit_code": 0
+    },
+    {
+      "command": [
+        "<PYTHON>",
+        "-I",
+        "-B",
+        "scripts/curated_memory.py",
+        "--help"
+      ],
+      "native_exit_code": 0
+    },
+    {
+      "command": [
+        "<PYTHON>",
+        "-I",
+        "-B",
+        "-c",
+        "import sys;sys.path.insert(0,sys.argv[1]);import web.api,coordination_runtime.github_handoff",
+        "<FRESH_CLONE>"
+      ],
+      "native_exit_code": 0
+    },
+    {
+      "command": [
+        "<PYTHON>",
+        "-I",
+        "-B",
+        "scripts/curated_memory.py",
+        "preview",
+        "--repo",
+        "<FRESH_CLONE>",
+        "--batch",
+        "coordination/evidence/acs-memory-preflight-01/candidate-batch.json"
+      ],
+      "native_exit_code": 0
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "native_exit_code": 0
+    }
+  ],
+  "qualification": "fresh local Windows clone, not a second device"
+}

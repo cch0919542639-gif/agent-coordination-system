@@ -4,7 +4,7 @@
 - Active Task: acs-memory-preflight-01
 - Phase: acs-memory-pilot
 - Status: REVIEW
-- Last Updated: 2026-10-27
+- Last Updated: 2026-10-28
 
 ## Current Step
 
@@ -28,12 +28,9 @@ therefore NAS persistence, real ingestion and two-machine acceptance are HOLD.
 
 ## Next Step
 
-Draft PR11 is published. Follow-up self-check repaired receipt role/row checks
-and MCP Git-timeout handling;54focused tests pass/native0/24.58seconds. Three
-new cases failed before repair. Publish the bounded repair on the same Draft PR;
-leave task REVIEW and await independent/user review. Candidate sources remain
-unapproved, with no real processing/NAS activation. See evidence followup-self-check.md.
-
-Final remote comparison: main advanced to d6c4578; merge-tree reports one
-PROGRESS.md conflict. Base synchronization and combined-branch validation remain
-pending; no merge performed and no integration acceptance claimed.
+The user authorized branch integration on2026-10-28. Integrated d6c4578,
+resolved the sole progress conflict and verified the combined branch:343tests
+pass/native0,73fresh-clone raw/blob pins pass. Publish the verified integration
+and evidence to existing Draft PR11; do not merge to main or self-accept. Await
+review. Sources remain pending-human-review and actual processing/NAS stays HOLD.
+See coordination/evidence/acs-memory-preflight-01/integration-20261028/report.md.

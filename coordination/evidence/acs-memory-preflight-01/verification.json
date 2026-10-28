@@ -57,17 +57,22 @@
     "docs/specs/acs-agentmemory-integration.md": "bf825d6fd4925ce2f4c3ae8ea56c8f2ee1e599a618a9b60fffd6549a279a78c6",
     "docs/specs/acs-agentmemory-plan.md": "d0b93bb2989f30cda225827ff0d9e3fcc2edfae638f132040fa8c7cb9a715223",
     "docs/specs/acs-agentmemory-context.md": "f7a7e155500c93a1cc79dc5f04fc7bc9565f646cdc23e7845105b86945f918da",
-    "coordination/delivery/acs-memory-preflight-01-delivery-report.md": "2ea111e779a97d1767560ad16643c3141637fbb8520bd86ea607c77fbc5d60cc",
-    "coordination/progress/codex-memory-implementation.md": "e912ab9e403dccc6126645c4527967d793dc725ffd04162bfd101d14413a60b7",
-    "coordination/task-board/review/2026-10-26_acs-memory-preflight-01_curated-memory-integration.md": "df0cd38849ea3c9a680bc8d18e0c3cb96055b107fa1dfd4db9fa9136070cfe58",
-    "PROGRESS.md": "e9eed938dad1966d7f2953ff985b02bb463d951de279e06aec5deda95c7e1f2c",
+    "coordination/delivery/acs-memory-preflight-01-delivery-report.md": "5ba79a7f2f32ac1523a43b2350ec2a68871915bdfff449b596438d1ea8555738",
+    "coordination/progress/codex-memory-implementation.md": "45ff5f6f59081f941509e9903e9a87da56769bcd96f4a9436f3c89e98bd0249d",
+    "coordination/task-board/review/2026-10-26_acs-memory-preflight-01_curated-memory-integration.md": "8f69705c843803e193ff174ada85d7a08f0562180c4af9365b3fe47afd2a2618",
+    "PROGRESS.md": "356eb61fee9290c5dc421db5a4c7fd0807b0921c0952ad542bf5011e58f46e22",
     "coordination/evidence/acs-memory-preflight-01/candidate-batch.json": "2817a68dfcbcad438832196dd97ce804af8344d3fd52f8fe5399e7bc66df83e9",
     "coordination/evidence/acs-memory-preflight-01/candidate-questions.json": "d2a1285736e6364d115513cd3d8bafb65b47a989862ab6f6a6dcece82bdb62f5",
     "coordination/evidence/acs-memory-preflight-01/earlier-depth-failure-junit.xml": "bd3375be9bc6e81713b82e8db7668e2448c4fedf1ae1643bf9f4e580e9704014",
     "coordination/evidence/acs-memory-preflight-01/junit.xml": "28e072395014d5e7b23967f9ba1b1848cc09a0fef24e08ae68fa7508917ea9b2",
     "coordination/evidence/acs-memory-preflight-01/preview.json": "408472e90d66b075ccafd9c5e70efd3455c0cea34d46200eed97745929a77c64",
     "coordination/evidence/acs-memory-preflight-01/review-junit.xml": "993cbc27d88739e83e2d3b738e6b0906295a5142ebc898f47589f3e4c14dc113",
-    "coordination/evidence/acs-memory-preflight-01/followup-self-check.md": "0ea266c4c5f310fe47a8d5a50ee2ef98d80fcfe360cf86798acf2ad8d57e2049"
+    "coordination/evidence/acs-memory-preflight-01/followup-self-check.md": "0ea266c4c5f310fe47a8d5a50ee2ef98d80fcfe360cf86798acf2ad8d57e2049",
+    "coordination/evidence/acs-memory-preflight-01/integration-20261028/clone-result.json": "3aeb29d74532ed6bb805c6212d6d56f4ba81beab40350d8140fcd8b8ab8bda7f",
+    "coordination/evidence/acs-memory-preflight-01/integration-20261028/composition.json": "59f9b25c6d54f63fa1b958b432da536f6ecaa12e6b70343eacb83d31a21ea427",
+    "coordination/evidence/acs-memory-preflight-01/integration-20261028/junit.xml": "5026fcc56e70d65b42f899e4393632604f3ce75681116ef6dbbdc38b6aa4ff96",
+    "coordination/evidence/acs-memory-preflight-01/integration-20261028/report.md": "996120bf52a061ace4a2d78821c21ed35f77696da400044b2b57da4f62cedb73",
+    "coordination/evidence/acs-memory-preflight-01/integration-20261028/result.json": "e8601c82abb8fde998a1ded07a891f6f94c293bc8bdcff4e97d2a416d775afed"
   },
   "hash_basis": "Git committed blob bytes; Windows checkout newline conversion is excluded",
   "diff_check": {
@@ -111,7 +116,7 @@
     "before_repair_native_exit": 1,
     "report": "coordination/evidence/acs-memory-preflight-01/followup-self-check.md"
   },
-  "integration_hold": {
+  "historical_integration_hold": {
     "main_commit": "d6c4578d5278f92444b83ffa1949ec5b40891c33",
     "command": "git merge-tree --write-tree origin/main HEAD",
     "native_exit_code": 1,
@@ -120,5 +125,21 @@
     ],
     "branch_merged": false,
     "combined_base_validation": "not performed"
+  },
+  "integration": {
+    "date": "2026-10-28",
+    "candidate_commit": "3a8dfb5a80e7fd53fc525683ec954e4dfabc6258",
+    "main_commit": "d6c4578d5278f92444b83ffa1949ec5b40891c33",
+    "conflict_resolved": [
+      "PROGRESS.md"
+    ],
+    "tests": 343,
+    "native_exit_code": 0,
+    "elapsed_seconds": 223.281,
+    "raw_blob_pins": 73,
+    "task_status": "REVIEW",
+    "pr_draft": true,
+    "merge_to_main": false,
+    "evidence_directory": "coordination/evidence/acs-memory-preflight-01/integration-20261028"
   }
 }

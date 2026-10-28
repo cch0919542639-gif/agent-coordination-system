@@ -61,3 +61,7 @@ Use exact Git blobs instead of working-tree Markdown. Persist delivery intent be
 ## Escalation Rules
 
 If current upstream cannot preserve source markers or return verifiable L1 records, hold the deployment gate. Unknown delivery is reconciled read-only or held, never blindly retried. Ask for explicit model/source decisions after safe implementation and a concrete preview exist.
+
+## Follow-up authorization (2026-10-28)
+
+The user requested conflict handling and integration validation. Synchronize the current main into this same Draft PR branch, preserve both parents, publish deterministic evidence and retain REVIEW. This does not authorize PR merge, real processing or deployment.
