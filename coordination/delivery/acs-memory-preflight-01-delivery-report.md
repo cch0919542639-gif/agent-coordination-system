@@ -115,3 +115,7 @@ Raw local logs remain outside Git. No real provider, real document import,
 persistent NAS service, hook, worker or schedule was activated.
 
 See coordination/evidence/acs-memory-preflight-01/integration-20261028/. PR remains Draft; no merge to main or task acceptance.
+
+## Synthetic upstream qualification (2026-10-29)
+
+Two real0.4.3 core/local-3B-model runs extracted one synthetic atom each; both omitted the exact source marker and the adapter refused activation. Direct upstream recall worked in the second run. Deployment remains HOLD; see coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029/report.md for limits and the preliminary startup incident. No real documents or remote model calls.

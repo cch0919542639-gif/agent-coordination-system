@@ -7,10 +7,12 @@ enabled by importing this module or running its offline preview.
 ## Current boundary
 
 The implemented path is preview → explicit import → extraction verification →
-verified recall. Local tests use a synthetic loopback HTTP contract fixture, not
-the actual AgentMemory server or a model. Upstream source-marker preservation,
-model quality and deployment acceptance remain **HOLD**. A missing marker refuses
-activation instead of quietly treating a persona echo as document search.
+verified recall. Original contract tests used a synthetic HTTP fixture. Two
+subsequent synthetic-only WSL trials used the real AgentMemory 0.4.3 core and a
+local model: extraction and direct recall worked, but the exact source marker
+was absent both times, so this adapter refused activation. Upstream source-marker
+preservation, model quality and deployment acceptance remain **HOLD**. See
+`coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029/`.
 
 Only AgentMemory0.4.3 through an explicit numeric loopback HTTP endpoint is
 accepted. This endpoint is intended to be the local end of a separately approved

@@ -4,7 +4,7 @@
 - Active Task: acs-memory-preflight-01
 - Phase: acs-memory-pilot
 - Status: REVIEW
-- Last Updated: 2026-10-28
+- Last Updated: 2026-10-29
 
 ## Current Step
 
@@ -22,15 +22,23 @@ does not mark the larger NAS/model integration accepted.
 
 ## Blocker Status
 
-No local implementation blocker. Actual provider endpoint, spend/source processing
-approval, real card review and upstream extraction/quality remain undecided;
-therefore NAS persistence, real ingestion and two-machine acceptance are HOLD.
+Real upstream extraction omitted the required source marker in both synthetic
+trials. Adapter activation is blocked by source correlation. Real card review,
+actual source processing, NAS persistence and two-machine acceptance are HOLD.
 
 ## Next Step
 
-The user authorized branch integration on2026-10-28. Integrated d6c4578,
+Historical integration checkpoint: on2026-10-28 the user authorized integration of d6c4578,
 resolved the sole progress conflict and verified the combined branch:343tests
 pass/native0,73fresh-clone raw/blob pins pass. Publish the verified integration
 and evidence to existing Draft PR11; do not merge to main or self-accept. Await
 review. Sources remain pending-human-review and actual processing/NAS stays HOLD.
 See coordination/evidence/acs-memory-preflight-01/integration-20261028/report.md.
+
+## Synthetic upstream trial (2026-10-29)
+
+Two temporary WSL runs of real0.4.3 and local3B model produced an L1 atom but omitted the exact marker. Adapter verification correctly refused activation; direct upstream recall succeeded once. Source correlation and deployment remain HOLD. See upstream-synthetic-20261029/report.md, including the unintended preliminary default startup. Task remains REVIEW and PR11 Draft.
+
+Next: evaluate a source-correlation design that covers upstream deduplication,
+updates and withdrawal; keep the marker requirement until another contract is
+proven. Do not enable real-document processing or persistent NAS service.

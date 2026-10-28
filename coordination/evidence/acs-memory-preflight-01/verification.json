@@ -53,14 +53,14 @@
   "sha256": {
     "scripts/curated_memory.py": "efb0c11d1bc242984c67faa8ecefc95f50eba588bc63c24865e36f80f14171cf",
     "tests/scripts/test_curated_memory.py": "38767d788f3d60730fc2553d914c0373537be82e43696ed91b25ba1503808aef",
-    "docs/operations/curated-memory-guide.md": "3100420978e835883ed727620c0c54f745f88ba11b1447d561c1fe7d75710119",
+    "docs/operations/curated-memory-guide.md": "7e6154529b65f6b8daf68666dfdef89db64218cb1fff92e6af330e78248a90a1",
     "docs/specs/acs-agentmemory-integration.md": "bf825d6fd4925ce2f4c3ae8ea56c8f2ee1e599a618a9b60fffd6549a279a78c6",
     "docs/specs/acs-agentmemory-plan.md": "d0b93bb2989f30cda225827ff0d9e3fcc2edfae638f132040fa8c7cb9a715223",
     "docs/specs/acs-agentmemory-context.md": "f7a7e155500c93a1cc79dc5f04fc7bc9565f646cdc23e7845105b86945f918da",
-    "coordination/delivery/acs-memory-preflight-01-delivery-report.md": "5ba79a7f2f32ac1523a43b2350ec2a68871915bdfff449b596438d1ea8555738",
-    "coordination/progress/codex-memory-implementation.md": "45ff5f6f59081f941509e9903e9a87da56769bcd96f4a9436f3c89e98bd0249d",
+    "coordination/delivery/acs-memory-preflight-01-delivery-report.md": "21e702cc153787b783282353daea4fa85d5ba348e40604891f5f916d2abd9480",
+    "coordination/progress/codex-memory-implementation.md": "f558096e031bcee2b2e9b325e2b21562fae30730bd3d1dd83582496f9d03e3bf",
     "coordination/task-board/review/2026-10-26_acs-memory-preflight-01_curated-memory-integration.md": "8f69705c843803e193ff174ada85d7a08f0562180c4af9365b3fe47afd2a2618",
-    "PROGRESS.md": "356eb61fee9290c5dc421db5a4c7fd0807b0921c0952ad542bf5011e58f46e22",
+    "PROGRESS.md": "b57f2fd99a9da130a232eb9d84cb8c70aaa0f4115e2574b4c51caafdb7d53335",
     "coordination/evidence/acs-memory-preflight-01/candidate-batch.json": "2817a68dfcbcad438832196dd97ce804af8344d3fd52f8fe5399e7bc66df83e9",
     "coordination/evidence/acs-memory-preflight-01/candidate-questions.json": "d2a1285736e6364d115513cd3d8bafb65b47a989862ab6f6a6dcece82bdb62f5",
     "coordination/evidence/acs-memory-preflight-01/earlier-depth-failure-junit.xml": "bd3375be9bc6e81713b82e8db7668e2448c4fedf1ae1643bf9f4e580e9704014",
@@ -72,7 +72,9 @@
     "coordination/evidence/acs-memory-preflight-01/integration-20261028/composition.json": "59f9b25c6d54f63fa1b958b432da536f6ecaa12e6b70343eacb83d31a21ea427",
     "coordination/evidence/acs-memory-preflight-01/integration-20261028/junit.xml": "5026fcc56e70d65b42f899e4393632604f3ce75681116ef6dbbdc38b6aa4ff96",
     "coordination/evidence/acs-memory-preflight-01/integration-20261028/report.md": "996120bf52a061ace4a2d78821c21ed35f77696da400044b2b57da4f62cedb73",
-    "coordination/evidence/acs-memory-preflight-01/integration-20261028/result.json": "e8601c82abb8fde998a1ded07a891f6f94c293bc8bdcff4e97d2a416d775afed"
+    "coordination/evidence/acs-memory-preflight-01/integration-20261028/result.json": "e8601c82abb8fde998a1ded07a891f6f94c293bc8bdcff4e97d2a416d775afed",
+    "coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029/report.md": "4838c781e9843c00022dc05e21e1b8885ee248799214ad8977dee88099beb917",
+    "coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029/result.json": "63c2b13ea70849e7d0a709cc3be555090a3d562f811721333c1604f6898c2205"
   },
   "hash_basis": "Git committed blob bytes; Windows checkout newline conversion is excluded",
   "diff_check": {
@@ -141,5 +143,17 @@
     "pr_draft": true,
     "merge_to_main": false,
     "evidence_directory": "coordination/evidence/acs-memory-preflight-01/integration-20261028"
+  },
+  "upstream_synthetic_trial": {
+    "date": "2026-10-29",
+    "trials": 2,
+    "l1_atoms_each": 1,
+    "marker_preserved": 0,
+    "adapter_activation": "refused",
+    "direct_recall": "1 synthetic match on trial 2",
+    "real_documents": 0,
+    "remote_provider_calls": 0,
+    "deployment": "HOLD",
+    "evidence": "coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029"
   }
 }
