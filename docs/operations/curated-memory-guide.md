@@ -37,8 +37,13 @@ version check is a compatibility check, not cryptographic server attestation.
 Run from the ACS checkout; substitute the actual absolute repository path:
 
 ```powershell
-py -3.13 -B scripts/curated_memory.py preview --repo "<CHECKOUT>" --batch coordination/evidence/acs-memory-preflight-01/candidate-batch.json
+py -3.13 -B scripts/curated_memory.py preview --repo "<CHECKOUT>" --batch coordination/evidence/acs-memory-preflight-01/candidate-batch-review-20261029.json
 ```
+
+This revised batch corrects three summaries or source anchors identified during
+the 2026-10-29 source review. The original `candidate-batch.json` and its
+preview remain historical evidence of the earlier verification, not the batch
+to use for the next review. Both remain unapproved.
 
 This reads only committed Git objects and the JSON batch, verifies origin,
 40-hex commit, regular-file mode, allowlisted Markdown path, raw blob SHA256 and

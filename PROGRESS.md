@@ -1,3 +1,12 @@
+## AgentMemory source candidate corrections (2026-10-31)
+
+The 2026-10-29 source review found three summaries or anchors needing correction.
+The revised candidate batch preserves all pending-human-review references and
+the original batch remains historical evidence. Offline preview and source pins
+are checked again; no candidate was imported or sent to a model. The temporary
+NAS synthetic test passed, but persistent service, real data, independent review
+and two-device acceptance remain open.
+
 ## AgentMemory synthetic marker strategy candidate (2026-10-29)
 
 A dedicated temporary0.4.3 instance with L1 dedup disabled and an agent-scoped marker strategy preserved all ten source markers, passed10/10 non-blind synthetic top3 queries, replay, adapter withdrawal and one supersession. Dedup-enabled three-card trial had merged facts and lost markers. Formal card review, NAS and two-device gates remain HOLD; PR11 stays Draft. See coordination/evidence/acs-memory-preflight-01/marker-strategy-20261029/report.md.
