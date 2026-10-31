@@ -1,0 +1,76 @@
+{
+  "batch_sha256": "4714d456dbf9b713b1879b62d8990797d56fe0d86411be3cfec82ef67476b4f9",
+  "cards": [
+    {
+      "card_sha256": "4ce7e15b30dc3fa3fce75e090873fa35ca8ab436479116067891f9d1655d46c9",
+      "memory_id": "sid-cp950-historical",
+      "source_url": "https://github.com/cch0919542639-gif/agent-coordination-system/blob/4a0f61d76c78ac5bf85f61c996c8c77a539ea970/coordination/delivery/console-download-verification-20261024-report.md#L18-L32",
+      "status": "superseded",
+      "summary": "The original c7f7dee release failed initialization under CP950. This is historical evidence, superseded by the repaired release."
+    },
+    {
+      "card_sha256": "e65c98cc7de2006d0d6b3359ba8922cb9155ad1e9a6718f6d40c93d620512d10",
+      "memory_id": "sid-cp950-repaired",
+      "source_url": "https://github.com/cch0919542639-gif/agent-coordination-system/blob/5002422d33d85b3def31541241521de06fd5527b/coordination/delivery/console-reverification-20261025-report.md#L9-L23",
+      "status": "active",
+      "summary": "The 92e1248 release passed 131 tests in the original CP950 environment without a UTF-8 workaround; this does not prove later releases or two physical hosts."
+    },
+    {
+      "card_sha256": "f5865d2721602b698ad14da49da933eb36b71d0b22eac96375dc9e3f0ee38650",
+      "memory_id": "formal-task-authority",
+      "source_url": "https://github.com/cch0919542639-gif/agent-coordination-system/blob/c3682d330ea847fc0895bff3dee334538a731499/docs/operations/agent-task-execution-protocol.md#L55-L69",
+      "status": "active",
+      "summary": "Repository evidence and reviewer acceptance determine delivery; chat or memory alone never closes a task."
+    },
+    {
+      "card_sha256": "bc0562cf81f61e9cc0b7c5b9a420e0e44f6ee8e7b838425076cbae4796605c1d",
+      "memory_id": "project-boundaries",
+      "source_url": "https://github.com/cch0919542639-gif/agent-coordination-system/blob/c3682d330ea847fc0895bff3dee334538a731499/docs/operations/project-repository-boundary.md#L3-L17",
+      "status": "active",
+      "summary": "Each product repository owns its coordination artifacts. The reusable engine must not become the task board for unrelated products."
+    },
+    {
+      "card_sha256": "65a6db280c8e115cc92d88428e2681f2eb995a5ed513fc9c7005640f976672d0",
+      "memory_id": "private-console-setup",
+      "source_url": "https://github.com/cch0919542639-gif/agent-coordination-system/blob/c3682d330ea847fc0895bff3dee334538a731499/docs/operations/console-download-guide.md#L57-L71",
+      "status": "active",
+      "summary": "Each computer initializes new private state with separate canonical roots; never copy another computer credentials, database or ACK state."
+    },
+    {
+      "card_sha256": "70ca910dbdeeef8c4ea8734b552412f42da378ea75f6bc49a8099c57a1048d01",
+      "memory_id": "viewer-boundary",
+      "source_url": "https://github.com/cch0919542639-gif/agent-coordination-system/blob/c3682d330ea847fc0895bff3dee334538a731499/docs/operations/web-console-guide.md#L61-L75",
+      "status": "active",
+      "summary": "Viewer reads seven views. Hidden controls or browser changes do not grant write permission; role enforcement belongs on the server."
+    },
+    {
+      "card_sha256": "5a1a956fa097ef529db49bd7f824b648caa04e7a9cf51b7f0eb4c18a8a2a982c",
+      "memory_id": "finite-loop-boundary",
+      "source_url": "https://github.com/cch0919542639-gif/agent-coordination-system/blob/c3682d330ea847fc0895bff3dee334538a731499/docs/operations/local-agent-completion-loop.md#L4-L18",
+      "status": "active",
+      "summary": "The controlled local loop uses explicit plans and bounded progression. Its availability does not authorize unbounded worker launches or remote transport."
+    },
+    {
+      "card_sha256": "25fda7e6689bd156df9a39b2ec278e2c38af48f7829069db815efd329fbc9bda",
+      "memory_id": "console-version-proof",
+      "source_url": "https://github.com/cch0919542639-gif/agent-coordination-system/blob/c3682d330ea847fc0895bff3dee334538a731499/docs/operations/console-release-status.md#L8-L22",
+      "status": "active",
+      "summary": "Console source, local acceptance and publication are distinct. Use the supplied exact commit and retain the limits of each historical verification."
+    },
+    {
+      "card_sha256": "6d913ef9a7d959e16fe6204f0841028b3ef6ec9c209a8312de0e1b68ed086eaf",
+      "memory_id": "privacy-boundary",
+      "source_url": "https://github.com/cch0919542639-gif/agent-coordination-system/blob/c3682d330ea847fc0895bff3dee334538a731499/docs/operations/token-efficiency-policy.md#L33-L47",
+      "status": "active",
+      "summary": "Transcript-based tools require separate privacy review, an explicit source allowlist, retention and rollback. Token optimization does not justify collecting private transcripts."
+    },
+    {
+      "card_sha256": "2d297f45ad5086caadeb7927483bef1d40ce2751c291e18c3837f8891aa6958f",
+      "memory_id": "manual-before-automation",
+      "source_url": "https://github.com/cch0919542639-gif/agent-coordination-system/blob/c3682d330ea847fc0895bff3dee334538a731499/docs/operations/lean-agent-engineering-principles.md#L105-L119",
+      "status": "active",
+      "summary": "Prefer a clear manual step and named operator responsibility when full automation is not implemented; do not describe partial automation as complete."
+    }
+  ],
+  "network_calls": 0
+}
