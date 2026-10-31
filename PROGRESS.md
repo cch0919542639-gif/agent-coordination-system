@@ -1,3 +1,12 @@
+## AgentMemory synthetic NAS integration (2026-11-01)
+
+Dedicated NAS core passed bounded synthetic backup/isolated restore and one
+fictional-source ACS adapter import, marker, recall, replay and withdrawal test.
+Local manual model/tunnel startup and abrupt-stop cleanup passed; two SSH client
+processes on one PC were not a two-PC test. Source review, real processing,
+off-device recovery, two physical clients and endurance remain open. See
+coordination/evidence/acs-memory-preflight-01/nas-pilot-20261101/report.md.
+
 ## AgentMemory source candidate corrections (2026-10-31)
 
 The 2026-10-29 source review found three summaries or anchors needing correction.
