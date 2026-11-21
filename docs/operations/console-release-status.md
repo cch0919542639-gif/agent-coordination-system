@@ -1,3 +1,13 @@
+# Scoped monitor and control-console candidate (2026-11-21)
+
+This local candidate selects the control console and read-only monitor from the
+independently reviewed integration source `553a1c5`, on main base `d6c4578`.
+Its composed scope needs review before merge or publication. The prior monitor
+and merged-API reviews do not independently accept this new source selection.
+The related review and local validation evidence are retained on local branch
+`codex/monitor-console-integration-01`. Hermes full functionality remains
+blocked. Real cross-machine and visible desktop interaction are not yet verified.
+
 # Handoff candidate integrated with main
 
 Updated2026-10-25. Mainc3682d3 includes merged PR6 and reviewed PR10 guards.
