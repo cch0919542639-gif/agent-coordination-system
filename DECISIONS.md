@@ -2,6 +2,7 @@
 
 | Date | Decision | Rationale | Consequence |
 | --- | --- | --- | --- |
+| 2026-11-22 | Default the foreground console, login and Agent sessions to manual shutdown. | User wants continuous local use without 15- or 30-minute interruptions. | Logout or stopping the console ends owned sessions; explicit timed server mode and bounded individual operations remain available. |
 | 2026-07 | Keep task lifecycle in repository files. | Git provides recoverable, reviewable evidence. | Chat is notification only. |
 | 2026-07 | Route local worker deliveries owner-strict and fail-closed. | A missing owner must not leak work to another worker. | Ownerless delivery requires orchestration attention. |
 | 2026-07 | Complete same-machine automation before cross-machine transport. | Shared local runtime lowers risk and validates the loop first. | Cross-machine support is deliberately deferred. |

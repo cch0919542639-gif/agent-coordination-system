@@ -17,7 +17,8 @@ python -B scripts/console_monitor.py start --state-dir C:/Private/console-state 
 每個 console state 同時只能有一個監控管理程序；已占用的連接埠不會被接管。
 可用 `--port 8767` 選其他埠，`--interval 120` 調整同步間隔（60..3600秒）。
 
-監控網頁沒有30分鐘自動停止時限；登入仍依既有規則15分鐘到期，屆時重新登入。
+監控網頁和登入工作階段沒有自動到期；登出或關閉主控台會結束工作階段。
+關閉整個瀏覽器後可能需要重新登入。
 關閉網頁不會停止監控，關閉監控終端或Ctrl+C會結束本次工作階段。
 
 ## 停止與查詢
@@ -66,6 +67,6 @@ Windows狀態查詢造成的短暫檔案共享衝突會在一秒內有限重試�
 ## 既有入口與回復
 
 既有 `console_setup.py serve --duration 300` 保持原有時限與角色權限。
-只有明確 `--read-only --duration 0` 可開啟無到期時間的唯讀HTTP；一般使用監控start入口，
-才能同時取得同步、子程序恢復與stop入口。停止監控後可繼續使用既有有限serve。
+一般 `console_setup.py serve` 預設持續執行；`--read-only --duration 0` 開啟唯讀HTTP。
+使用監控start入口才能同時取得同步、子程序恢復與stop入口。
 此開發變更尚未更新凍結的下載manifest及接受快照，不代表已發布新版本或再次通過雙機驗收。

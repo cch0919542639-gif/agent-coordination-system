@@ -47,12 +47,11 @@ def test_monitor_downgrades_admin_and_denies_all_controller_routes(console):
     assert request(console, '/api/logout', {}, admin)[0] == 200
 
 
-def test_indefinite_serve_requires_explicit_read_only(monkeypatch):
-    def unexpected(*args, **kwargs):
-        pytest.fail('invalid duration reached state loading')
-    monkeypatch.setattr(setup, 'load', unexpected)
+def test_monitor_health_requires_read_only(monkeypatch):
+    from types import SimpleNamespace
+    monkeypatch.setattr(setup, 'load', lambda *args: SimpleNamespace())
     with pytest.raises(setup.StateError):
-        setup.serve('unused', duration=0)
+        setup.serve('unused', duration=0, monitor_health_file='unused')
 
 
 def test_health_requires_owned_read_only_proof(console):

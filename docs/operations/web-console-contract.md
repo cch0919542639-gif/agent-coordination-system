@@ -1,11 +1,18 @@
 # Phase5 local Web console contract
 
+2026-11-22 user-directed amendment: foreground console and login/Agent sessions
+remain active until manually stopped, logged out, or the server closes. An
+explicit 10..1800 second server duration remains available. Login cookies remain
+browser-session cookies; closing the browser may require a new login. One-use
+60-second action previews retain their own expiry. Historical descriptions below
+of finite defaults and 15-minute sessions are superseded by this amendment.
+
 2026-10-28 scoped amendment: the manual monitor entry described in
 [console-monitor-guide.md](console-monitor-guide.md) supervises a read-only local
 HTTP child and sync-only subprocesses until explicit stop. `console_setup serve`
 accepts duration0 only with explicit `--read-only`; all authenticated roles become
-Viewer for that process and Controller actions are refused. Existing finite serve
-defaults, login expiry and role-bearing setups remain unchanged. No worker launch,
+Viewer for that process and Controller actions are refused. The original finite
+defaults and login expiry in this 2026-10-28 amendment are now superseded. No worker launch,
 receive, remote queue write, autostart or OS service is part of this amendment.
 
 Frozen before implementation, 2026-10-16. Scope: trusted local operator on this
@@ -25,7 +32,7 @@ only SHA256 digest stored. File permissions remain the operator's responsibility
 Login POST JSON exchanges username/token for random HttpOnly SameSite=Strict
 host-only cookie and independent session CSRF token held in JS memory. No browser
 storage, query credentials, raw logs, external resources or permissive CORS.
-Sessions expire after15minutes, maximum8. Failed login budget5/minute per server.
+Sessions remain until logout or server stop, maximum8. Failed login budget5/minute per server.
 Exact Host and mutation Origin must equal server loopback origin; foreign GET
 Origin also refused. POST requires JSON and CSRF except login. Maximum body16KiB,
 response256KiB; fixed routes/static allowlist, no arbitrary file access. Request

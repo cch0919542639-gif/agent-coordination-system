@@ -475,7 +475,7 @@ for line in sys.stdin:
     agent = agent_control.AgentSession(name, tmp_path)
     try:
         state = wait_for(lambda: (s if (s := agent.snapshot())['phase'] == 'ready' else None))
-        assert timeouts == [900, startup_timeout]
+        assert timeouts == [startup_timeout]
         assert [x['id'] for x in state['models']] == ['one/a', 'two/b']
         agent.select('two/b')
         wait_for(lambda: agent.snapshot()['phase'] == 'ready' and agent.snapshot()['model'] == 'two/b')
@@ -796,7 +796,7 @@ def test_http_role_csrf_and_session_isolation(console, monkeypatch):
     assert console['app'].agent_sessions == {}
 
 
-def test_login_expiry_stops_owned_agent_without_another_request(console, monkeypatch):
+def test_login_persists_and_logout_stops_owned_agent(console, monkeypatch):
     timers = []
     class Timer:
         def __init__(self, interval, callback, args=()):
@@ -812,12 +812,11 @@ def test_login_expiry_stops_owned_agent_without_another_request(console, monkeyp
     monkeypatch.setattr('web.api.threading.Timer', Timer)
     monkeypatch.setattr('web.api.AgentSession', Fake)
     admin = login(console, 'administrator')
-    # Rounding the absolute monotonic deadline can add a fraction of a microsecond.
-    assert 0 < timers[-1].interval <= 900.000001
+    assert timers == []
     assert request(console, '/api/agent/start', {'agent': 'hermes'}, admin)[0] == 200
     agent = console['app'].agent_sessions[admin['sid']]['hermes']
-    assert agent.deadline == console['app'].sessions[admin['sid']]['expires']
-    timers[-1].fire()
+    assert agent.deadline is None
+    assert request(console, '/api/logout', {}, admin)[0] == 200
     assert agent.phase == 'stopped'
     assert admin['sid'] not in console['app'].sessions
     assert admin['sid'] not in console['app'].agent_sessions

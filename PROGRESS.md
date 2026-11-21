@@ -1,3 +1,13 @@
+## Manual console and session lifetime (2026-11-22)
+
+At the user's direction, both foreground console entry points default to manual
+shutdown, and login plus Agent sessions no longer have 15-minute timers. Logout,
+explicit Agent stop and server close still clean up owned sessions. Browser-session
+cookies may require login again after closing the browser; one-use action plans
+and individual network operations retain their bounded deadlines. Explicit finite
+server durations remain supported. Six affected suites passed 201 tests with one
+skip; final focused checks passed ten tests. No other running session was stopped.
+
 ## Direct model privacy choice (2026-11-22)
 
 The user chose an explicit ordinary mode alongside the default zero-data-retention

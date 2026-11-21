@@ -1,4 +1,4 @@
-"""Explicit local console initialization and finite foreground serving (Python 3.12+)."""
+"""Explicit local console initialization and foreground serving (Python 3.12+)."""
 import argparse
 import ctypes
 import hashlib
@@ -198,10 +198,10 @@ def initialize(config):
     return True
 
 
-def serve(state_dir, port=8766, duration=300, handoff_config=None, read_only=False, monitor_health_file=None):
+def serve(state_dir, port=8766, duration=0, handoff_config=None, read_only=False, monitor_health_file=None):
     if (type(port) is not int or not 1024 <= port <= 65535 or type(duration) is not int
-            or not (10 <= duration <= 1800 or (duration == 0 and read_only))):
-        raise StateError('Port must be1024..65535; duration10..1800, or0 for read-only monitoring.')
+            or not (duration == 0 or 10 <= duration <= 1800)):
+        raise StateError('Port must be1024..65535; duration0 for manual stop or10..1800 seconds.')
     app = load(state_dir)
     app.read_only = read_only
     if monitor_health_file is not None:
@@ -246,7 +246,7 @@ def main(argv=None):
     run.add_argument('--state-dir', required=True)
     run.add_argument('--handoff-config')
     run.add_argument('--port', type=int, default=8766)
-    run.add_argument('--duration', type=int, default=300)
+    run.add_argument('--duration', type=int, default=0)
     run.add_argument('--read-only', action='store_true')
     run.add_argument('--monitor-health-file')
     args = vars(parser.parse_args(argv)); command = args.pop('command')

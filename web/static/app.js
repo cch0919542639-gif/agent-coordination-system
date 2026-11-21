@@ -34,7 +34,7 @@ async function api(path, body, signal) {
     if (path === '/api/agent/report' && response.status === 409) throw new Error('回覆已變更、尚未完成，或本輪已送出；請先檢查 Codex 佇列。');
     if (path.startsWith('/api/agent/') && response.status === 413) throw new Error('指示超過可傳送大小，請縮短內容。');
     if (path.startsWith('/api/agent/') && response.status === 409) throw new Error('操作被拒絕；請確認 Agent 已連線並選好模型。');
-    throw new Error(response.status === 401 ? '登入資料不正確或登入已逾時。' : response.status === 403 ? '權限或來源檢查未通過。' : response.status === 429 ? '要求過於頻繁，請稍後再試。' : '要求被拒絕，請更新狀態後重新預覽。');
+    throw new Error(response.status === 401 ? '登入資料不正確或登入已結束。' : response.status === 403 ? '權限或來源檢查未通過。' : response.status === 429 ? '要求過於頻繁，請稍後再試。' : '要求被拒絕，請更新狀態後重新預覽。');
   }
   return data;
 }

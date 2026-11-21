@@ -18,6 +18,25 @@ from test_parallel_runtime import system, prepare
 from coordination_runtime.state_controller import StateController, StateError
 from coordination_runtime.parallel_runtime import ParallelController
 from coordination_runtime.resource_guard import ResourceController
+from web import api as console_api
+
+
+def test_cli_defaults_to_manual_shutdown(monkeypatch):
+    calls = []
+    class FakeServer:
+        origin = 'http://127.0.0.1:8765'
+        def __init__(self, app, port): calls.append(('start', port))
+        def serve_forever(self, poll_interval): raise KeyboardInterrupt()
+        def server_close(self): calls.append(('closed',))
+    monkeypatch.setattr(console_api, 'StateController', lambda *args: object())
+    monkeypatch.setattr(console_api, 'ParallelController', lambda *args: object())
+    monkeypatch.setattr(console_api, 'Console', lambda *args, **kwargs: object())
+    monkeypatch.setattr(console_api, 'handoff_service', lambda *args: None)
+    monkeypatch.setattr(console_api, 'Server', FakeServer)
+    monkeypatch.setattr(console_api.threading, 'Timer', lambda *args: pytest.fail('default must not create a shutdown timer'))
+    args = ['--repo', 'repo', '--db', 'db', '--workspaces', 'workspaces', '--project-id', 'project', '--auth-file', 'auth']
+    assert console_api.main(args) == 0
+    assert calls == [('start', 8765), ('closed',)]
 from web.api import Console, Server
 
 
@@ -212,11 +231,16 @@ def test_event_cursor_project_filter_and_no_opaque_artifacts(console):
     assert len(sequences) == 105 and len(sequences) == len(set(sequences))  # initial mode event +104
 
 
-def test_logout_session_expiry_and_login_throttle(console):
-    viewer = login(console)
-    assert request(console, '/api/logout', {}, viewer)[0] == 200
-    assert request(console, '/api/session', session=viewer)[0] == 401
-    viewer = login(console); console['app'].sessions[viewer['sid']]['expires'] = 0
+def test_logout_session_lifetime_and_login_throttle(console, monkeypatch):
+    status, data, headers = request(console, '/api/login', {'username': 'viewer', 'token': console['tokens']['viewer']})
+    assert status == 200 and 'Max-Age=' not in headers['Set-Cookie']
+    viewer = dict(data, sid=headers['Set-Cookie'].partition('=')[2].partition(';')[0])
+    now = time.monotonic()
+    with monkeypatch.context() as patch:
+        patch.setattr(console_api.time, 'monotonic', lambda: now + 3600)
+        assert request(console, '/api/session', session=viewer)[0] == 200
+    status, _, headers = request(console, '/api/logout', {}, viewer)
+    assert status == 200 and 'Max-Age=0' in headers['Set-Cookie']
     assert request(console, '/api/session', session=viewer)[0] == 401
     for _ in range(5):
         assert request(console, '/api/login', dict(username='viewer', token='bad'))[0] == 401

@@ -90,8 +90,10 @@ class AgentSession:
         self.permission = None; self.pending = {}; self.next_id = 1
         self.job = self.sock = self.listener = None; self.closed = False
         self.started = threading.Event()
-        remaining = 900 if deadline is None else max(0, min(900, deadline - time.monotonic()))
-        self.expiry = threading.Timer(remaining, self.close); self.expiry.daemon = True; self.expiry.start()
+        self.expiry = None
+        if deadline is not None:
+            self.expiry = threading.Timer(max(0, deadline - time.monotonic()), self.close)
+            self.expiry.daemon = True; self.expiry.start()
         threading.Thread(target=self._run, daemon=True).start()
 
     def snapshot(self):
@@ -319,7 +321,8 @@ class AgentSession:
             self.permission = None
 
     def close(self):
-        self.expiry.cancel()
+        if self.expiry is not None:
+            self.expiry.cancel()
         with self.lock:
             self.closed = True; self.phase = 'stopped'; self.permission = None
         self._cleanup()

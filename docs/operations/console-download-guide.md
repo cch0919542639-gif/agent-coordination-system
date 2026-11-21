@@ -175,17 +175,18 @@ This small entry point does not repair or migrate existing databases.
 ## Start, stop and restart
 
 ```powershell
-py -3.12 scripts/console_setup.py serve --state-dir "C:\Private\console-state" --port 8766 --duration 300
+py -3.12 scripts/console_setup.py serve --state-dir "C:\Private\console-state" --port 8766
 ```
 
 Serve requires a complete matching initialized setup; it cannot create or migrate
 the DB or accounts. The terminal reports `http://127.0.0.1:PORT`, process PID,
-finite duration and stop instructions. Open exactly that origin on this computer,
+duration and stop instructions. Open exactly that origin on this computer,
 then sign in using the private login file. Seven views show local board/runtime
 data. Viewer is read-only; no task or worker starts through initialization.
 
-Keep the foreground terminal open. Stop with **Ctrl+C** in that terminal or wait
-for expiry (default300seconds, allowed10..1800). Restart with the same serve
+Keep the foreground terminal open. By default it runs until **Ctrl+C** in that
+terminal. An explicit `--duration` of 10..1800 seconds enables a timed stop.
+Restart with the same serve
 command; existing local credentials and DB persist. If the port is occupied,
 choose another port or explicitly stop its owner. This tool never kills the
 other process, starts a daemon or installs an autostart task.

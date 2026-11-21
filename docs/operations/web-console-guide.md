@@ -6,22 +6,22 @@ publication activation. See the [accepted record](../../coordination/evidence/co
 and [frozen contract](web-console-contract.md). Existing runtime/controllers and
 legacy FastAPI service are unchanged; this console is `web.api`.
 
-## Explicit finite launch
+## Explicit foreground launch
 
 Use installed Python3.12 from the repository root only after the target and access
 configuration have been deliberately supplied. Every value in angle brackets
 below is a placeholder, not an existing account, private path or runnable setup.
 
 ```text
-python -B -m web.api --repo "<ABSOLUTE_REPOSITORY>" --db "<ABSOLUTE_SCHEMA4_DB>" --workspaces "<ABSOLUTE_WORKSPACE_ROOT>" --project-id "<PROJECT_ID>" --auth-file "<EXTERNAL_AUTH_JSON>" --port 8765 --duration 300
+python -B -m web.api --repo "<ABSOLUTE_REPOSITORY>" --db "<ABSOLUTE_SCHEMA4_DB>" --workspaces "<ABSOLUTE_WORKSPACE_ROOT>" --project-id "<PROJECT_ID>" --auth-file "<EXTERNAL_AUTH_JSON>" --port 8765
 ```
 
 All five named path/project arguments are required. The service binds IPv4
-`127.0.0.1` only; CLI port1024..65535, duration10..1800seconds. Defaults are8765
-and300seconds; no installation/autostart/daemon is supplied. Open the exact
+`127.0.0.1` only; CLI port1024..65535. By default the server runs until manually
+stopped; optional duration10..1800seconds enables a timed stop. No autostart or daemon is supplied. Open the exact
 `http://127.0.0.1:PORT` origin printed at startup on this host, without a reverse
 proxy or `localhost` substitution. Host/Origin checks require that exact origin.
-The finite server stops at its duration; logout ends only the browser session.
+Stop the server with Ctrl+C; logout ends only the browser session.
 Starting it never creates/migrates a DB, enables mode or supplies default accounts.
 A missing DB displays repository metadata with runtime unavailable. An existing
 foreign/schema/binding conflict refuses; use the separately governed runtime
@@ -53,7 +53,7 @@ responsibility. Do not put tokens/configuration in repo, URL query, screenshots,
 logs or browser storage. This docs task creates no credentials or permissions.
 
 The server issues a port-specific HttpOnly/SameSite=Strict cookie and a separate
-CSRF value in JS memory. Sessions expire after15minutes; maximum8 concurrent
+CSRF value in JS memory. Sessions remain until logout or server stop; maximum8 concurrent
 sessions, failed login budget5/minute per server. Logout invalidates that session
 and its preview plans. HTTP loopback provides no TLS; use a trusted local host and
 browser. Public hosting and hostile OS/browser isolation are outside this contract.

@@ -1,5 +1,11 @@
 # Plan
 
+## Manual console lifetime (2026-11-22)
+
+At the user's direction, the foreground console, login and Agent sessions stay
+active until manually stopped or logged out. Explicit finite server durations
+remain supported; operation previews and network attempts retain their limits.
+
 ## Direct model privacy choice (2026-11-22)
 
 The user chose default zero data retention with an explicit per-session ordinary
