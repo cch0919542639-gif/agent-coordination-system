@@ -84,6 +84,7 @@ class AgentSession:
     def __init__(self, agent, cwd, deadline=None, direct_config=None):
         self.agent = agent; self.cwd = str(cwd); self.lock = threading.RLock()
         self.direct_config = direct_config
+        self.privacy = (direct_config or {}).get('privacy', 'zdr') if agent == 'direct' else None
         self.phase = 'starting'; self.error = None; self.models = []; self.model = None
         self.method = None; self.session = None; self.response = ''; self.activity = []; self.turn = 0
         self.permission = None; self.pending = {}; self.next_id = 1
@@ -95,7 +96,7 @@ class AgentSession:
 
     def snapshot(self):
         with self.lock:
-            return dict(agent=self.agent, phase=self.phase, error=self.error, models=list(self.models),
+            return dict(agent=self.agent, phase=self.phase, error=self.error, privacy=self.privacy, models=list(self.models),
                         model=self.model, response=self.response, activity=list(self.activity),
                         permission=self.permission and {k: self.permission[k] for k in ('title', 'details', 'options')})
 

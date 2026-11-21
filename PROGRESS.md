@@ -1,3 +1,13 @@
+## Direct model privacy choice (2026-11-22)
+
+The user chose an explicit ordinary mode alongside the default zero-data-retention
+mode. The selected policy is bound to each direct-model session; ordinary mode
+does not override stricter OpenRouter account rules and may permit retention or
+training. The model catalogue filters for text chat and the selected policy.
+The affected regression passed 128 tests with one skip; after a final UI-only
+logout reset, the direct-model suite passed six tests. No real key or provider
+message was used in automated tests. Local user verification is pending.
+
 ## PR9 publication evidence/status closeout (2026-10-27)
 
 User-requested metadata fix bundles the accepted exact1d7b85b live transport/intake/

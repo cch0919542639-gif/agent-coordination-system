@@ -1,5 +1,11 @@
 # Plan
 
+## Direct model privacy choice (2026-11-22)
+
+The user chose default zero data retention with an explicit per-session ordinary
+mode. Ordinary mode does not enforce those provider restrictions; the UI must
+disclose possible retention and training. This does not authorize unattended work.
+
 ## Objective
 
 Provide a safe, repo-first multi-agent coordination system that supports

@@ -9,6 +9,7 @@ import urllib.request
 
 ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
 CATALOG = 'https://openrouter.ai/api/v1/endpoints/zdr'
+MODELS = 'https://openrouter.ai/api/v1/models'
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -29,30 +30,45 @@ def model_ids():
     return list(dict.fromkeys(v for x in values if valid_model(v := x.strip())))[:32]
 
 
-def catalog(opener=None):
+def catalog(opener=None, privacy='zdr'):
+    if privacy not in ('zdr', 'standard'):
+        raise ValueError('invalid privacy mode')
     if opener is None:
         opener = urllib.request.build_opener(NoRedirect()).open
-    with opener(CATALOG, timeout=15) as response:
-        raw = response.read(4194305)
-    if len(raw) > 4194304:
-        raise ValueError('catalog too large')
-    rows = json.loads(raw)['data']
-    if not isinstance(rows, list) or len(rows) > 10000:
-        raise ValueError('invalid catalog')
+    def read(url):
+        with opener(url, timeout=15) as response:
+            raw = response.read(4194305)
+        if len(raw) > 4194304:
+            raise ValueError('catalog too large')
+        rows = json.loads(raw)['data']
+        if not isinstance(rows, list) or len(rows) > 10000:
+            raise ValueError('invalid catalog')
+        return rows
+    allowed = {row['model_id'] for row in read(CATALOG)
+               if isinstance(row, dict) and valid_model(row.get('model_id'))} if privacy == 'zdr' else None
     result = {}
-    for row in rows:
-        if isinstance(row, dict) and valid_model(row.get('model_id')):
-            model = row['model_id']
+    for row in read(MODELS):
+        if not isinstance(row, dict):
+            continue
+        model = row.get('id')
+        architecture = row.get('architecture')
+        if (valid_model(model) and isinstance(architecture, dict)
+                and 'text' in (architecture.get('input_modalities') or [])
+                and 'text' in (architecture.get('output_modalities') or [])
+                and (allowed is None or model in allowed)):
             result[model] = {'id': model, 'free': model.endswith(':free')}
     if len(result) > 2000:
         raise ValueError('catalog too large')
     return sorted(result.values(), key=lambda x: x['id'])
 
 
-def complete(key, model, messages, opener=None):
-    body = json.dumps({'model': model, 'messages': messages, 'max_tokens': 4096,
-                       'provider': {'zdr': True, 'data_collection': 'deny'}},
-                      ensure_ascii=False).encode('utf-8')
+def complete(key, model, messages, opener=None, privacy='zdr'):
+    if privacy not in ('zdr', 'standard'):
+        raise ValueError('invalid privacy mode')
+    payload = {'model': model, 'messages': messages, 'max_tokens': 4096}
+    if privacy == 'zdr':
+        payload['provider'] = {'zdr': True, 'data_collection': 'deny'}
+    body = json.dumps(payload, ensure_ascii=False).encode('utf-8')
     request = urllib.request.Request(ENDPOINT, data=body, method='POST',
         headers={'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json'})
     if opener is None:
@@ -74,9 +90,9 @@ def main():
     raw_config = sys.stdin.buffer.readline(8193)
     sys.stdin.close()
     config = json.loads(raw_config)
-    key, models = config.get('key'), config.get('models')
+    key, models, privacy = config.get('key'), config.get('models'), config.get('privacy', 'zdr')
     if (not valid_key(key) or not isinstance(models, list) or not 1 <= len(models) <= 32
-            or not all(valid_model(x) for x in models)):
+            or not all(valid_model(x) for x in models) or privacy not in ('zdr', 'standard')):
         return 1
     del config, raw_config
     model = models[0]
@@ -122,7 +138,7 @@ def main():
                         pending = messages + [{'role': 'user', 'content': text}]
                         if sum(len(x['content']) for x in pending) > 100000:
                             raise ValueError('conversation too long')
-                        answer, finish = complete(key, model, pending)
+                        answer, finish = complete(key, model, pending, privacy=privacy)
                         if finish == 'stop':
                             messages = pending + [{'role': 'assistant', 'content': answer}]
                         send({'jsonrpc': '2.0', 'method': 'session/update', 'params': {

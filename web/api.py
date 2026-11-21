@@ -359,13 +359,17 @@ class Handler(BaseHTTPRequestHandler):
         elif self.headers.get('Content-Length') not in (None, '0'):
             raise Refused()
         app = self.server.app
-        if route == '/api/direct/models' and self.command == 'GET' and not parsed.query:
+        if route == '/api/direct/models' and self.command == 'GET':
             with app.lock:
                 if app.closed: raise Refused(503)
                 _, user = self.session()
                 if ROLES[user['role']] < 2: raise Refused(403)
+            query = parse_qs(parsed.query, keep_blank_values=True, max_num_fields=1, strict_parsing=True)
+            if not set(query) <= {'privacy'} or any(len(v) != 1 for v in query.values()): raise Refused()
+            privacy = query.get('privacy', ['zdr'])[0]
+            if privacy not in ('zdr', 'standard'): raise Refused()
             try:
-                return self.reply(200, {'models': catalog()})
+                return self.reply(200, {'models': catalog() if privacy == 'zdr' else catalog(privacy=privacy)})
             except Exception:
                 raise Refused(503) from None
         if route == '/api/monitor-health' and self.command == 'GET':
@@ -429,9 +433,12 @@ class Handler(BaseHTTPRequestHandler):
                 keys = {'/api/agent/start': {'agent'}, '/api/agent/model': {'agent', 'model'},
                         '/api/agent/prompt': {'agent', 'text'}, '/api/agent/permission': {'agent', 'choice'},
                         '/api/agent/stop': {'agent'}}[route]
-                if route == '/api/agent/start' and isinstance(body, dict) and body.get('agent') == 'direct' and set(body) == {'agent', 'api_key', 'model'}:
+                if (route == '/api/agent/start' and isinstance(body, dict) and body.get('agent') == 'direct'
+                        and set(body) in ({'agent', 'api_key', 'model'}, {'agent', 'api_key', 'model', 'privacy'})):
                     if not valid_key(body['api_key']) or not valid_model(body['model']): raise Refused()
-                    direct_config = {'key': body['api_key'], 'models': [body['model']]}
+                    privacy = body.get('privacy', 'zdr')
+                    if privacy not in ('zdr', 'standard'): raise Refused()
+                    direct_config = {'key': body['api_key'], 'models': [body['model']], 'privacy': privacy}
                 else:
                     shape(body, keys)
                     direct_config = None

@@ -18,6 +18,11 @@ let agentPromptSent = {};
 let timer = null, pending = null, generation = 0, plan = null, actionBusy = false, revision = 0, authGeneration = 0;
 function node(tag, content, cls) { const n = document.createElement(tag); if (content !== undefined) n.textContent = content; if (cls) n.className = cls; return n; }
 function showError(message) { $('error').textContent = message; }
+function showPrivacyNote() {
+  $('direct-privacy-note').textContent = $('direct-privacy').value === 'standard'
+    ? '一般模式不要求零資料保留或拒絕資料收集；內容可能依供應商政策被保存或用於訓練。'
+    : '零資料保留模式只使用符合條件的端點。';
+}
 async function api(path, body, signal) {
   const requestSession = session;
   const headers = {}; if (body !== undefined) { headers['Content-Type'] = 'application/json'; if (session) headers['X-CSRF-Token'] = session.csrf; }
@@ -40,6 +45,8 @@ function signedOut() {
   for (const id of ['agent-prompt','agent-response','agent-activity','agent-permission-title','agent-permission-details','agent-error','agent-current']) $(id).textContent = '';
   $('agent-prompt').value = ''; $('agent-permission').hidden = true; $('agent-permission-options').replaceChildren(); $('agent-model').replaceChildren();
   $('direct-key').value = ''; $('direct-model').value = ''; $('direct-model-options').replaceChildren();
+  $('direct-privacy').value = 'zdr'; $('direct-privacy-note').textContent = '零資料保留模式只使用符合條件的端點。';
+  $('direct-model-status').textContent = '也可以直接輸入 OpenRouter 模型 ID。';
   clearPlan(); $('console').hidden = true; $('login').hidden = false; $('token').value = '';
   $('action-result').textContent = ''; $('action-result').hidden = true; $('confirm').hidden = true;
   $('content').replaceChildren(); eventRows = []; cursor = 0; $('username').focus();
@@ -173,6 +180,10 @@ function renderAgents(data) {
   $('direct-config').hidden = name !== 'direct'; $('agent-model-field').hidden = name === 'direct';
   $('agent-prompt').maxLength = name === 'direct' ? 50000 : 8000;
   const phase = state ? state.phase : 'offline', admin = session.role === 'administrator';
+  if (name === 'direct' && state?.privacy && !['failed','stopped'].includes(phase)) {
+    $('direct-privacy').value = state.privacy; showPrivacyNote();
+  }
+  $('direct-privacy').disabled = !admin || agentBusy || !['offline','failed','stopped'].includes(phase);
   if (name === 'direct' && state?.model && !$('direct-model').value) $('direct-model').value = state.model;
   $('direct-model-load').disabled = !admin;
   $('connection').textContent = '本機 Agent 工作階段'; $('updated').textContent = '更新於 ' + new Date().toLocaleTimeString('zh-TW');
@@ -264,17 +275,25 @@ $('logout').addEventListener('click', async () => { try { await api('/api/logout
 $('agent-kind').addEventListener('change', () => { agentSignature = ''; agentActionError = ''; if (agentSnapshot) renderAgents(agentSnapshot); });
 $('agent-start').addEventListener('click', async () => {
   if ($('agent-kind').value !== 'direct' || (!$('direct-key').value && !$('direct-model').value.trim())) { await agentAction('start'); return; }
-  const api_key = $('direct-key').value, model = $('direct-model').value.trim();
+  const api_key = $('direct-key').value, model = $('direct-model').value.trim(), privacy = $('direct-privacy').value || 'zdr';
   $('direct-key').value = '';
-  await agentAction('start', {api_key, model});
+  await agentAction('start', {api_key, model, privacy});
 });
 $('direct-key').addEventListener('input', () => { if (agentSnapshot) renderAgents(agentSnapshot); });
 $('direct-model').addEventListener('input', () => { if (agentSnapshot) renderAgents(agentSnapshot); });
+$('direct-privacy').addEventListener('change', () => {
+  $('direct-model-options').replaceChildren();
+  $('direct-model-status').textContent = '隱私模式已變更，請重新取得模型清單或手動輸入 ID。';
+  showPrivacyNote();
+});
 $('direct-model-load').addEventListener('click', async () => {
   const button = $('direct-model-load'); button.disabled = true;
   $('direct-model-status').textContent = '正在取得模型清單…';
   try {
-    const data = await api('/api/direct/models'); $('direct-model-options').replaceChildren();
+    const privacy = $('direct-privacy').value || 'zdr';
+    const data = await api('/api/direct/models?privacy=' + encodeURIComponent(privacy));
+    if (($('direct-privacy').value || 'zdr') !== privacy) return;
+    $('direct-model-options').replaceChildren();
     for (const item of data.models) { const opt = node('option', item.free ? '免費模型' : '可能收費'); opt.value = item.id; $('direct-model-options').append(opt); }
     $('direct-model-status').textContent = `已取得 ${data.models.length} 個模型，請選擇或輸入 ID；實際可用性與價格以供應商為準。`;
   } catch (error) { $('direct-model-status').textContent = '無法取得清單，仍可手動輸入模型 ID。'; }
