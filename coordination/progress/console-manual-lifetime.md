@@ -7,7 +7,7 @@
 - Last Updated: 2026-11-22
 
 ## Current Step
-Implementation and focused validation completed; preparing local startup.
+Implementation and focused validation completed; local foreground console started.
 
 ## Changes So Far
 Foreground server, login and Agent sessions default to manual stop. Explicit
@@ -17,4 +17,4 @@ timed server mode, role checks and owned cleanup remain supported.
 No code blocker. Other existing sessions must not be interrupted.
 
 ## Next Step
-Start the tested local version on a free port and report the foreground controls.
+Use the foreground launcher and report the manual controls and browser-session behavior.

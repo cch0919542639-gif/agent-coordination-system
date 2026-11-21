@@ -7,6 +7,9 @@ cookies may require login again after closing the browser; one-use action plans
 and individual network operations retain their bounded deadlines. Explicit finite
 server durations remain supported. Six affected suites passed 201 tests with one
 skip; final focused checks passed ten tests. No other running session was stopped.
+The tested commit `8251798` was cloned to a separate local installation. The
+existing user launcher was updated to use it without `--duration`; its foreground
+process served the console on port 8766. The candidate is local and unpublished.
 
 ## Direct model privacy choice (2026-11-22)
 
