@@ -198,25 +198,40 @@ def initialize(config):
     return True
 
 
-def serve(state_dir, port=8766, duration=300, handoff_config=None):
-    if type(port) is not int or not 1024 <= port <= 65535 or type(duration) is not int or not 10 <= duration <= 1800:
-        raise StateError('Port must be1024..65535 and duration10..1800 seconds.')
+def serve(state_dir, port=8766, duration=300, handoff_config=None, read_only=False, monitor_health_file=None):
+    if (type(port) is not int or not 1024 <= port <= 65535 or type(duration) is not int
+            or not (10 <= duration <= 1800 or (duration == 0 and read_only))):
+        raise StateError('Port must be1024..65535; duration10..1800, or0 for read-only monitoring.')
     app = load(state_dir)
+    app.read_only = read_only
+    if monitor_health_file is not None:
+        if not read_only or duration != 0:
+            raise StateError('Monitor health requires indefinite read-only mode.')
+        path = canonical(monitor_health_file)
+        require_private(path, inherited=True)
+        health = read_json(path)
+        if not isinstance(health, dict) or set(health) != {'secret'} or not isinstance(health['secret'], str) or not re.fullmatch(r'[a-f0-9]{64}', health['secret']):
+            raise StateError('Monitor health configuration invalid.')
+        app.monitor_health_secret = health['secret']
     app.handoff = handoff_service(handoff_config, app.p)
     try:
         server = Server(app, port)
     except OSError:
         raise StateError('Port unavailable; choose another port or stop its owner explicitly.') from None
-    timer = threading.Timer(duration, server.shutdown); timer.daemon = True
+    timer = threading.Timer(duration, server.shutdown) if duration else None
     try:
-        timer.start()
+        if timer:
+            timer.daemon = True
+            timer.start()
         print(json.dumps(dict(origin=server.origin, pid=os.getpid(), duration=duration,
-                              stop='Ctrl+C in this terminal, or wait for expiry')), flush=True)
+                              read_only=read_only, stop='Ctrl+C in this terminal')), flush=True)
         server.serve_forever(poll_interval=0.25)
     except KeyboardInterrupt:
         pass
     finally:
-        timer.cancel(); server.server_close()
+        if timer:
+            timer.cancel()
+        server.server_close()
 
 
 def main(argv=None):
@@ -232,6 +247,8 @@ def main(argv=None):
     run.add_argument('--handoff-config')
     run.add_argument('--port', type=int, default=8766)
     run.add_argument('--duration', type=int, default=300)
+    run.add_argument('--read-only', action='store_true')
+    run.add_argument('--monitor-health-file')
     args = vars(parser.parse_args(argv)); command = args.pop('command')
     try:
         if command == 'init':

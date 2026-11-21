@@ -6,11 +6,13 @@ import hmac
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 from pathlib import Path
 import re
 import secrets
 import threading
 import time
+import uuid
 from urllib.parse import parse_qs, urlsplit
 
 from coordination_runtime.parallel_runtime import ParallelController
@@ -19,6 +21,9 @@ from coordination_runtime.recovery_manager import RecoveryManager
 from coordination_runtime.resource_guard import ResourceController
 from coordination_runtime.state_controller import StateController, StateError, _id, _integer
 from .read_model import ReadModel
+from .agent_control import AgentSession, AGENTS, inventory
+from .direct_model_bridge import catalog, model_ids, valid_key, valid_model
+from . import codex_report
 
 VIEWS = {'overview', 'board', 'monitor', 'workspaces', 'reviews', 'events', 'settings', 'handoff'}
 ROLES = {'viewer': 0, 'operator': 1, 'administrator': 2}
@@ -47,8 +52,9 @@ def unique(pairs):
 
 
 class Console:
-    def __init__(self, parallel, auth_file, handoff=None):
+    def __init__(self, parallel, auth_file, handoff=None, read_only=False):
         self.p = parallel
+        self.read_only = read_only
         self.handoff = handoff
         path = Path(auth_file).absolute()
         if (path.resolve() != path or path.is_relative_to(parallel.root)
@@ -79,6 +85,8 @@ class Console:
             raise StateError('Authentication configuration invalid.') from None
         self.model = ReadModel(parallel)
         self.sessions = {}
+        self.agent_sessions = {}
+        self.closed = False
         self.failures = deque(maxlen=5)
         # ponytail: four HTTP handlers share one bounded local-controller lock;
         # per-session locks only if measured operator throughput requires them.
@@ -97,14 +105,30 @@ class Console:
         if not hmac.compare_digest(digest, user['token_sha256'] if user else '0' * 64):
             self.failures.append(now)
             raise Refused(401)
-        self.sessions = {k: v for k, v in self.sessions.items() if now < v['expires']}
+        for sid, session in list(self.sessions.items()):
+            if now >= session['expires']:
+                self.close_session(sid)
+        if self.closed:
+            raise Refused(503)
         if len(self.sessions) >= 8:
             raise Refused(429)
         sid = secrets.token_urlsafe(32)
-        session = dict(username=user['username'], role=user['role'], csrf=secrets.token_urlsafe(32),
-                       expires=now + 900, plans={})
+        session = dict(username=user['username'], role='viewer' if self.read_only else user['role'], csrf=secrets.token_urlsafe(32),
+                       expires=now + 900, plans={}, reports={})
+        timer = threading.Timer(max(0, session['expires'] - time.monotonic()), self.close_session, args=(sid,))
+        timer.daemon = True
+        session['timer'] = timer
         self.sessions[sid] = session
+        timer.start()
         return sid, session
+
+    def close_session(self, sid):
+        with self.lock:
+            session = self.sessions.pop(sid, None)
+            if session:
+                session['timer'].cancel()
+            for agent in self.agent_sessions.pop(sid, {}).values():
+                agent.close()
 
     def handoff_summary(self):
         if self.handoff is None:
@@ -177,6 +201,8 @@ class Console:
             raise StateError('Handoff refused; refresh and preview again.') from None
 
     def action(self, action, args, execute=False):
+        if self.read_only:
+            raise Refused(403)
         if action in ('handoff.sync', 'handoff.dispatch'):
             return self.handoff_action(action, args, execute)
         fields = {'recovery.reconcile': {'run_id', 'request_id', 'expected_version', 'expected_fence', 'reason'},
@@ -239,6 +265,13 @@ class Server(ThreadingHTTPServer):
     def handle_error(self, request, client_address):
         pass  # Never emit paths, request bodies, cookies or tracebacks.
 
+    def server_close(self):
+        with self.app.lock:
+            self.app.closed = True
+            for sid in set(self.app.sessions) | set(self.app.agent_sessions):
+                self.app.close_session(sid)
+        super().server_close()
+
 
 class Handler(BaseHTTPRequestHandler):
     server_version = 'CoordinationConsole'
@@ -278,7 +311,7 @@ class Handler(BaseHTTPRequestHandler):
         sid = morsel.value if morsel else ''
         session = self.server.app.sessions.get(sid)
         if not session or time.monotonic() >= session['expires']:
-            self.server.app.sessions.pop(sid, None)
+            self.server.app.close_session(sid)
             raise Refused(401)
         if self.command == 'POST' and not hmac.compare_digest(self.headers.get('X-CSRF-Token', ''), session['csrf']):
             raise Refused(403)
@@ -315,7 +348,8 @@ class Handler(BaseHTTPRequestHandler):
             if self.headers.get('Content-Type') != 'application/json':
                 raise Refused(415)
             length = self.headers.get('Content-Length', '')
-            if not re.fullmatch(r'[0-9]{1,5}', length) or not 0 < int(length) <= 16384:
+            limit = 262144 if route == '/api/agent/prompt' else 16384
+            if not re.fullmatch(r'[0-9]{1,6}', length) or not 0 < int(length) <= limit:
                 raise Refused(413)
             raw = self.rfile.read(int(length))
             if len(raw) != int(length):
@@ -325,7 +359,27 @@ class Handler(BaseHTTPRequestHandler):
         elif self.headers.get('Content-Length') not in (None, '0'):
             raise Refused()
         app = self.server.app
+        if route == '/api/direct/models' and self.command == 'GET' and not parsed.query:
+            with app.lock:
+                if app.closed: raise Refused(503)
+                _, user = self.session()
+                if ROLES[user['role']] < 2: raise Refused(403)
+            try:
+                return self.reply(200, {'models': catalog()})
+            except Exception:
+                raise Refused(503) from None
+        if route == '/api/monitor-health' and self.command == 'GET':
+            secret = getattr(app, 'monitor_health_secret', None)
+            query = parse_qs(parsed.query, keep_blank_values=True, max_num_fields=1, strict_parsing=True)
+            nonce = query.get('nonce', [])
+            if not app.read_only or not secret or set(query) != {'nonce'} or len(nonce) != 1 or not re.fullmatch(r'[a-f0-9]{32}', nonce[0]):
+                raise Refused(404)
+            pid = os.getpid()
+            proof = hmac.new(bytes.fromhex(secret), (nonce[0] + ':' + str(pid)).encode('ascii'), hashlib.sha256).hexdigest()
+            return self.reply(200, {'pid': pid, 'read_only': True, 'proof': proof})
         with app.lock:
+            if app.closed:
+                raise Refused(503)
             if route == '/api/login' and self.command == 'POST':
                 sid, session = app.login(body)
                 return self.reply(200, {k: session[k] for k in ('username', 'role', 'csrf')}, cookie=sid)
@@ -333,8 +387,74 @@ class Handler(BaseHTTPRequestHandler):
             if route == '/api/session' and self.command == 'GET' and not parsed.query:
                 return self.reply(200, {k: session[k] for k in ('username', 'role', 'csrf')})
             if route == '/api/logout' and self.command == 'POST':
-                shape(body, set()); del app.sessions[sid]
+                shape(body, set()); app.close_session(sid)
                 return self.reply(200, dict(logged_out=True), cookie='')
+            if route == '/api/agents' and self.command == 'GET' and not parsed.query:
+                sessions = app.agent_sessions.get(sid, {})
+                thread = os.environ.get('CODEX_THREAD_ID', '') if session['role'] == 'administrator' else ''
+                try:
+                    if str(uuid.UUID(thread)) != thread: thread = ''
+                except ValueError:
+                    thread = ''
+                return self.reply(200, dict(agents=inventory(), sessions={k: v.snapshot() for k, v in sessions.items()}, codex_thread=thread))
+            if route == '/api/agent/report' and self.command == 'POST':
+                if ROLES[session['role']] < 2: raise Refused(403)
+                shape(body, {'agent', 'thread', 'response_sha256'})
+                name, thread, digest = body['agent'], body['thread'], body['response_sha256']
+                if not isinstance(name, str) or name not in AGENTS or not isinstance(thread, str) or not isinstance(digest, str): raise Refused()
+                try:
+                    if str(uuid.UUID(thread)) != thread: raise ValueError()
+                except ValueError:
+                    raise Refused() from None
+                agent = app.agent_sessions.get(sid, {}).get(name)
+                if not agent: raise Refused(409)
+                with agent.lock:
+                    response = agent.response
+                    if (agent.phase != 'ready' or agent.error or not response or not agent.turn
+                            or not hmac.compare_digest(hashlib.sha256(response.encode('utf-8')).hexdigest(), digest)):
+                        raise Refused(409)
+                    key = (thread, name, id(agent), agent.turn)
+                reports = session['reports']
+                if key in reports or len(reports) >= 64: raise Refused(409)
+                # Reserve before dispatch: an uncertain result must not be retried.
+                reports[key] = 'unknown'
+                try:
+                    codex_report.enqueue(thread, name, response, app.p.root)
+                except Exception:
+                    return self.reply(503, {'error': '回報結果未確認；請先在 Codex 檢查佇列，避免重送。'})
+                reports[key] = 'queued'
+                return self.reply(200, {'status': 'queued'})
+            if self.command == 'POST' and route in {'/api/agent/start', '/api/agent/model', '/api/agent/prompt', '/api/agent/permission', '/api/agent/stop'}:
+                if ROLES[session['role']] < 2: raise Refused(403)
+                keys = {'/api/agent/start': {'agent'}, '/api/agent/model': {'agent', 'model'},
+                        '/api/agent/prompt': {'agent', 'text'}, '/api/agent/permission': {'agent', 'choice'},
+                        '/api/agent/stop': {'agent'}}[route]
+                if route == '/api/agent/start' and isinstance(body, dict) and body.get('agent') == 'direct' and set(body) == {'agent', 'api_key', 'model'}:
+                    if not valid_key(body['api_key']) or not valid_model(body['model']): raise Refused()
+                    direct_config = {'key': body['api_key'], 'models': [body['model']]}
+                else:
+                    shape(body, keys)
+                    direct_config = None
+                name = body['agent']
+                if not isinstance(name, str) or name not in AGENTS: raise Refused()
+                sessions = app.agent_sessions.get(sid, {})
+                agent = sessions.get(name)
+                if route == '/api/agent/start':
+                    if agent and agent.snapshot()['phase'] not in ('stopped', 'failed'): raise Refused(409)
+                    if name == 'direct' and direct_config is None and not (valid_key(os.environ.get('COORDINATION_OPENROUTER_API_KEY')) and model_ids()): raise Refused(409)
+                    if agent: agent.close()
+                    sessions = app.agent_sessions.setdefault(sid, {})
+                    if name == 'direct' and direct_config is not None:
+                        agent = AgentSession(name, app.p.root, deadline=session['expires'], direct_config=direct_config)
+                    else:
+                        agent = AgentSession(name, app.p.root, deadline=session['expires'])
+                    sessions[name] = agent
+                elif not agent: raise Refused(409)
+                elif route == '/api/agent/stop': agent.close()
+                elif route == '/api/agent/model': agent.select(body['model'])
+                elif route == '/api/agent/prompt': agent.prompt(body['text'])
+                else: agent.answer(body['choice'])
+                return self.reply(200, agent.snapshot())
             if route == '/api/view' and self.command == 'GET':
                 query = parse_qs(parsed.query, keep_blank_values=True, max_num_fields=4, strict_parsing=True)
                 if not set(query) <= {'name', 'offset', 'after', 'limit'} or any(len(v) != 1 for v in query.values()):

@@ -130,9 +130,9 @@ class JobProcess:
     No post-spawn Assign fallback: unsupported JOB_LIST fails before execution.
     """
 
-    def __init__(self, command, *, cwd, capture_output=False):
+    def __init__(self, command, *, cwd, capture_output=False, pipe_stdin=False):
         self.job = self.process = self.thread = None
-        self.stdout = None
+        self.stdout = self.stdin = None
         self.members = {}
         self.returncode = None
         self.resumed = False
@@ -151,6 +151,7 @@ class JobProcess:
         attributes = None
         attributes_ready = False
         read_handle = W.HANDLE()
+        input_write = W.HANDLE()
         try:
             self.job = checked(self.api.CreateJobObjectW(None, None), "job_create_failed")
             limits = ExtendedLimits()
@@ -163,6 +164,12 @@ class JobProcess:
                     raise GuardError("null_handle_failed")
                 child_handles.append(handle)
             stdin_handle, null_output = child_handles
+            if pipe_stdin:
+                input_read = W.HANDLE()
+                checked(self.api.CreatePipe(C.byref(input_read), C.byref(input_write), C.byref(security), 0), "input_pipe_create_failed")
+                child_handles.append(input_read.value)
+                checked(self.api.SetHandleInformation(input_write, 1, 0), "pipe_inheritance_failed")
+                stdin_handle = input_read.value
             stdout_handle = null_output
             if capture_output:
                 write_handle = W.HANDLE()
@@ -192,6 +199,11 @@ class JobProcess:
                                            C.byref(startup), C.byref(info)), "process_create_failed")
             self.process, self.thread, self.pid = info.process, info.thread, info.pid
             self.creation_time = creation_time(self.process)
+            if pipe_stdin:
+                import msvcrt
+                fd = msvcrt.open_osfhandle(input_write.value, os.O_WRONLY | os.O_BINARY)
+                input_write = W.HANDLE()
+                self.stdin = os.fdopen(fd, "wb", buffering=0)
             if capture_output:
                 import msvcrt
                 fd = msvcrt.open_osfhandle(read_handle.value, os.O_RDONLY | os.O_BINARY)
@@ -207,6 +219,8 @@ class JobProcess:
                 self.api.CloseHandle(handle)
             if read_handle.value:
                 self.api.CloseHandle(read_handle)
+            if input_write.value:
+                self.api.CloseHandle(input_write)
 
     def resume(self):
         if self.resumed:
@@ -322,6 +336,9 @@ class JobProcess:
 
     def close(self):
         # Last Job close also covers constructor errors and a suspended launcher.
+        if self.stdin:
+            self.stdin.close()
+            self.stdin = None
         for name in ("job", "thread", "process"):
             handle = getattr(self, name, None)
             if handle:

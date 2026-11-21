@@ -1,5 +1,13 @@
 # Phase5 local Web console contract
 
+2026-10-28 scoped amendment: the manual monitor entry described in
+[console-monitor-guide.md](console-monitor-guide.md) supervises a read-only local
+HTTP child and sync-only subprocesses until explicit stop. `console_setup serve`
+accepts duration0 only with explicit `--read-only`; all authenticated roles become
+Viewer for that process and Controller actions are refused. Existing finite serve
+defaults, login expiry and role-bearing setups remain unchanged. No worker launch,
+receive, remote queue write, autostart or OS service is part of this amendment.
+
 Frozen before implementation, 2026-10-16. Scope: trusted local operator on this
 Windows host; no hostile OS user protection or public network deployment.
 

@@ -4,6 +4,7 @@ const pages = {
   overview: ['工作總覽', '從任務到證據，掌握目前進度。'],
   board: ['任務看板', '正式任務生命週期，以儲存庫中的任務卡為準。'],
   monitor: ['Agent 監控', 'Runtime 租約與已記錄的程序收據；需要時再做即時檢查。'],
+  agents: ['Agent 操控', '在各 Agent 的可用清單中選擇提供者與模型，手動啟動及監控。'],
   workspaces: ['工作區', '已登記的隔離工作區與固定基底，保留候選成果。'],
   reviews: ['審查中心', '正式審查紀錄與 SHA 收據；執行操作時仍需重新核對。'],
   events: ['事件紀錄', '依序列增量讀取，每次最多 50 筆，畫面保留最近 100 筆。'],
@@ -12,6 +13,8 @@ const pages = {
 };
 let session = null, view = 'overview', offset = 0, cursor = 0, eventRows = [];
 let handoffSnapshot = null, handoffSignature = '';
+let agentSnapshot = null, agentSignature = '', permissionSignature = '', agentBusy = false, agentActionError = '', agentActionMessage = '';
+let agentPromptSent = {};
 let timer = null, pending = null, generation = 0, plan = null, actionBusy = false, revision = 0, authGeneration = 0;
 function node(tag, content, cls) { const n = document.createElement(tag); if (content !== undefined) n.textContent = content; if (cls) n.className = cls; return n; }
 function showError(message) { $('error').textContent = message; }
@@ -22,6 +25,10 @@ async function api(path, body, signal) {
   const data = await response.json();
   if (!response.ok) {
     if (response.status === 401 && requestSession && session === requestSession) signedOut();
+    if (path === '/api/agent/report' && response.status === 503) throw new Error('回報結果未確認；請先在 Codex 檢查佇列，避免重送。');
+    if (path === '/api/agent/report' && response.status === 409) throw new Error('回覆已變更、尚未完成，或本輪已送出；請先檢查 Codex 佇列。');
+    if (path.startsWith('/api/agent/') && response.status === 413) throw new Error('指示超過可傳送大小，請縮短內容。');
+    if (path.startsWith('/api/agent/') && response.status === 409) throw new Error('操作被拒絕；請確認 Agent 已連線並選好模型。');
     throw new Error(response.status === 401 ? '登入資料不正確或登入已逾時。' : response.status === 403 ? '權限或來源檢查未通過。' : response.status === 429 ? '要求過於頻繁，請稍後再試。' : '要求被拒絕，請更新狀態後重新預覽。');
   }
   return data;
@@ -29,6 +36,10 @@ async function api(path, body, signal) {
 function signedOut() {
   authGeneration++; session = null; generation++; clearTimeout(timer); if (pending) pending.abort(); pending = null;
   handoffSnapshot = null; handoffSignature = '';
+  agentSnapshot = null; agentSignature = ''; permissionSignature = ''; agentActionError = ''; agentActionMessage = ''; agentPromptSent = {};
+  for (const id of ['agent-prompt','agent-response','agent-activity','agent-permission-title','agent-permission-details','agent-error','agent-current']) $(id).textContent = '';
+  $('agent-prompt').value = ''; $('agent-permission').hidden = true; $('agent-permission-options').replaceChildren(); $('agent-model').replaceChildren();
+  $('direct-key').value = ''; $('direct-model').value = ''; $('direct-model-options').replaceChildren();
   clearPlan(); $('console').hidden = true; $('login').hidden = false; $('token').value = '';
   $('action-result').textContent = ''; $('action-result').hidden = true; $('confirm').hidden = true;
   $('content').replaceChildren(); eventRows = []; cursor = 0; $('username').focus();
@@ -38,7 +49,7 @@ function signedIn(data) {
   $('identity').textContent = data.username; $('role').textContent = {viewer:'Viewer · 檢視',operator:'Operator · 操作',administrator:'Administrator · 管理'}[data.role];
   $('token').value = ''; $('login-error').textContent = ''; navigate('overview');
 }
-function schedule() { clearTimeout(timer); if (session) timer = setTimeout(refresh, document.hidden ? 60000 : 5000); }
+function schedule() { clearTimeout(timer); if (session) timer = setTimeout(refresh, document.hidden ? 60000 : view === 'agents' ? 2000 : 5000); }
 function navigate(name) {
   generation++; if (pending) pending.abort(); pending = null; clearTimeout(timer);
   view = name; offset = 0; cursor = 0; eventRows = []; clearPlan();
@@ -47,6 +58,8 @@ function navigate(name) {
   $('operations').hidden = !['settings','handoff'].includes(name) || session.role === 'viewer';
   $('action-form').hidden = name !== 'settings'; $('inspect-form').hidden = name !== 'settings';
   $('handoff-controls').hidden = name !== 'handoff';
+  $('agent-panel').hidden = name !== 'agents'; $('content').hidden = name === 'agents';
+  if (name === 'agents') { agentSignature = ''; $('previous').hidden = true; $('next').hidden = true; $('page-info').textContent = ''; }
   if (name === 'handoff') { handoffSnapshot = null; handoffSignature = ''; $('handoff-controls').hidden = true; }
   $('confirm').hidden = true; $('action-result').hidden = true; $('action-message').textContent = '';
   $('content').replaceChildren(node('p', '讀取實際狀態中…', 'note'));
@@ -148,10 +161,77 @@ async function refresh() {
   $('refresh').disabled = true;
   $('previous').disabled = true; $('next').disabled = true;
   try {
-    const data = await api(`/api/view?name=${view}&offset=${offset}&after=${cursor}&limit=50`, undefined, controller.signal);
-    if (current === generation && session) { showError(''); render(data); }
+    const data = await api(view === 'agents' ? '/api/agents' : `/api/view?name=${view}&offset=${offset}&after=${cursor}&limit=50`, undefined, controller.signal);
+    if (current === generation && session) { showError(''); if (view === 'agents') renderAgents(data); else render(data); }
   } catch (error) { if (error.name !== 'AbortError' && current === generation && session) { showError(error.message); $('connection').textContent = '更新失敗 · 保留上次資料'; } }
   finally { if (pending === controller) { pending = null; $('refresh').disabled = false; $('previous').disabled = false; $('next').disabled = false; schedule(); } }
+}
+function renderAgents(data) {
+  agentSnapshot = data;
+  if (!$('codex-thread').value && data.codex_thread) $('codex-thread').value = data.codex_thread;
+  const name = $('agent-kind').value, found = (data.agents || []).find(a => a.id === name), state = (data.sessions || {})[name];
+  $('direct-config').hidden = name !== 'direct'; $('agent-model-field').hidden = name === 'direct';
+  $('agent-prompt').maxLength = name === 'direct' ? 50000 : 8000;
+  const phase = state ? state.phase : 'offline', admin = session.role === 'administrator';
+  if (name === 'direct' && state?.model && !$('direct-model').value) $('direct-model').value = state.model;
+  $('direct-model-load').disabled = !admin;
+  $('connection').textContent = '本機 Agent 工作階段'; $('updated').textContent = '更新於 ' + new Date().toLocaleTimeString('zh-TW');
+  $('agent-inventory').textContent = (data.agents || []).map(a => `${a.name}：${(data.sessions || {})[a.id]?.phase || (a.id === 'direct' ? (a.installed ? '已設定' : '未設定') : (a.installed ? '已安裝' : '未安裝'))}`).join(' · ');
+  $('agent-role-note').hidden = admin;
+  const emptyReply = phase === 'ready' && agentPromptSent[name] && !state?.response && !state?.error;
+  $('agent-state').textContent = agentActionMessage || (emptyReply ? 'Agent 已回報結束，目前沒有文字回覆。' : ({offline:'尚未連線',starting:'連線中…',ready:'已連線',switching:'切換模型中…',running:'執行中，等待 Agent 回覆或操作授權…',failed:'連線失敗',stopped:'已停止'})[phase]) || phase;
+  $('agent-error').textContent = agentActionError || state?.error || '';
+  $('agent-current').textContent = '目前模型：' + (state?.model || '尚未選擇');
+  const signature = JSON.stringify([name,state?.models || []]);
+  if (signature !== agentSignature) {
+    agentSignature = signature; $('agent-model').replaceChildren();
+    for (const item of state?.models || []) { const opt = node('option',item.name); opt.value = item.id; $('agent-model').append(opt); }
+    if ((state?.models || []).some(x => x.id === state?.model)) $('agent-model').value = state.model;
+  }
+  const directReady = name !== 'direct' || (!!$('direct-key').value && !!$('direct-model').value.trim()) || found?.configured;
+  $('agent-start').disabled = !admin || agentBusy || !found?.installed || !directReady || !['offline','failed','stopped'].includes(phase);
+  $('agent-apply').disabled = !admin || agentBusy || phase !== 'ready' || !(state?.models || []).length;
+  $('agent-send').disabled = !admin || agentBusy || phase !== 'ready' || !state?.model;
+  $('agent-report').disabled = !admin || agentBusy || phase !== 'ready' || !state?.response || !!state?.error;
+  $('agent-stop').disabled = !admin || agentBusy || ['offline','failed','stopped'].includes(phase);
+  $('agent-response').textContent = state?.response || ''; $('agent-activity').textContent = (state?.activity || []).map(x => `${x.title} · ${x.status}`).join('\n');
+  $('agent-permission').hidden = !state?.permission;
+  if (state?.permission) {
+    $('agent-permission-title').textContent = state.permission.title; $('agent-permission-details').textContent = state.permission.details;
+    const signature = JSON.stringify([name,state.permission,admin]);
+    if (signature !== permissionSignature) {
+      permissionSignature = signature; $('agent-permission-options').replaceChildren();
+      for (const choice of state.permission.options) {
+        const button = node('button', choice.kind === 'allow_once' ? '允許這一次' : '拒絕', choice.kind === 'allow_once' ? 'primary' : 'secondary');
+        button.type = 'button';
+        button.addEventListener('click', () => agentAction('permission',{choice:choice.id})); $('agent-permission-options').append(button);
+      }
+    }
+    for (const button of $('agent-permission-options').children) button.disabled = !admin || agentBusy;
+  } else {
+    permissionSignature = ''; $('agent-permission-options').replaceChildren();
+    $('agent-permission-title').textContent = ''; $('agent-permission-details').textContent = '';
+  }
+}
+async function agentAction(action, extra = {}) {
+  if (agentBusy) return false;
+  const selected = $('agent-kind').value, current = session; agentBusy = true;
+  agentActionError = ''; agentActionMessage = action === 'prompt' ? '正在送出指示…' : '處理中…';
+  generation++; clearTimeout(timer); if (pending) pending.abort(); pending = null;
+  if (agentSnapshot) renderAgents(agentSnapshot);
+  try {
+    const state = await api('/api/agent/' + action, {agent:selected,...extra});
+    if (current === session && agentSnapshot) {
+      agentSnapshot.sessions[selected] = state;
+      if (action === 'prompt') agentPromptSent[selected] = true;
+      if (action === 'start' || action === 'stop') delete agentPromptSent[selected];
+    }
+    return true;
+  } catch (error) { agentActionError = error.message; return false; }
+  finally {
+    agentBusy = false; agentActionMessage = '';
+    if (agentSnapshot && current === session) { renderAgents(agentSnapshot); refresh(); }
+  }
 }
 const actionFields = {'resource.probe':[], 'resource.reset':['expected_sequence'], 'recovery.reconcile':['run_id','request_id','expected_version','expected_fence','reason'], 'board.reconcile':['request_id'], 'board.cancel':['request_id'], 'parallel.disable':[]};
 function clearPlan() { revision++; plan = null; $('confirm').hidden = true; }
@@ -181,6 +261,43 @@ async function operation(path, body) {
 }
 $('login-form').addEventListener('submit', async event => { event.preventDefault(); const attempt = ++authGeneration, button = event.submitter; button.disabled = true; try { const data = await api('/api/login',{username:$('username').value,token:$('token').value}); if (attempt === authGeneration) signedIn(data); } catch(error) { if (attempt === authGeneration) $('login-error').textContent = error.message; } finally { button.disabled = false; } });
 $('logout').addEventListener('click', async () => { try { await api('/api/logout',{}); signedOut(); } catch(error) { showError(error.message); } });
+$('agent-kind').addEventListener('change', () => { agentSignature = ''; agentActionError = ''; if (agentSnapshot) renderAgents(agentSnapshot); });
+$('agent-start').addEventListener('click', async () => {
+  if ($('agent-kind').value !== 'direct' || (!$('direct-key').value && !$('direct-model').value.trim())) { await agentAction('start'); return; }
+  const api_key = $('direct-key').value, model = $('direct-model').value.trim();
+  $('direct-key').value = '';
+  await agentAction('start', {api_key, model});
+});
+$('direct-key').addEventListener('input', () => { if (agentSnapshot) renderAgents(agentSnapshot); });
+$('direct-model').addEventListener('input', () => { if (agentSnapshot) renderAgents(agentSnapshot); });
+$('direct-model-load').addEventListener('click', async () => {
+  const button = $('direct-model-load'); button.disabled = true;
+  $('direct-model-status').textContent = '正在取得模型清單…';
+  try {
+    const data = await api('/api/direct/models'); $('direct-model-options').replaceChildren();
+    for (const item of data.models) { const opt = node('option', item.free ? '免費模型' : '可能收費'); opt.value = item.id; $('direct-model-options').append(opt); }
+    $('direct-model-status').textContent = `已取得 ${data.models.length} 個模型，請選擇或輸入 ID；實際可用性與價格以供應商為準。`;
+  } catch (error) { $('direct-model-status').textContent = '無法取得清單，仍可手動輸入模型 ID。'; }
+  finally { button.disabled = false; }
+});
+$('agent-report').addEventListener('click', async () => {
+  const name = $('agent-kind').value, state = agentSnapshot?.sessions?.[name], thread = $('codex-thread').value.trim();
+  if (!state?.response || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(thread)) {
+    $('report-status').textContent = '請輸入完整的 Codex 對話 ID，並確認已有回覆。'; return;
+  }
+  if (!window.confirm(`確認將目前 ${name} 的回覆送到 Codex 對話 ${thread}？回覆可能包含敏感內容。`)) return;
+  agentBusy = true; if (agentSnapshot) renderAgents(agentSnapshot);
+  try {
+    const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(state.response));
+    const response_sha256 = [...new Uint8Array(bytes)].map(x => x.toString(16).padStart(2,'0')).join('');
+    await api('/api/agent/report', {agent:name, thread, response_sha256});
+    $('report-status').textContent = '回覆已加入指定對話的佇列；請確認 Codex 已處理。';
+  } catch (error) { $('report-status').textContent = `${error.message} 若連線中斷，請先檢查 Codex 佇列，避免重送。`; }
+  finally { agentBusy = false; if (agentSnapshot) renderAgents(agentSnapshot); }
+});
+$('agent-stop').addEventListener('click', () => agentAction('stop'));
+$('agent-apply').addEventListener('click', () => agentAction('model',{model:$('agent-kind').value === 'direct' ? $('direct-model').value.trim() : $('agent-model').value}));
+$('agent-prompt-form').addEventListener('submit', async event => { event.preventDefault(); if (await agentAction('prompt',{text:$('agent-prompt').value})) $('agent-prompt').value = ''; });
 for (const button of document.querySelectorAll('nav button')) button.addEventListener('click', () => navigate(button.dataset.view));
 $('refresh').addEventListener('click', refresh);
 $('next').addEventListener('click', () => { if (pending) return; if (view !== 'events') offset += 100; refresh(); });
