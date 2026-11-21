@@ -1,3 +1,19 @@
+## Local monitor integration candidate (2026-11-21)
+
+For the local integration branch, use the foreground instructions in the
+[monitor guide](console-monitor-guide.md). Monitor sessions are read-only;
+the ordinary console retains its existing role-based controls. See
+[release status](console-release-status.md) for provenance and remaining gates.
+The historical release instructions and manifest below are not evidence of a
+new production publication.
+
+## Manual continuous read-only monitor (2026-10-28 development)
+
+For an on-demand foreground monitor with sync retry, owned HTTP-child restart,
+status and stop commands, see [the monitor guide](console-monitor-guide.md).
+This local development extension has not refreshed the frozen release manifest.
+The historical finite serve/watch instructions below still describe their own entries.
+
 ## Main-integrated handoff candidate (2026-10-25)
 
 This candidate combines accepted handoff source1feeca7/a82c5a7 with mainc3682d3,

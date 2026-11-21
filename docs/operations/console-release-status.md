@@ -1,3 +1,13 @@
+# Scoped monitor and control-console candidate (2026-11-21)
+
+This local candidate selects the control console and read-only monitor from the
+reviewed integration source `553a1c5`, on main base `d6c4578`. Independent
+review of the selected source `3dc00f5` and local test evidence are recorded in
+`coordination/evidence/console-monitor-scoped-release-01/`. The new candidate
+manifest there identifies the exact source and evidence; the older manifest
+below is historical. Hermes full functionality remains blocked. Real cross-machine
+and visible desktop interaction are not yet verified. Publication is not implied.
+
 # Handoff candidate integrated with main
 
 Updated2026-10-25. Mainc3682d3 includes merged PR6 and reviewed PR10 guards.
