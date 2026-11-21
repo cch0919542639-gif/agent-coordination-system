@@ -1,3 +1,72 @@
+## AgentMemory synthetic NAS integration (2026-11-01)
+
+Dedicated NAS core passed bounded synthetic backup/isolated restore and one
+fictional-source ACS adapter import, marker, recall, replay and withdrawal test.
+Local manual model/tunnel startup and abrupt-stop cleanup passed; two SSH client
+processes on one PC were not a two-PC test. Source review, real processing,
+off-device recovery, two physical clients and endurance remain open. See
+coordination/evidence/acs-memory-preflight-01/nas-pilot-20261101/report.md.
+
+## AgentMemory source candidate corrections (2026-10-31)
+
+The 2026-10-29 source review found three summaries or anchors needing correction.
+The revised candidate batch preserves all pending-human-review references and
+the original batch remains historical evidence. Offline preview and source pins
+are checked again; no candidate was imported or sent to a model. The temporary
+NAS synthetic test passed, but persistent service, real data, independent review
+and two-device acceptance remain open.
+
+## AgentMemory synthetic marker strategy candidate (2026-10-29)
+
+A dedicated temporary0.4.3 instance with L1 dedup disabled and an agent-scoped marker strategy preserved all ten source markers, passed10/10 non-blind synthetic top3 queries, replay, adapter withdrawal and one supersession. Dedup-enabled three-card trial had merged facts and lost markers. Formal card review, NAS and two-device gates remain HOLD; PR11 stays Draft. See coordination/evidence/acs-memory-preflight-01/marker-strategy-20261029/report.md.
+
+## AgentMemory synthetic upstream gate HOLD (2026-10-29)
+
+Two isolated real0.4.3/local3B runs extracted one synthetic L1 atom each but both omitted the required source marker. The adapter refused activation; direct upstream recall worked in the second run. Source correlation, real documents and NAS deployment remain HOLD. See coordination/evidence/acs-memory-preflight-01/upstream-synthetic-20261029/report.md for limits and preliminary default-startup incident. PR11 remains Draft, task REVIEW.
+
+## PR11 branch integration verified (2026-10-28)
+
+Integrated main d6c4578 into the PR11 branch at fixed merge
+`3a8dfb5a80e7fd53fc525683ec954e4dfabc6258`. The sole PROGRESS.md conflict preserves both new
+prefixes and one shared history. Exact parent proof retains763main files,
+17feature-only files and117product/test paths, without new product logic.
+
+One combined11file pytest invocation passed343tests/native0 in
+223.281seconds (memory54 + core241 + handoff48). Encoding
+overrides were unset. Fresh local Windows autocrlf clone passed73raw/blob pins,
+threeCLIhelp calls, imports, validator, ten-card offline preview and clean status.
+Candidate summaries remain unapproved. This is local deterministic integration
+proof, not independent acceptance, a new second-device test or NAS qualification.
+
+The ordinary diff check against the feature parent reports inherited CRLF line
+endings from main's pinned snapshots. The CR-at-EOL-aware check and ordinary
+PR delta check against main both pass. Pinned bytes were preserved, not rewritten.
+Raw local logs remain outside Git. No real provider, real document import,
+persistent NAS service, hook, worker or schedule was activated.
+
+## Curated-memory follow-up self-check (2026-10-27)
+
+Draft PR11 remains review-only. Receipt reconciliation now rejects wrong-role or
+malformed messages, and MCP survives Git subprocess timeouts with a safe error.
+Three added regressions failed before repair;54focused cases pass/native0 in
+24.58seconds. This author self-check does not approve candidate sources or formal
+acceptance. No provider, persistent NAS service, hooks or real import enabled.
+See coordination/evidence/acs-memory-preflight-01/followup-self-check.md.
+
+## Curated memory adapter submitted for review（2026-10-26）
+
+acs-memory-preflight-01 implements an optional source-pinned CLI/MCP adapter on
+an isolated main-based branch. Final focused51tests passed/native0/21.60seconds;
+ten real Git source candidates preview offline and remain pending review. Durable
+receipts prevent blind replay; activated queries return only approved source
+cards, excluding raw model persona and stale/foreign candidates. Synthetic HTTP
+tests do not prove upstream model extraction/quality. Real processing/provider,
+NAS persistence and two-device acceptance remain separate gates. The user later
+confirmed synthetic-only offline work and authorized a Draft PR publication,
+without merge, on2026-10-26.
+See coordination/delivery/acs-memory-preflight-01-delivery-report.md. Existing
+workers, task acceptance, runtime state and earlier release records are unchanged.
+
 ## PR9 publication evidence/status closeout (2026-10-27)
 
 User-requested metadata fix bundles the accepted exact1d7b85b live transport/intake/

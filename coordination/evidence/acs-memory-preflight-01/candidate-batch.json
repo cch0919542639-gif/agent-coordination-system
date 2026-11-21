@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "project_id": "agent-coordination-system",
+  "repository": "https://github.com/cch0919542639-gif/agent-coordination-system",
+  "cards": [
+    {
+      "memory_id": "sid-cp950-historical",
+      "title": "CP950 original failure",
+      "summary": "The original c7f7dee release failed initialization under CP950. This is historical evidence, superseded by the repaired release.",
+      "source_commit": "4a0f61d76c78ac5bf85f61c996c8c77a539ea970",
+      "source_path": "coordination/delivery/console-download-verification-20261024-report.md",
+      "source_blob_sha256": "f039c9de52bcf3fe5986953c091ffff1f73ff4bfa36b50617c12f73c7e091984",
+      "source_anchor": {
+        "start_line": 18,
+        "end_line": 32
+      },
+      "source_date": "2026-10-25",
+      "approval_ref": "pending-human-review",
+      "applicable_versions": "c7f7dee only",
+      "task_ref": "PR 7",
+      "status": "superseded",
+      "supersedes": []
+    },
+    {
+      "memory_id": "sid-cp950-repaired",
+      "title": "CP950 repair verification",
+      "summary": "The 92e1248 release passed 131 tests in the original CP950 environment without a UTF-8 workaround; this does not prove later releases or two physical hosts.",
+      "source_commit": "5002422d33d85b3def31541241521de06fd5527b",
+      "source_path": "coordination/delivery/console-reverification-20261025-report.md",
+      "source_blob_sha256": "bc262adc6d69d79720097bc0d4dd84c00ca33c98e5c422627a1d1e3036ebcb02",
+      "source_anchor": {
+        "start_line": 9,
+        "end_line": 23
+      },
+      "source_date": "2026-10-25",
+      "approval_ref": "pending-human-review",
+      "applicable_versions": "92e1248; later releases require verification",
+      "task_ref": "PR 8",
+      "status": "active",
+      "supersedes": [
+        "sid-cp950-historical"
+      ]
+    },
+    {
+      "memory_id": "formal-task-authority",
+      "title": "Formal task authority",
+      "summary": "Repository evidence and reviewer acceptance determine delivery; chat or memory alone never closes a task.",
+      "source_commit": "c3682d330ea847fc0895bff3dee334538a731499",
+      "source_path": "docs/operations/agent-task-execution-protocol.md",
+      "source_blob_sha256": "0372194578fc0d6537b12b7e1acc43640110c39844c5bdd62d9769b286f6c10b",
+      "source_anchor": {
+        "start_line": 55,
+        "end_line": 69
+      },
+      "source_date": "2026-10-25",
+      "approval_ref": "pending-human-review",
+      "applicable_versions": "current pinned protocol",
+      "task_ref": "not-provided",
+      "status": "active",
+      "supersedes": []
+    },
+    {
+      "memory_id": "project-boundaries",
+      "title": "Separate project task boards",
+      "summary": "Each product repository owns its coordination artifacts. The reusable engine must not become the task board for unrelated products.",
+      "source_commit": "c3682d330ea847fc0895bff3dee334538a731499",
+      "source_path": "docs/operations/project-repository-boundary.md",
+      "source_blob_sha256": "3e98ab48c7b07660d46a34ffcde43e451363d1118e1a2e518f7a08ea02850e92",
+      "source_anchor": {
+        "start_line": 3,
+        "end_line": 17
+      },
+      "source_date": "2026-10-25",
+      "approval_ref": "pending-human-review",
+      "applicable_versions": "current pinned protocol",
+      "task_ref": "not-provided",
+      "status": "active",
+      "supersedes": []
+    },
+    {
+      "memory_id": "private-console-setup",
+      "title": "Private console initialization",
+      "summary": "Each computer initializes new private state with separate canonical roots; never copy another computer credentials, database or ACK state.",
+      "source_commit": "c3682d330ea847fc0895bff3dee334538a731499",
+      "source_path": "docs/operations/console-download-guide.md",
+      "source_blob_sha256": "a1aecd7f114e5bc9aa1b57db36b06489a5d599b8e11a8d76defe85e3bb7a5016",
+      "source_anchor": {
+        "start_line": 57,
+        "end_line": 71
+      },
+      "source_date": "2026-10-25",
+      "approval_ref": "pending-human-review",
+      "applicable_versions": "pinned console guide",
+      "task_ref": "not-provided",
+      "status": "active",
+      "supersedes": []
+    },
+    {
+      "memory_id": "viewer-boundary",
+      "title": "Viewer authorization",
+      "summary": "Viewer reads seven views. Hidden controls or browser changes do not grant write permission; role enforcement belongs on the server.",
+      "source_commit": "c3682d330ea847fc0895bff3dee334538a731499",
+      "source_path": "docs/operations/web-console-guide.md",
+      "source_blob_sha256": "62637b881316a41da4c78be8279369582889dcfa45ca53a8e9f7c88c1293c9fa",
+      "source_anchor": {
+        "start_line": 61,
+        "end_line": 75
+      },
+      "source_date": "2026-10-25",
+      "approval_ref": "pending-human-review",
+      "applicable_versions": "pinned web console contract",
+      "task_ref": "not-provided",
+      "status": "active",
+      "supersedes": []
+    },
+    {
+      "memory_id": "finite-loop-boundary",
+      "title": "Finite worker loop",
+      "summary": "The controlled local loop uses explicit plans and bounded progression. Its availability does not authorize unbounded worker launches or remote transport.",
+      "source_commit": "c3682d330ea847fc0895bff3dee334538a731499",
+      "source_path": "docs/operations/local-agent-completion-loop.md",
+      "source_blob_sha256": "d8bb9576201f3e47fa18f2d54dfd6a9265060807fe75625b38b6e5bbd933960a",
+      "source_anchor": {
+        "start_line": 4,
+        "end_line": 18
+      },
+      "source_date": "2026-10-25",
+      "approval_ref": "pending-human-review",
+      "applicable_versions": "pinned local loop contract",
+      "task_ref": "not-provided",
+      "status": "active",
+      "supersedes": []
+    },
+    {
+      "memory_id": "console-version-proof",
+      "title": "Version-specific verification",
+      "summary": "Console source, local acceptance and publication are distinct. Use the supplied exact commit and retain the limits of each historical verification.",
+      "source_commit": "c3682d330ea847fc0895bff3dee334538a731499",
+      "source_path": "docs/operations/console-release-status.md",
+      "source_blob_sha256": "63106dd00f81bfcd048103478d515f7866b9db57029e2428275b6e4c944e883d",
+      "source_anchor": {
+        "start_line": 8,
+        "end_line": 22
+      },
+      "source_date": "2026-10-25",
+      "approval_ref": "pending-human-review",
+      "applicable_versions": "pinned console release status",
+      "task_ref": "not-provided",
+      "status": "active",
+      "supersedes": []
+    },
+    {
+      "memory_id": "privacy-boundary",
+      "title": "Transcript privacy boundary",
+      "summary": "Transcript-based tools require separate privacy review, an explicit source allowlist, retention and rollback. Token optimization does not justify collecting private transcripts.",
+      "source_commit": "c3682d330ea847fc0895bff3dee334538a731499",
+      "source_path": "docs/operations/token-efficiency-policy.md",
+      "source_blob_sha256": "9057048c7b41161d01d3c869ddec5194d094d117e8e3e4f84f8d078bdfb77dec",
+      "source_anchor": {
+        "start_line": 33,
+        "end_line": 47
+      },
+      "source_date": "2026-10-25",
+      "approval_ref": "pending-human-review",
+      "applicable_versions": "current pinned privacy policy",
+      "task_ref": "not-provided",
+      "status": "active",
+      "supersedes": []
+    },
+    {
+      "memory_id": "manual-before-automation",
+      "title": "Manual clarity first",
+      "summary": "Prefer a clear manual step and named operator responsibility when full automation is not implemented; do not describe partial automation as complete.",
+      "source_commit": "c3682d330ea847fc0895bff3dee334538a731499",
+      "source_path": "docs/operations/lean-agent-engineering-principles.md",
+      "source_blob_sha256": "e428ae1d7357a68727df27ec5b1f52ab3ac086c5fee503f7f3f42325c6d717cc",
+      "source_anchor": {
+        "start_line": 105,
+        "end_line": 119
+      },
+      "source_date": "2026-10-25",
+      "approval_ref": "pending-human-review",
+      "applicable_versions": "current pinned engineering policy",
+      "task_ref": "not-provided",
+      "status": "active",
+      "supersedes": []
+    }
+  ]
+}

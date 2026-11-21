@@ -1,0 +1,22 @@
+{
+  "candidate_commit": "3a8dfb5a80e7fd53fc525683ec954e4dfabc6258",
+  "files": [
+    "test_curated_memory.py",
+    "test_console_setup.py",
+    "test_web_console.py",
+    "test_state_controller.py",
+    "test_board_projection.py",
+    "test_parallel_runtime.py",
+    "test_worker_activation.py",
+    "test_worker_poller.py",
+    "test_local_agent_loop.py",
+    "test_github_handoff.py",
+    "test_handoff_console.py"
+  ],
+  "native_exit_code": 0,
+  "timed_out": false,
+  "elapsed_seconds": 223.281,
+  "encoding_overrides": "PYTHONUTF8 and PYTHONIOENCODING unset",
+  "command": "python -B -m pytest tests/scripts/test_curated_memory.py tests/scripts/test_console_setup.py tests/scripts/test_web_console.py tests/scripts/test_state_controller.py tests/scripts/test_board_projection.py tests/scripts/test_parallel_runtime.py tests/scripts/test_worker_activation.py tests/scripts/test_worker_poller.py tests/scripts/test_local_agent_loop.py tests/scripts/test_github_handoff.py tests/scripts/test_handoff_console.py -q -p no:cacheprovider",
+  "tests": 343
+}

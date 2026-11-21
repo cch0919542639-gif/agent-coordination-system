@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-29",
+  "core_version": "0.4.3",
+  "core_image_amd64": "sha256:d26ca47426b7c03c4e7f724fe42087f262a4ef86132cfccf245dc628f3914ca3",
+  "core_binary_sha256": "e7f1218acd1c58c5416389248f5cfa5cc16e80218034592eb2ae78ae64b3602d",
+  "model": "Qwen2.5-3B-Instruct Q4_K_M",
+  "environment": "isolated local WSL CPU and loopback",
+  "trials": [
+    {
+      "elapsed_seconds": 38.89,
+      "synthetic_source_validation": "pass",
+      "local_model_health": "pass",
+      "real_agentmemory_health": "pass",
+      "synthetic_account": "pass",
+      "actual_adapter_import": "pass",
+      "l1_atoms": 1,
+      "generation_status": [
+        {
+          "count": 1,
+          "layer": "l1",
+          "status": "succeeded"
+        }
+      ],
+      "exact_source_marker_present": false,
+      "adapter_verification": "refused: Extraction missing exact card/source marker; deployment gate remains HOLD.",
+      "receipt_state": "submitted"
+    },
+    {
+      "elapsed_seconds": 39.84,
+      "synthetic_source_validation": "pass",
+      "local_model_health": "pass",
+      "real_agentmemory_health": "pass",
+      "synthetic_account": "pass",
+      "actual_adapter_import": "pass",
+      "l1_atoms": 1,
+      "generation_status": [
+        {
+          "count": 1,
+          "layer": "l1",
+          "status": "succeeded"
+        }
+      ],
+      "exact_source_marker_present": false,
+      "atom_session_matches_synthetic_card": true,
+      "direct_upstream_recall": {
+        "count": 1,
+        "contains_t1": true
+      },
+      "adapter_verification": "refused: Extraction missing exact card/source marker; deployment gate remains HOLD.",
+      "receipt_state": "submitted"
+    }
+  ],
+  "outcome": "HOLD: exact source marker not preserved; adapter refused activation",
+  "external_model_calls": 0,
+  "real_documents_processed": 0,
+  "nas_deployment": false,
+  "unexpected_default_start": "A separate --version probe started default loopback core briefly; stopped. Default audit.db and system.db had modification times during that interval; prior state unknown and files retained."
+}

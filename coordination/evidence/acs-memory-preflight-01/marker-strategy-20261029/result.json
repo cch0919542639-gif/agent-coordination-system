@@ -1,0 +1,295 @@
+{
+  "date": "2026-10-29",
+  "mode": "synthetic-only local WSL",
+  "formal_acceptance": false,
+  "one_card_custom_strategy": {
+    "date": "2026-10-29",
+    "data_scope": "synthetic only",
+    "external_model_calls": 0,
+    "agentmemory_version": "0.4.3",
+    "model": "Qwen2.5-3B-Instruct Q4_K_M",
+    "binary_sha256": "e7f1218acd1c58c5416389248f5cfa5cc16e80218034592eb2ae78ae64b3602d",
+    "prior_startup_issue": "An earlier --version attempt started default loopback service briefly; stopped; default audit.db/system.db had timestamps in that interval; prior state unknown and left untouched.",
+    "steps": {
+      "synthetic_source_validation": "pass",
+      "local_model_health": "pass",
+      "real_agentmemory_health": "pass",
+      "synthetic_account": "pass",
+      "synthetic_custom_strategy": "pass and read back",
+      "actual_adapter_import": "pass",
+      "l1_atoms": 1,
+      "generation_status": [
+        {
+          "count": 1,
+          "layer": "l1",
+          "status": "succeeded"
+        }
+      ],
+      "exact_source_marker_present": true,
+      "atom_session_matches_synthetic_card": true,
+      "direct_upstream_recall": {
+        "count": 1,
+        "contains_t1": true
+      },
+      "adapter_verification": {
+        "verified": 1,
+        "proof": "source markers only; model quality and upstream runtime require separate evidence"
+      },
+      "adapter_recall": {
+        "match_ids": [
+          "synthetic-review"
+        ]
+      },
+      "receipt_state": "verified"
+    },
+    "outcome": "pass",
+    "local_processes_stopped": true,
+    "elapsed_seconds": 53.07
+  },
+  "three_cards_dedup_enabled": {
+    "date": "2026-10-29",
+    "data_scope": "synthetic only",
+    "external_model_calls": 0,
+    "agentmemory_version": "0.4.3",
+    "model": "Qwen2.5-3B-Instruct Q4_K_M",
+    "binary_sha256": "e7f1218acd1c58c5416389248f5cfa5cc16e80218034592eb2ae78ae64b3602d",
+    "prior_startup_issue": "An earlier --version attempt started default loopback service briefly; stopped; default audit.db/system.db had timestamps in that interval; prior state unknown and left untouched.",
+    "steps": {
+      "synthetic_source_validation": "pass",
+      "local_model_health": "pass",
+      "real_agentmemory_health": "pass",
+      "synthetic_account": "pass",
+      "synthetic_custom_strategy": "pass and read back",
+      "actual_adapter_import": "pass",
+      "l1_atoms": 1,
+      "generation_status": [
+        {
+          "count": 3,
+          "layer": "l1",
+          "status": "succeeded"
+        }
+      ],
+      "markers_per_card": {
+        "synthetic-review": false,
+        "synthetic-preview": false,
+        "synthetic-backup": false
+      },
+      "exact_source_marker_present": false,
+      "atom_session_matches_synthetic_card": true,
+      "direct_upstream_recall": {
+        "count": 1,
+        "contains_t1": true
+      },
+      "adapter_verification": "refused: Extraction missing exact card/source marker; deployment gate remains HOLD.",
+      "receipt_state": "submitted"
+    },
+    "outcome": "hold_source_verification",
+    "local_processes_stopped": true,
+    "elapsed_seconds": 121.99
+  },
+  "three_cards_dedup_disabled": {
+    "date": "2026-10-29",
+    "data_scope": "synthetic only",
+    "external_model_calls": 0,
+    "agentmemory_version": "0.4.3",
+    "model": "Qwen2.5-3B-Instruct Q4_K_M",
+    "binary_sha256": "e7f1218acd1c58c5416389248f5cfa5cc16e80218034592eb2ae78ae64b3602d",
+    "prior_startup_issue": "An earlier --version attempt started default loopback service briefly; stopped; default audit.db/system.db had timestamps in that interval; prior state unknown and left untouched.",
+    "steps": {
+      "synthetic_source_validation": "pass",
+      "local_model_health": "pass",
+      "synthetic_only_config": "memory.extraction.enableDedup=false",
+      "real_agentmemory_health": "pass",
+      "synthetic_account": "pass",
+      "synthetic_custom_strategy": "pass and read back",
+      "actual_adapter_import": "pass",
+      "l1_atoms": 3,
+      "generation_status": [
+        {
+          "count": 3,
+          "layer": "l1",
+          "status": "succeeded"
+        }
+      ],
+      "markers_per_card": {
+        "synthetic-review": true,
+        "synthetic-preview": true,
+        "synthetic-backup": true
+      },
+      "exact_source_marker_present": true,
+      "atom_session_matches_synthetic_card": true,
+      "direct_upstream_recall": {
+        "count": 1,
+        "contains_t1": true
+      },
+      "adapter_verification": {
+        "verified": 3,
+        "proof": "source markers only; model quality and upstream runtime require separate evidence"
+      },
+      "adapter_recall": {
+        "match_ids": [
+          "synthetic-review"
+        ]
+      },
+      "replay_without_resubmission": "pass",
+      "withdrawal_and_stale_batch_refusal": "pass",
+      "receipt_state": "verified"
+    },
+    "outcome": "pass",
+    "local_processes_stopped": true,
+    "elapsed_seconds": 88.1
+  },
+  "ten_cards_dedup_disabled": {
+    "date": "2026-10-29",
+    "data_scope": "synthetic only",
+    "external_model_calls": 0,
+    "agentmemory_version": "0.4.3",
+    "model": "Qwen2.5-3B-Instruct Q4_K_M",
+    "binary_sha256": "e7f1218acd1c58c5416389248f5cfa5cc16e80218034592eb2ae78ae64b3602d",
+    "prior_startup_issue": "An earlier --version attempt started default loopback service briefly; stopped; default audit.db/system.db had timestamps in that interval; prior state unknown and left untouched.",
+    "steps": {
+      "synthetic_source_validation": "pass",
+      "local_model_health": "pass",
+      "synthetic_only_config": "memory.extraction.enableDedup=false",
+      "real_agentmemory_health": "pass",
+      "synthetic_account": "pass",
+      "synthetic_custom_strategy": "pass and read back",
+      "actual_adapter_import": "pass",
+      "l1_atoms": 10,
+      "generation_status": [
+        {
+          "count": 10,
+          "layer": "l1",
+          "status": "succeeded"
+        }
+      ],
+      "markers_per_card": {
+        "synthetic-review": true,
+        "synthetic-preview": true,
+        "synthetic-backup": true,
+        "synthetic-owner": true,
+        "synthetic-release": true,
+        "synthetic-retention": true,
+        "synthetic-settings": true,
+        "synthetic-schedule": true,
+        "synthetic-approval": true,
+        "synthetic-cancelled": true
+      },
+      "exact_source_marker_present": true,
+      "atom_session_matches_synthetic_card": true,
+      "direct_upstream_recall": {
+        "count": 2,
+        "contains_t1": true
+      },
+      "adapter_verification": {
+        "verified": 10,
+        "proof": "source markers only; model quality and upstream runtime require separate evidence"
+      },
+      "adapter_recall": {
+        "match_ids": [
+          "synthetic-review",
+          "synthetic-approval",
+          "synthetic-schedule"
+        ]
+      },
+      "replay_without_resubmission": "pass",
+      "synthetic_top3": {
+        "hits": 10,
+        "questions": 10,
+        "details": [
+          {
+            "expected": "synthetic-review",
+            "top3_ids": [
+              "synthetic-review",
+              "synthetic-approval",
+              "synthetic-schedule"
+            ],
+            "hit": true
+          },
+          {
+            "expected": "synthetic-preview",
+            "top3_ids": [
+              "synthetic-preview",
+              "synthetic-backup"
+            ],
+            "hit": true
+          },
+          {
+            "expected": "synthetic-backup",
+            "top3_ids": [
+              "synthetic-backup",
+              "synthetic-settings",
+              "synthetic-schedule"
+            ],
+            "hit": true
+          },
+          {
+            "expected": "synthetic-owner",
+            "top3_ids": [
+              "synthetic-owner"
+            ],
+            "hit": true
+          },
+          {
+            "expected": "synthetic-release",
+            "top3_ids": [
+              "synthetic-release"
+            ],
+            "hit": true
+          },
+          {
+            "expected": "synthetic-retention",
+            "top3_ids": [
+              "synthetic-retention"
+            ],
+            "hit": true
+          },
+          {
+            "expected": "synthetic-settings",
+            "top3_ids": [
+              "synthetic-settings",
+              "synthetic-schedule",
+              "synthetic-backup"
+            ],
+            "hit": true
+          },
+          {
+            "expected": "synthetic-schedule",
+            "top3_ids": [
+              "synthetic-schedule",
+              "synthetic-settings",
+              "synthetic-backup"
+            ],
+            "hit": true
+          },
+          {
+            "expected": "synthetic-approval",
+            "top3_ids": [
+              "synthetic-approval",
+              "synthetic-review"
+            ],
+            "hit": true
+          },
+          {
+            "expected": "synthetic-cancelled",
+            "top3_ids": [
+              "synthetic-cancelled",
+              "synthetic-review"
+            ],
+            "hit": true
+          }
+        ],
+        "formal_acceptance": false
+      },
+      "withdrawal_and_stale_batch_refusal": "pass",
+      "supersession_excludes_old_and_returns_new": "pass",
+      "receipt_state": "verified"
+    },
+    "outcome": "pass",
+    "local_processes_stopped": true,
+    "elapsed_seconds": 311.52
+  },
+  "real_documents_processed": 0,
+  "external_model_calls": 0,
+  "nas_deployment": false
+}
