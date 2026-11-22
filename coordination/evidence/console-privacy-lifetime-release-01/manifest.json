@@ -1,9 +1,9 @@
 {
   "scope": "Local privacy and manual-lifetime candidate, not published",
-  "source_commit": "39ae4e06fbb8d4e2f3713aa7fbaf1de1105d542f",
+  "source_commit": "0df0b3862d98a251d612471b828e893929c05ef3",
   "base_commit": "69b5ce5acde565e24cee10f3ce19bf0a28279f10",
   "initial_reviewed_candidate": "1f4fb5a236800e9ba9330e438c56666a7d24327b",
-  "hash_definition": "SHA-256 of canonical Git blob bytes and Git blob ID; source commit fixes the complete tree and pins cover inherited console dependencies and all changed source/evidence paths.",
+  "hash_definition": "SHA-256 of canonical Git blob bytes and Git blob ID. The source commit fixes the full tree; selected pins cover release dependencies, source and evidence. Mutable reviewer task/progress metadata and the manifest itself are excluded.",
   "historical_manifest": "coordination/evidence/console-monitor-scoped-release-01/manifest.json",
   "evidence": "coordination/evidence/console-privacy-lifetime-release-01/review-and-validation.md",
   "limitations": [
@@ -24,13 +24,18 @@
     },
     {
       "path": "PROGRESS.md",
-      "git_blob": "d2882d12e2f5cfd322ea81485ecb1002a4001e85",
-      "git_blob_sha256": "a43756befd0c66321aa3790a2cc85695cf9ff29f3077dc9ea2323964ed018ad6"
+      "git_blob": "f53a30becdd03ad223fb49d48c3693996d51dc95",
+      "git_blob_sha256": "201bac1344c3d04a16d8dd9645a0e323322637f569e5ad68c3a7c5ea2777fd75"
     },
     {
       "path": "coordination/delivery/console-manual-lifetime-01-delivery-report.md",
       "git_blob": "f3e31feed6a4f5c16440cdb560b783c0366dcddc",
       "git_blob_sha256": "bb2f393c352d0a8347068627cb8eab468402fe19bf96b62f0ebc34f0ecdb60dd"
+    },
+    {
+      "path": "coordination/delivery/console-privacy-lifetime-review-01-delivery-report.md",
+      "git_blob": "564e103394e6f6f400c13fd151ffc778c5678ce6",
+      "git_blob_sha256": "61deea041500ddc4d92abc987ea84b4d4024d7faaa1b4ea8c21583734415f089"
     },
     {
       "path": "coordination/delivery/direct-model-privacy-01-delivery-report.md",
@@ -49,13 +54,18 @@
     },
     {
       "path": "coordination/evidence/console-privacy-lifetime-release-01/review-and-validation.md",
-      "git_blob": "4de488ba15940138ea260282eb3618bc231a53e3",
-      "git_blob_sha256": "c917298150611e926440fb9af740116060a0f9f9343935cab216075ebc0422e2"
+      "git_blob": "703e628fe03111bbfa3f33d86e0ad7d5275aafb5",
+      "git_blob_sha256": "a0629b996a0c1fce587fd27af1985b606f7abc894891cef37075c049e898b527"
     },
     {
       "path": "coordination/evidence/console-privacy-lifetime-review-01/initial-review.md",
       "git_blob": "50221432787af52ba46168144712e586f397517f",
       "git_blob_sha256": "bc5f428594fb60697aba09a573ecd2dc31ca0f49737fc8f77a17fdc157e85992"
+    },
+    {
+      "path": "coordination/evidence/console-privacy-lifetime-review-01/rereview.md",
+      "git_blob": "f13c160dc87faed949461ce76211697055ba61af",
+      "git_blob_sha256": "8b26d63427cbcadf0b3f9694ee8577ac1256f2d7a15056aef2ad7ee52ed7251b"
     },
     {
       "path": "coordination/evidence/direct-model-privacy-01/validation.md",
@@ -64,23 +74,33 @@
     },
     {
       "path": "coordination/progress/console-manual-lifetime.md",
-      "git_blob": "082f0de7b22e1c46cef14b7e19cbfae971ad7476",
-      "git_blob_sha256": "a22aa093012d32b87dc0316ff289b059f2674115b8e0d1d08e23c246a3e556b3"
+      "git_blob": "f75f44fc13b295361be5ce8b28da373420a20062",
+      "git_blob_sha256": "c06c2281b3221e8b96d3bb8ec7d370615e3feb6f8d71331e16baa066f5e67545"
     },
     {
       "path": "coordination/progress/direct-model-privacy.md",
-      "git_blob": "b2969f87bd89169cb12c7f1bd55469298253c495",
-      "git_blob_sha256": "5992e8f9223b7953a208c372a8cca4b847420b8fb1578a53824a2cf579799359"
+      "git_blob": "a7d7e32ea208d35fd3b0328afa31f26eedfebdb2",
+      "git_blob_sha256": "5b505f995d9b452fc24ee6777fa72c4e0ecbc2da96701e4767af3468eecf45a9"
     },
     {
-      "path": "coordination/task-board/review/2026-11-22_console-manual-lifetime-01_remove-time-limit.md",
-      "git_blob": "498426c517747df03b08b31e2361e358db1f94a9",
-      "git_blob_sha256": "6905d626254bca081c9335adeb6a0b8ee2cff85cf4091cc068ba202edd58e120"
+      "path": "coordination/reviews/review-console-manual-lifetime-01.md",
+      "git_blob": "bd38ea0a53be86caf684a6600d031019be38a24b",
+      "git_blob_sha256": "ce8f2db0826e13fc536d440f583c64fed777180753277a6843c6a098cac3ae98"
     },
     {
-      "path": "coordination/task-board/review/2026-11-22_direct-model-privacy-01_optional-mode.md",
-      "git_blob": "8a58237089a8c07fbbbe3dd5abcce0da1787731d",
-      "git_blob_sha256": "18bb813c80ab335822e203d9e730eb010642fe18104f47b8c360fa781c40a378"
+      "path": "coordination/reviews/review-direct-model-privacy-01.md",
+      "git_blob": "02c1d2c8a90bb496e7c32a5e2f5814d333789540",
+      "git_blob_sha256": "71f5a5068cac2fb0ecbbe2ed6d224d0d96cdeda6b555957788f2d730c1923bee"
+    },
+    {
+      "path": "coordination/task-board/done/2026-11-22_console-manual-lifetime-01_remove-time-limit.md",
+      "git_blob": "0274b827a865cd7cbdb06856c6376d49132a368f",
+      "git_blob_sha256": "bbed497f9d7612e4242db161b84e4b3af9bd12875278c51389a869b7332b203c"
+    },
+    {
+      "path": "coordination/task-board/done/2026-11-22_direct-model-privacy-01_optional-mode.md",
+      "git_blob": "1c3034cd8d3b204117500bbfc52580abeca9be43",
+      "git_blob_sha256": "fc50fc6561fae12bc0cf0b229b507f72bc6e4be820ae434a2a1a5adc128da882"
     },
     {
       "path": "coordination_runtime/__init__.py",
@@ -337,5 +357,7 @@
       "git_blob": "72fad0ec587f0df691eee3bc29b8d52d88409bd5",
       "git_blob_sha256": "009fe1d9fa75873b9f51bda52ec6e122c91a40a28b1f956ac8ef80a8e6fdc79a"
     }
-  ]
+  ],
+  "independent_rereview_candidate": "83c4a97f5e188d8010b2a4deea8849119848ff9e",
+  "reviewed_runtime_source": "39ae4e06fbb8d4e2f3713aa7fbaf1de1105d542f"
 }
