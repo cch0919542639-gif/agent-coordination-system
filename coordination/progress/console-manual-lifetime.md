@@ -3,7 +3,7 @@
 - Agent: ORCHESTRATOR
 - Active Task: console-manual-lifetime-01
 - Phase: agent-control-center
-- Status: REVIEW
+- Status: DONE
 - Last Updated: 2026-11-22
 
 ## Current Step
@@ -14,7 +14,8 @@ Foreground server, login and Agent sessions default to manual stop. Explicit
 timed server mode, role checks and owned cleanup remain supported.
 
 ## Blocker Status
-No code blocker. Other existing sessions must not be interrupted.
+Independent re-review found no remaining actionable issue. Other existing
+sessions must not be interrupted.
 
 ## Next Step
-Use the foreground launcher and report the manual controls and browser-session behavior.
+Use the foreground launcher and retain browser-session behavior in documentation.

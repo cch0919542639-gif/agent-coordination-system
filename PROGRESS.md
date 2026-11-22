@@ -4,7 +4,8 @@ Independent review of `1f4fb5a` found a cross-tab privacy race, orphaned-login
 session exhaustion, and a stale release manifest. The candidate binds direct
 prompts to the displayed session, model and privacy; adds explicit, authenticated
 same-account session recovery; and prepares separate current source pins. No
-automatic termination was restored. Independent re-review remains pending.
+automatic termination was restored. Independent re-review of `83c4a97` found all
+three issues resolved and no new actionable issue; 74 tests passed, one skipped.
 
 After the initial repair a six-suite regression passed 202 tests with one skip;
 the final model-binding change was then checked by four affected suites: 130 passed,

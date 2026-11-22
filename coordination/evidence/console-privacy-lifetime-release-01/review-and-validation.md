@@ -15,6 +15,13 @@ four affected suites (130 passed, one skipped); three additional focused tests
 passed, including real Windows owned-process termination during manual recovery.
 No test used a real provider or user session.
 
+Independent re-review of candidate `83c4a97f5e188d8010b2a4deea8849119848ff9e`
+found the three original findings resolved with no new actionable issue. Its
+focused suite passed 74 tests with one skip; a separate stale-tab replay passed.
+The reviewer independently checked all 65 pins of that candidate and confirmed
+the historical monitor manifest was unchanged. This result does not establish
+a real provider call or cross-machine operation.
+
 Old pages or clients that send an unbound direct prompt now receive a refusal;
 refresh the console page after updating. Default ZDR policy and read-only monitor
 boundaries remain; ordinary privacy mode still requires explicit selection and is

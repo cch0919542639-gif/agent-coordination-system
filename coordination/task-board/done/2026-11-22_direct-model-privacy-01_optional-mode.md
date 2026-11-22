@@ -1,7 +1,7 @@
 ---
 task_id: direct-model-privacy-01
 phase: agent-control-center
-status: REVIEW
+status: DONE
 owner: ORCHESTRATOR
 reviewer: ORCHESTRATOR
 priority: high

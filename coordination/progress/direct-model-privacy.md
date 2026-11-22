@@ -3,7 +3,7 @@
 - Agent: ORCHESTRATOR
 - Active Task: direct-model-privacy-01
 - Phase: agent-control-center
-- Status: REVIEW
+- Status: DONE
 - Last Updated: 2026-11-22
 
 ## Current Step
@@ -15,8 +15,8 @@ Default ZDR and explicit ordinary mode remain available. The current candidate
 also refuses legacy unbound direct prompts, requiring a page refresh after upgrade.
 
 ## Blocker Status
-Independent re-review and a real provider request remain pending. Existing user
-sessions and keys were not accessed.
+Independent re-review found no remaining actionable issue. A real provider request
+remains unverified; existing user sessions and keys were not accessed.
 
 ## Next Step
-Complete affected tests, fix the release manifest and request re-review.
+Prepare the reviewed candidate for merge; do not claim real provider success.
