@@ -247,6 +247,23 @@ def test_logout_session_lifetime_and_login_throttle(console, monkeypatch):
     assert request(console, '/api/login', dict(username='viewer', token=console['tokens']['viewer']))[0] == 429
 
 
+def test_explicit_same_account_session_recovery(console):
+    class Agent:
+        closed = False
+        def close(self): self.closed = True
+    admins = [login(console, 'administrator') for _ in range(7)]
+    viewer = login(console, 'viewer')
+    agent = Agent(); console['app'].agent_sessions[admins[0]['sid']] = {'direct': agent}
+    credentials = {'username': 'administrator', 'token': console['tokens']['administrator']}
+    assert request(console, '/api/login', credentials)[0] == 429
+    assert request(console, '/api/login', {**credentials, 'close_other_sessions': 'true'})[0] == 400
+    assert request(console, '/api/login', {**credentials, 'token': 'bad', 'close_other_sessions': True})[0] == 401
+    assert not agent.closed and request(console, '/api/session', session=admins[0])[0] == 200
+    assert request(console, '/api/login', {**credentials, 'close_other_sessions': True})[0] == 200
+    assert agent.closed and request(console, '/api/session', session=admins[0])[0] == 401
+    assert request(console, '/api/session', session=viewer)[0] == 200
+
+
 def test_auth_file_is_mandatory_external_and_never_plaintext(console):
     p = console['p']
     with pytest.raises(StateError): Console(p, p.root / 'auth.json')

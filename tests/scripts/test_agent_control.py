@@ -822,6 +822,27 @@ def test_login_persists_and_logout_stops_owned_agent(console, monkeypatch):
     assert admin['sid'] not in console['app'].agent_sessions
 
 
+@pytest.mark.skipif(os.name != 'nt', reason='Windows owned Job')
+def test_explicit_login_recovery_stops_owned_agent_process(console, tmp_path, monkeypatch):
+    from worker_process_guard import JobProcess
+    monkeypatch.setattr(agent_control.AgentSession, '_run', lambda self: None)
+    admin = login(console, 'administrator')
+    agent = agent_control.AgentSession('opencode', tmp_path)
+    job = JobProcess([sys.executable, '-B', '-c', 'import time; time.sleep(30)'], cwd=tmp_path)
+    try:
+        with agent.lock:
+            agent.job = job
+            job.resume()
+        pid, created = job.pid, job.creation_time
+        console['app'].agent_sessions[admin['sid']] = {'opencode': agent}
+        credentials = {'username': 'administrator', 'token': console['tokens']['administrator'], 'close_other_sessions': True}
+        assert request(console, '/api/login', credentials)[0] == 200
+        assert request(console, '/api/session', session=admin)[0] == 401
+        wait_for(lambda: identity_state(pid, created) in ('missing', 'exited'), seconds=5)
+    finally:
+        agent.close()
+
+
 @pytest.mark.parametrize(('reason', 'error'), [
     ('end_turn', None), ('refusal', '拒絕'), ('max_tokens', '長度上限'),
     ('max_turn_requests', '次數上限'), ('cancelled', '取消'), (None, '結束原因'),

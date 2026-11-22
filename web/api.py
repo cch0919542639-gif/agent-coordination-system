@@ -93,7 +93,10 @@ class Console:
         self.lock = threading.RLock()
 
     def login(self, body):
-        shape(body, {'username', 'token'})
+        if isinstance(body, dict) and set(body) == {'username', 'token', 'close_other_sessions'}:
+            if type(body['close_other_sessions']) is not bool: raise Refused()
+        else:
+            shape(body, {'username', 'token'})
         now = time.monotonic()
         while self.failures and now - self.failures[0] >= 60:
             self.failures.popleft()
@@ -107,6 +110,10 @@ class Console:
             raise Refused(401)
         if self.closed:
             raise Refused(503)
+        if body.get('close_other_sessions', False):
+            for sid, session in list(self.sessions.items()):
+                if session['username'] == user['username']:
+                    self.close_session(sid)
         if len(self.sessions) >= 8:
             raise Refused(429)
         sid = secrets.token_urlsafe(32)
@@ -430,6 +437,10 @@ class Handler(BaseHTTPRequestHandler):
                     privacy = body.get('privacy', 'zdr')
                     if privacy not in ('zdr', 'standard'): raise Refused()
                     direct_config = {'key': body['api_key'], 'models': [body['model']], 'privacy': privacy}
+                elif (route == '/api/agent/prompt' and isinstance(body, dict) and body.get('agent') == 'direct'):
+                    if set(body) == {'agent', 'text'}: raise Refused(409)
+                    shape(body, {'agent', 'text', 'instance_id', 'privacy', 'model'})
+                    direct_config = None
                 else:
                     shape(body, keys)
                     direct_config = None
@@ -450,7 +461,15 @@ class Handler(BaseHTTPRequestHandler):
                 elif not agent: raise Refused(409)
                 elif route == '/api/agent/stop': agent.close()
                 elif route == '/api/agent/model': agent.select(body['model'])
-                elif route == '/api/agent/prompt': agent.prompt(body['text'])
+                elif route == '/api/agent/prompt':
+                    if name == 'direct':
+                        with agent.lock:
+                            if (not isinstance(body['instance_id'], str) or body['instance_id'] != agent.instance_id
+                                    or body['privacy'] != agent.privacy or body['model'] != agent.model):
+                                raise Refused(409)
+                            agent.prompt(body['text'])
+                    else:
+                        agent.prompt(body['text'])
                 else: agent.answer(body['choice'])
                 return self.reply(200, agent.snapshot())
             if route == '/api/view' and self.command == 'GET':

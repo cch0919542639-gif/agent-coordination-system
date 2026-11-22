@@ -58,6 +58,13 @@ sessions, failed login budget5/minute per server. Logout invalidates that sessio
 and its preview plans. HTTP loopback provides no TLS; use a trusted local host and
 browser. Public hosting and hostile OS/browser isolation are outside this contract.
 
+If browser cookies were lost and the eight-session limit is reached, the login
+screen offers an explicit checkbox to close other sessions for the same account
+before signing in. It stops those sessions' owned Agents and does not close other
+accounts' sessions. It is off by default; incorrect credentials never close
+sessions. If other accounts occupy all slots, their owners must log out or the
+operator must manually stop and restart the console.
+
 | Role | Server-enforced capability |
 | --- | --- |
 | Viewer | Read seven views |

@@ -115,9 +115,13 @@ const tick=()=>new Promise(r=>setImmediate(r));function reply(req,status,body){r
  const loading2=get('direct-model-load').listeners.click();const catalog2=requests.shift();assert.equal(catalog2.path,'/api/direct/models?privacy=standard');
  reply(catalog2,200,{models:[{id:'vendor/ordinary:free',free:true}]});await loading2;
  assert.equal(get('direct-model-options').children[0].value,'vendor/ordinary:free');
- vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',models:[]}}})",ctx);
+ vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',instance_id:'snapshot-id',model:'vendor/ordinary:free',models:[]}}})",ctx);
  assert.equal(get('direct-privacy').value,'standard');assert(get('direct-privacy').disabled);
- assert(get('direct-privacy-note').textContent.includes('可能'));console.log('direct UI passed');
+ assert(get('direct-privacy-note').textContent.includes('可能'));
+ get('agent-prompt').value='hello';const sending=get('agent-prompt-form').listeners.submit({preventDefault(){}});
+ const prompt=requests.shift();assert.deepEqual(JSON.parse(prompt.opts.body),{agent:'direct',text:'hello',instance_id:'snapshot-id',privacy:'standard',model:'vendor/ordinary:free'});
+ reply(prompt,200,{phase:'running',privacy:'standard',instance_id:'snapshot-id',models:[]});await sending;
+ console.log('direct UI passed');
 })().catch(e=>{console.error(e);process.exitCode=1});
 ''', encoding='utf-8')
     job = JobProcess([binary, str(script), str(ROOT / 'web/static/app.js')], cwd=tmp_path, capture_output=True)
@@ -168,25 +172,37 @@ bridge.main()
             if value['phase'] == phase and (response is None or value['response'] == response): return value
             time.sleep(.05)
         pytest.fail('direct session did not reach expected state')
-    assert wait('ready')['privacy'] == 'zdr'
+    initial = wait('ready')
+    assert initial['privacy'] == 'zdr'
+    def prompt(text, state):
+        return request(console, '/api/agent/prompt', {'agent': 'direct', 'text': text,
+            'instance_id': state['instance_id'], 'privacy': state['privacy'], 'model': state['model']}, admin)[0]
     assert 'fixture-key' not in json.dumps(request(console, '/api/agents', session=admin)[1])
-    assert request(console, '/api/agent/prompt', {'agent': 'direct', 'text': 'x' * 40000}, admin)[0] == 200
+    assert request(console, '/api/agent/prompt', {'agent': 'direct', 'text': 'legacy'}, admin)[0] == 409
+    assert prompt('wrong session', {**initial, 'instance_id': 'wrong'}) == 409
+    assert prompt('x' * 40000, initial) == 200
     wait('ready', 'vendor/a:free:1')
-    assert request(console, '/api/agent/prompt', {'agent': 'direct', 'text': 'follow up'}, admin)[0] == 200
+    assert prompt('follow up', initial) == 200
     wait('ready', 'vendor/a:free:3')
     assert request(console, '/api/agent/model', {'agent': 'direct', 'model': 'vendor/b:free'}, admin)[0] == 200
-    assert wait('ready')['response'] == ''
-    assert request(console, '/api/agent/prompt', {'agent': 'direct', 'text': 'new model'}, admin)[0] == 200
+    changed = wait('ready')
+    assert changed['response'] == '' and changed['model'] == 'vendor/b:free'
+    assert prompt('stale model', initial) == 409
+    assert prompt('new model', changed) == 200
     wait('ready', 'vendor/b:free:1')
-    assert request(console, '/api/agent/prompt', {'agent': 'direct', 'text': 'fail'}, admin)[0] == 200
+    assert prompt('fail', changed) == 200
     assert wait('ready')['error'] == 'Agent 請求失敗（HTTP 429）。'
     agent = console['app'].agent_sessions[admin['sid']]['direct']
     pid, created = agent.job.pid, agent.job.creation_time
-    assert request(console, '/api/agent/prompt', {'agent': 'direct', 'text': 'wait'}, admin)[0] == 200
+    assert prompt('wait', changed) == 200
     assert request(console, '/api/agent/stop', {'agent': 'direct'}, admin)[0] == 200
     assert request(console, '/api/agent/start', {**start, 'privacy': 'standard'}, admin)[0] == 200
-    assert wait('ready')['privacy'] == 'standard'
-    assert request(console, '/api/agent/prompt', {'agent': 'direct', 'text': 'hello'}, admin)[0] == 200
+    current = wait('ready')
+    assert current['privacy'] == 'standard' and current['instance_id'] != initial['instance_id']
+    assert request(console, '/api/agent/prompt', {'agent': 'direct', 'text': 'legacy'}, admin)[0] == 409
+    assert prompt('stale ZDR tab', initial) == 409
+    assert prompt('wrong privacy', {**current, 'privacy': 'zdr'}) == 409
+    assert current['response'] == '' and prompt('hello', current) == 200
     wait('ready', 'vendor/a:free:1:standard')
     assert request(console, '/api/agent/stop', {'agent': 'direct'}, admin)[0] == 200
     assert identity_state(pid, created) in ('missing', 'exited')

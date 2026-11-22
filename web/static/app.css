@@ -2,6 +2,7 @@
 
 #handoff-controls>button{margin-top:10px}#handoff-binding{max-height:220px}#handoff-controls select{min-width:0}.form-grid>div{min-width:0}
 /* Agent interaction keeps input text selectable and long replies contained. */
+.session-recovery{display:flex;align-items:flex-start;gap:8px}.session-recovery input{width:auto;margin:0;flex:none}
 #agent-panel textarea{font:inherit;width:100%;min-height:100px;padding:12px;border:1px solid var(--line);border-radius:7px;resize:vertical;margin:8px 0 12px}
 #agent-panel textarea:focus-visible{outline:3px solid #d08829;outline-offset:4px}
 #agent-panel .input-row{flex-wrap:wrap;gap:10px}

@@ -5,7 +5,7 @@
 <a class="skip" href="#main">跳到主要內容</a>
 <section id="login" class="login-wrap" aria-labelledby="login-title">
  <div class="login-card"><span class="eyebrow">COORDINATION SYSTEM / 2.0</span><h1 id="login-title">協作，清楚有序。</h1><p>登入本機控制台，查看任務、執行紀錄與審查證據。</p>
- <form id="login-form"><label for="username">使用者名稱</label><input id="username" name="username" required autocomplete="username" maxlength="100"><label for="token">存取權杖</label><input id="token" name="token" type="password" required autocomplete="current-password" maxlength="43" minlength="43"><button type="submit" class="primary">登入控制台 <span aria-hidden="true">→</span></button></form><p id="login-error" class="error" role="alert"></p><small>僅限本機 · 127.0.0.1 · 權限由伺服器檢查</small></div>
+ <form id="login-form"><label for="username">使用者名稱</label><input id="username" name="username" required autocomplete="username" maxlength="100"><label for="token">存取權杖</label><input id="token" name="token" type="password" required autocomplete="current-password" maxlength="43" minlength="43"><label class="session-recovery"><input id="close-other-sessions" type="checkbox">登入時結束此帳號其他工作階段（會停止其中的 Agent）</label><button type="submit" class="primary">登入控制台 <span aria-hidden="true">→</span></button></form><p id="login-error" class="error" role="alert"></p><small>僅限本機 · 127.0.0.1 · 權限由伺服器檢查</small></div>
 </section>
 <div id="console" class="shell" hidden>
  <aside><div class="brand"><span class="brand-mark" aria-hidden="true">◈</span><div>協作控制台<small>COORDINATION / 2.0</small></div></div><p class="nav-label">工作空間</p><nav aria-label="主要導覽">

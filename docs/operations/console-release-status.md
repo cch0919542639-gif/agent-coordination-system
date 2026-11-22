@@ -1,3 +1,15 @@
+# Privacy choice and manual-lifetime candidate (2026-11-22)
+
+This local candidate adds an explicit direct-model privacy choice and manual
+console/login/Agent lifetime. Default direct sessions require zero data retention;
+ordinary sessions require explicit selection. A direct prompt is bound to the
+displayed session and privacy mode, and login offers explicit same-account session
+recovery. Independent review and current source/evidence pins are recorded in
+`coordination/evidence/console-privacy-lifetime-release-01/`. The older manifest
+and monitor review below document an earlier source version, not this candidate.
+Real cross-machine and complete Hermes operation remain unverified. A real provider
+call for this candidate has not been established; no publication is implied.
+
 # Scoped monitor and control-console candidate (2026-11-21)
 
 This local candidate selects the control console and read-only monitor from the

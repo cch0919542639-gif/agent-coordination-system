@@ -1,3 +1,17 @@
+## Privacy and lifetime independent review (2026-11-22)
+
+Independent review of `1f4fb5a` found a cross-tab privacy race, orphaned-login
+session exhaustion, and a stale release manifest. The candidate binds direct
+prompts to the displayed session, model and privacy; adds explicit, authenticated
+same-account session recovery; and prepares separate current source pins. No
+automatic termination was restored. Independent re-review remains pending.
+
+After the initial repair a six-suite regression passed 202 tests with one skip;
+the final model-binding change was then checked by four affected suites: 130 passed,
+one skipped. Three further tests passed, including real owned-process cleanup.
+An earlier regression exposed one UI-message assertion failure, which was fixed.
+No real provider request or private user session was used in these tests.
+
 ## Manual console and session lifetime (2026-11-22)
 
 At the user's direction, both foreground console entry points default to manual
