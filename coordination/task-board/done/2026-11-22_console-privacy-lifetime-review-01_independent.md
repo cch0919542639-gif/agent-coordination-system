@@ -1,7 +1,7 @@
 ---
 task_id: console-privacy-lifetime-review-01
 phase: agent-control-center
-status: REVIEW
+status: DONE
 owner: console-privacy-lifetime-reviewer
 reviewer: ORCHESTRATOR
 priority: high
