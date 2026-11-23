@@ -3,7 +3,8 @@
 The user reported that the input suggestion list did not appear. An explicit
 native model dropdown now populates from the privacy-specific catalogue and
 fills the editable model ID. Switching privacy clears the prior list. Focused
-direct-model tests passed six; browser validation and review remain pending.
+direct-model tests passed six. The installed browser loaded 245 ZDR models and
+selection filled the ID correctly; review remains pending.
 
 ## Privacy and lifetime independent review (2026-11-22)
 

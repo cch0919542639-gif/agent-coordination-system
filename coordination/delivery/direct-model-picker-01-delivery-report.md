@@ -18,8 +18,10 @@ Static console HTML and JavaScript, focused frontend tests, task and progress.
 ## Validation Steps Performed
 
 Direct-model suite: 6 passed. JavaScript syntax and Git diff checks passed.
+Installed Chrome UI: 245 zero-retention models loaded and selecting an entry
+filled the matching ID. No provider inference request was made in this check.
 
 ## Known Residual Risks
 
 A successful live provider response remains unverified; the earlier request
-returned HTTP 401. Browser selection validation and final review remain pending.
+returned HTTP 401. Final review remains pending.
