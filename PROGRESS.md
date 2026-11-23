@@ -1,3 +1,10 @@
+## Explicit OpenRouter model picker (2026-11-24)
+
+The user reported that the input suggestion list did not appear. An explicit
+native model dropdown now populates from the privacy-specific catalogue and
+fills the editable model ID. Switching privacy clears the prior list. Focused
+direct-model tests passed six; browser validation and review remain pending.
+
 ## Privacy and lifetime independent review (2026-11-22)
 
 Independent review of `1f4fb5a` found a cross-tab privacy race, orphaned-login

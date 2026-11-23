@@ -24,7 +24,8 @@
   <div id="agent-model-field"><label for="agent-model">提供者／模型</label><select id="agent-model"></select></div></div>
   <div id="direct-config" hidden><label for="direct-key">OpenRouter API Key</label><input id="direct-key" type="password" maxlength="512" autocomplete="off" spellcheck="false">
   <label for="direct-privacy">資料隱私模式</label><select id="direct-privacy"><option value="zdr" selected>零資料保留（預設）</option><option value="standard">一般模式</option></select><p id="direct-privacy-note" class="note">零資料保留模式只使用符合條件的端點。</p>
-  <label for="direct-model">模型 ID</label><input id="direct-model" type="text" maxlength="200" list="direct-model-options" autocomplete="off" placeholder="例如 provider/model:free"><datalist id="direct-model-options"></datalist>
+  <label for="direct-model-options">選擇 OpenRouter 模型</label><select id="direct-model-options" disabled><option value="">請先取得模型清單</option></select>
+  <label for="direct-model">模型 ID（也可手動輸入）</label><input id="direct-model" type="text" maxlength="200" autocomplete="off" placeholder="例如 provider/model:free">
   <button id="direct-model-load" class="secondary" type="button">取得符合隱私模式的聊天模型清單</button><p id="direct-model-status" class="note" role="status">也可以直接輸入 OpenRouter 模型 ID。</p></div>
   <p id="agent-state" role="status"></p><p id="agent-error" class="error" role="alert"></p>
   <div class="input-row"><button id="agent-start" class="secondary" type="button">連線 Agent</button><button id="agent-apply" class="secondary" type="button">套用模型</button><button id="agent-stop" class="danger" type="button">停止此 Agent</button></div>
