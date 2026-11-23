@@ -1,4 +1,4 @@
-"""Explicit, finite, authenticated loopback server; no initialization or providers."""
+"""Explicit, authenticated foreground loopback server; no initialization."""
 import argparse
 from collections import deque
 import hashlib
@@ -93,7 +93,10 @@ class Console:
         self.lock = threading.RLock()
 
     def login(self, body):
-        shape(body, {'username', 'token'})
+        if isinstance(body, dict) and set(body) == {'username', 'token', 'close_other_sessions'}:
+            if type(body['close_other_sessions']) is not bool: raise Refused()
+        else:
+            shape(body, {'username', 'token'})
         now = time.monotonic()
         while self.failures and now - self.failures[0] >= 60:
             self.failures.popleft()
@@ -105,28 +108,23 @@ class Console:
         if not hmac.compare_digest(digest, user['token_sha256'] if user else '0' * 64):
             self.failures.append(now)
             raise Refused(401)
-        for sid, session in list(self.sessions.items()):
-            if now >= session['expires']:
-                self.close_session(sid)
         if self.closed:
             raise Refused(503)
+        if body.get('close_other_sessions', False):
+            for sid, session in list(self.sessions.items()):
+                if session['username'] == user['username']:
+                    self.close_session(sid)
         if len(self.sessions) >= 8:
             raise Refused(429)
         sid = secrets.token_urlsafe(32)
         session = dict(username=user['username'], role='viewer' if self.read_only else user['role'], csrf=secrets.token_urlsafe(32),
-                       expires=now + 900, plans={}, reports={})
-        timer = threading.Timer(max(0, session['expires'] - time.monotonic()), self.close_session, args=(sid,))
-        timer.daemon = True
-        session['timer'] = timer
+                       plans={}, reports={})
         self.sessions[sid] = session
-        timer.start()
         return sid, session
 
     def close_session(self, sid):
         with self.lock:
-            session = self.sessions.pop(sid, None)
-            if session:
-                session['timer'].cancel()
+            self.sessions.pop(sid, None)
             for agent in self.agent_sessions.pop(sid, {}).values():
                 agent.close()
 
@@ -295,7 +293,7 @@ class Handler(BaseHTTPRequestHandler):
                 "frame-ancestors 'none'; form-action 'self'", 'Connection': 'close'}.items():
             self.send_header(key, value)
         if cookie is not None:
-            self.send_header('Set-Cookie', self.server.cookie + '=' + cookie + '; Path=/; HttpOnly; SameSite=Strict; Max-Age=' + ('900' if cookie else '0'))
+            self.send_header('Set-Cookie', self.server.cookie + '=' + cookie + '; Path=/; HttpOnly; SameSite=Strict' + ('' if cookie else '; Max-Age=0'))
         self.end_headers()
         self.wfile.write(raw)
         self.close_connection = True
@@ -310,7 +308,7 @@ class Handler(BaseHTTPRequestHandler):
         morsel = jar.get(self.server.cookie)
         sid = morsel.value if morsel else ''
         session = self.server.app.sessions.get(sid)
-        if not session or time.monotonic() >= session['expires']:
+        if not session:
             self.server.app.close_session(sid)
             raise Refused(401)
         if self.command == 'POST' and not hmac.compare_digest(self.headers.get('X-CSRF-Token', ''), session['csrf']):
@@ -359,13 +357,17 @@ class Handler(BaseHTTPRequestHandler):
         elif self.headers.get('Content-Length') not in (None, '0'):
             raise Refused()
         app = self.server.app
-        if route == '/api/direct/models' and self.command == 'GET' and not parsed.query:
+        if route == '/api/direct/models' and self.command == 'GET':
             with app.lock:
                 if app.closed: raise Refused(503)
                 _, user = self.session()
                 if ROLES[user['role']] < 2: raise Refused(403)
+            query = parse_qs(parsed.query, keep_blank_values=True, max_num_fields=1, strict_parsing=True)
+            if not set(query) <= {'privacy'} or any(len(v) != 1 for v in query.values()): raise Refused()
+            privacy = query.get('privacy', ['zdr'])[0]
+            if privacy not in ('zdr', 'standard'): raise Refused()
             try:
-                return self.reply(200, {'models': catalog()})
+                return self.reply(200, {'models': catalog() if privacy == 'zdr' else catalog(privacy=privacy)})
             except Exception:
                 raise Refused(503) from None
         if route == '/api/monitor-health' and self.command == 'GET':
@@ -429,9 +431,16 @@ class Handler(BaseHTTPRequestHandler):
                 keys = {'/api/agent/start': {'agent'}, '/api/agent/model': {'agent', 'model'},
                         '/api/agent/prompt': {'agent', 'text'}, '/api/agent/permission': {'agent', 'choice'},
                         '/api/agent/stop': {'agent'}}[route]
-                if route == '/api/agent/start' and isinstance(body, dict) and body.get('agent') == 'direct' and set(body) == {'agent', 'api_key', 'model'}:
+                if (route == '/api/agent/start' and isinstance(body, dict) and body.get('agent') == 'direct'
+                        and set(body) in ({'agent', 'api_key', 'model'}, {'agent', 'api_key', 'model', 'privacy'})):
                     if not valid_key(body['api_key']) or not valid_model(body['model']): raise Refused()
-                    direct_config = {'key': body['api_key'], 'models': [body['model']]}
+                    privacy = body.get('privacy', 'zdr')
+                    if privacy not in ('zdr', 'standard'): raise Refused()
+                    direct_config = {'key': body['api_key'], 'models': [body['model']], 'privacy': privacy}
+                elif (route == '/api/agent/prompt' and isinstance(body, dict) and body.get('agent') == 'direct'):
+                    if set(body) == {'agent', 'text'}: raise Refused(409)
+                    shape(body, {'agent', 'text', 'instance_id', 'privacy', 'model'})
+                    direct_config = None
                 else:
                     shape(body, keys)
                     direct_config = None
@@ -445,14 +454,22 @@ class Handler(BaseHTTPRequestHandler):
                     if agent: agent.close()
                     sessions = app.agent_sessions.setdefault(sid, {})
                     if name == 'direct' and direct_config is not None:
-                        agent = AgentSession(name, app.p.root, deadline=session['expires'], direct_config=direct_config)
+                        agent = AgentSession(name, app.p.root, direct_config=direct_config)
                     else:
-                        agent = AgentSession(name, app.p.root, deadline=session['expires'])
+                        agent = AgentSession(name, app.p.root)
                     sessions[name] = agent
                 elif not agent: raise Refused(409)
                 elif route == '/api/agent/stop': agent.close()
                 elif route == '/api/agent/model': agent.select(body['model'])
-                elif route == '/api/agent/prompt': agent.prompt(body['text'])
+                elif route == '/api/agent/prompt':
+                    if name == 'direct':
+                        with agent.lock:
+                            if (not isinstance(body['instance_id'], str) or body['instance_id'] != agent.instance_id
+                                    or body['privacy'] != agent.privacy or body['model'] != agent.model):
+                                raise Refused(409)
+                            agent.prompt(body['text'])
+                    else:
+                        agent.prompt(body['text'])
                 else: agent.answer(body['choice'])
                 return self.reply(200, agent.snapshot())
             if route == '/api/view' and self.command == 'GET':
@@ -540,23 +557,27 @@ def main(argv=None):
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--handoff-config')
     parser.add_argument('--port', type=int, default=8765)
-    parser.add_argument('--duration', type=int, default=300)
+    parser.add_argument('--duration', type=int, default=0)
     args = parser.parse_args(argv)
-    if not 1024 <= args.port <= 65535 or not 10 <= args.duration <= 1800:
-        parser.error('Port or finite lifetime outside allowed range.')
-    server = None
+    if not 1024 <= args.port <= 65535 or not (args.duration == 0 or 10 <= args.duration <= 1800):
+        parser.error('Port or lifetime outside allowed range.')
+    server = timer = None
     try:
         p = ParallelController(StateController(args.db), args.repo, args.workspaces, args.project_id)
         server = Server(Console(p, args.auth_file, handoff=handoff_service(args.handoff_config, p)), args.port)
-        timer = threading.Timer(args.duration, server.shutdown); timer.daemon = True; timer.start()
+        if args.duration:
+            timer = threading.Timer(args.duration, server.shutdown); timer.daemon = True; timer.start()
         print(json.dumps(dict(origin=server.origin, duration=args.duration)), flush=True)
         server.serve_forever(poll_interval=0.25)
-        timer.cancel()
+        return 0
+    except KeyboardInterrupt:
         return 0
     except (OSError, ValueError, StateError):
         print('Local console configuration unavailable.', flush=True)
         return 2
     finally:
+        if timer is not None:
+            timer.cancel()
         if server is not None:
             server.server_close()
 

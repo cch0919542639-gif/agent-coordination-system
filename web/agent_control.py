@@ -84,18 +84,22 @@ class AgentSession:
     def __init__(self, agent, cwd, deadline=None, direct_config=None):
         self.agent = agent; self.cwd = str(cwd); self.lock = threading.RLock()
         self.direct_config = direct_config
+        self.privacy = (direct_config or {}).get('privacy', 'zdr') if agent == 'direct' else None
+        self.instance_id = secrets.token_urlsafe(24) if agent == 'direct' else None
         self.phase = 'starting'; self.error = None; self.models = []; self.model = None
         self.method = None; self.session = None; self.response = ''; self.activity = []; self.turn = 0
         self.permission = None; self.pending = {}; self.next_id = 1
         self.job = self.sock = self.listener = None; self.closed = False
         self.started = threading.Event()
-        remaining = 900 if deadline is None else max(0, min(900, deadline - time.monotonic()))
-        self.expiry = threading.Timer(remaining, self.close); self.expiry.daemon = True; self.expiry.start()
+        self.expiry = None
+        if deadline is not None:
+            self.expiry = threading.Timer(max(0, deadline - time.monotonic()), self.close)
+            self.expiry.daemon = True; self.expiry.start()
         threading.Thread(target=self._run, daemon=True).start()
 
     def snapshot(self):
         with self.lock:
-            return dict(agent=self.agent, phase=self.phase, error=self.error, models=list(self.models),
+            return dict(agent=self.agent, phase=self.phase, error=self.error, privacy=self.privacy, instance_id=self.instance_id, models=list(self.models),
                         model=self.model, response=self.response, activity=list(self.activity),
                         permission=self.permission and {k: self.permission[k] for k in ('title', 'details', 'options')})
 
@@ -318,7 +322,8 @@ class AgentSession:
             self.permission = None
 
     def close(self):
-        self.expiry.cancel()
+        if self.expiry is not None:
+            self.expiry.cancel()
         with self.lock:
             self.closed = True; self.phase = 'stopped'; self.permission = None
         self._cleanup()

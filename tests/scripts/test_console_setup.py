@@ -203,8 +203,25 @@ def test_broadened_login_file_permissions_refuse_without_mutation(config):
 def test_no_query_or_invalid_serve_creates_a_database(config):
     with pytest.raises(StateError): setup.serve(config['state_dir'], duration=9)
     with pytest.raises(StateError): setup.serve(config['state_dir'], duration=1801)
+    with pytest.raises(StateError): setup.serve(config['state_dir'], duration=-1)
     with pytest.raises(StateError): setup.serve(config['state_dir'], port=0)
     assert not Path(config['state_dir']).exists()
+
+
+def test_default_serve_runs_until_interrupted_and_closes(monkeypatch):
+    app = SimpleNamespace(p=object())
+    calls = []
+    class Server:
+        origin = 'http://127.0.0.1:8766'
+        def __init__(self, app, port): calls.append(('start', app.read_only, port))
+        def serve_forever(self, poll_interval): raise KeyboardInterrupt()
+        def server_close(self): calls.append(('closed',))
+    monkeypatch.setattr(setup, 'load', lambda _: app)
+    monkeypatch.setattr(setup, 'handoff_service', lambda *args: None)
+    monkeypatch.setattr(setup, 'Server', Server)
+    monkeypatch.setattr(setup.threading, 'Timer', lambda *args: pytest.fail('default must not create a shutdown timer'))
+    setup.serve('unused')
+    assert calls == [('start', False, 8766), ('closed',)]
 
 
 def test_busy_port_refuses_and_preserves_private_files(config):

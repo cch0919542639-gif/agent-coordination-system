@@ -1,3 +1,41 @@
+## Privacy and lifetime independent review (2026-11-22)
+
+Independent review of `1f4fb5a` found a cross-tab privacy race, orphaned-login
+session exhaustion, and a stale release manifest. The candidate binds direct
+prompts to the displayed session, model and privacy; adds explicit, authenticated
+same-account session recovery; and prepares separate current source pins. No
+automatic termination was restored. Independent re-review of `83c4a97` found all
+three issues resolved and no new actionable issue; 74 tests passed, one skipped.
+
+After the initial repair a six-suite regression passed 202 tests with one skip;
+the final model-binding change was then checked by four affected suites: 130 passed,
+one skipped. Three further tests passed, including real owned-process cleanup.
+An earlier regression exposed one UI-message assertion failure, which was fixed.
+No real provider request or private user session was used in these tests.
+
+## Manual console and session lifetime (2026-11-22)
+
+At the user's direction, both foreground console entry points default to manual
+shutdown, and login plus Agent sessions no longer have 15-minute timers. Logout,
+explicit Agent stop and server close still clean up owned sessions. Browser-session
+cookies may require login again after closing the browser; one-use action plans
+and individual network operations retain their bounded deadlines. Explicit finite
+server durations remain supported. Six affected suites passed 201 tests with one
+skip; final focused checks passed ten tests. No other running session was stopped.
+The tested commit `8251798` was cloned to a separate local installation. The
+existing user launcher was updated to use it without `--duration`; its foreground
+process served the console on port 8766. The candidate is local and unpublished.
+
+## Direct model privacy choice (2026-11-22)
+
+The user chose an explicit ordinary mode alongside the default zero-data-retention
+mode. The selected policy is bound to each direct-model session; ordinary mode
+does not override stricter OpenRouter account rules and may permit retention or
+training. The model catalogue filters for text chat and the selected policy.
+The affected regression passed 128 tests with one skip; after a final UI-only
+logout reset, the direct-model suite passed six tests. No real key or provider
+message was used in automated tests. Local user verification is pending.
+
 ## PR9 publication evidence/status closeout (2026-10-27)
 
 User-requested metadata fix bundles the accepted exact1d7b85b live transport/intake/
