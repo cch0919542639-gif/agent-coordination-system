@@ -9,10 +9,14 @@ import sys
 import threading
 import urllib.error
 import urllib.request
+from urllib.parse import urlsplit
 
 ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
 CATALOG = 'https://openrouter.ai/api/v1/endpoints/zdr'
 MODELS = 'https://openrouter.ai/api/v1/models'
+PROVIDERS = {'openrouter': 'https://openrouter.ai/api/v1',
+             'deepseek': 'https://api.deepseek.com',
+             'agnes': 'https://apihub.agnes-ai.com/v1'}
 
 # ponytail: at most one abandoned error-body reader per bridge process.
 _error_reader_slot = threading.BoundedSemaphore(1)
@@ -30,6 +34,33 @@ def valid_model(value):
 
 def valid_key(value):
     return isinstance(value, str) and bool(re.fullmatch(r'[!-~]{1,512}', value))
+
+
+def provider_endpoint(provider, base_url='', privacy='zdr'):
+    """Resolve a session-bound HTTPS endpoint; never accept embedded credentials."""
+    if not isinstance(provider, str) or not isinstance(base_url, str) or privacy not in ('zdr', 'standard'):
+        raise ValueError('invalid provider or privacy')
+    if provider == 'openrouter':
+        if base_url: raise ValueError('unexpected custom endpoint')
+        return PROVIDERS[provider]
+    if privacy != 'standard':
+        raise ValueError('zero retention routing is only available on OpenRouter')
+    if provider in PROVIDERS:
+        if base_url: raise ValueError('unexpected custom endpoint')
+        return PROVIDERS[provider]
+    if provider != 'custom' or not isinstance(base_url, str) or not 1 <= len(base_url) <= 512:
+        raise ValueError('invalid custom endpoint')
+    if any(ord(c) <= 32 or ord(c) >= 127 for c in base_url) or any(c in base_url for c in '\\?#'):
+        raise ValueError('invalid custom endpoint')
+    try:
+        parts = urlsplit(base_url)
+        if (parts.scheme != 'https' or not parts.hostname or parts.username is not None or
+                parts.password is not None or parts.query or parts.fragment or
+                parts.port == 0 or not re.fullmatch(r'/[A-Za-z0-9._~/-]*|', parts.path)):
+            raise ValueError('invalid custom endpoint')
+    except ValueError:
+        raise ValueError('invalid custom endpoint') from None
+    return base_url.rstrip('/')
 
 
 def model_ids():
@@ -69,14 +100,13 @@ def catalog(opener=None, privacy='zdr'):
     return sorted(result.values(), key=lambda x: x['id'])
 
 
-def complete(key, model, messages, opener=None, privacy='zdr'):
-    if privacy not in ('zdr', 'standard'):
-        raise ValueError('invalid privacy mode')
+def complete(key, model, messages, opener=None, privacy='zdr', provider='openrouter', base_url=''):
+    endpoint = provider_endpoint(provider, base_url, privacy) + '/chat/completions'
     payload = {'model': model, 'messages': messages, 'max_tokens': 4096}
-    if privacy == 'zdr':
+    if provider == 'openrouter' and privacy == 'zdr':
         payload['provider'] = {'zdr': True, 'data_collection': 'deny'}
     body = json.dumps(payload, ensure_ascii=False).encode('utf-8')
-    request = urllib.request.Request(ENDPOINT, data=body, method='POST',
+    request = urllib.request.Request(endpoint, data=body, method='POST',
         headers={'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json'})
     if opener is None:
         opener = urllib.request.build_opener(NoRedirect()).open
@@ -153,6 +183,11 @@ def main():
     sys.stdin.close()
     config = json.loads(raw_config)
     key, models, privacy = config.get('key'), config.get('models'), config.get('privacy', 'zdr')
+    provider, base_url = config.get('provider', 'openrouter'), config.get('base_url', '')
+    try:
+        provider_endpoint(provider, base_url, privacy)
+    except ValueError:
+        return 1
     if (not valid_key(key) or not isinstance(models, list) or not 1 <= len(models) <= 32
             or not all(valid_model(x) for x in models) or privacy not in ('zdr', 'standard')):
         return 1
@@ -200,7 +235,10 @@ def main():
                         pending = messages + [{'role': 'user', 'content': text}]
                         if sum(len(x['content']) for x in pending) > 100000:
                             raise ValueError('conversation too long')
-                        answer, finish = complete(key, model, pending, privacy=privacy)
+                        if provider == 'openrouter':
+                            answer, finish = complete(key, model, pending, privacy=privacy)
+                        else:
+                            answer, finish = complete(key, model, pending, privacy=privacy, provider=provider, base_url=base_url)
                         if finish == 'stop':
                             messages = pending + [{'role': 'assistant', 'content': answer}]
                         send({'jsonrpc': '2.0', 'method': 'session/update', 'params': {
@@ -212,7 +250,7 @@ def main():
                     send({'jsonrpc': '2.0', 'id': ident, 'result': result})
                 except Exception as error:
                     status = error.code if isinstance(error, urllib.error.HTTPError) else None
-                    reason = provider_404_reason(error, model) if method == 'session/prompt' else None
+                    reason = provider_404_reason(error, model) if method == 'session/prompt' and provider == 'openrouter' else None
                     send({'jsonrpc': '2.0', 'id': ident, 'error': {'status': status, 'reason': reason}})
 
 

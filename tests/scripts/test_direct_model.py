@@ -37,6 +37,36 @@ def test_provider_request_requires_private_routing_and_has_no_tools():
     assert direct.NoRedirect().redirect_request(None, None, 302, '', {}, 'https://elsewhere.invalid') is None
 
 
+def test_multi_provider_transport_and_validation():
+    captured = []
+    class Response:
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def read(self, size): return json.dumps({'choices':[{'message':{'content':'ok'},'finish_reason':'stop'}]}).encode()
+    def opener(req, timeout):
+        captured.append((req.full_url, json.loads(req.data), req.get_header('Authorization')))
+        return Response()
+    providers = [('deepseek', '', 'https://api.deepseek.com/chat/completions'),
+                 ('agnes', '', 'https://apihub.agnes-ai.com/v1/chat/completions'),
+                 ('custom', 'https://api.example.test/v1/', 'https://api.example.test/v1/chat/completions')]
+    for name, base, expected in providers:
+        assert direct.complete('fixture-key', 'example/model', [{'role':'user','content':'hello'}], opener,
+                               privacy='standard', provider=name, base_url=base) == ('ok', 'stop')
+        url, payload, auth = captured[-1]
+        assert url == expected and auth == 'Bearer fixture-key'
+        assert 'provider' not in payload and 'fixture-key' not in json.dumps(payload)
+        with pytest.raises(ValueError): direct.complete('fixture-key','m',[],opener, privacy='zdr', provider=name, base_url=base)
+    for bad in ('http://example.test/v1', 'https://name:password@example.test/v1',
+                'https://example.test/v1?key=secret', 'https://example.test/v1#fragment',
+                'https://example.test/v1?', 'https://example.test:99999/v1',
+                'https://example.test/space here', 'https://example.test/\\evil'):
+        with pytest.raises(ValueError): direct.provider_endpoint('custom', bad, 'standard')
+    for bad_provider, base, privacy in [('invalid','','standard'), ('deepseek','https://evil.test','standard'),
+                                         ('openrouter','https://evil.test','zdr'), ('custom','','standard'),
+                                         ('custom',[],'standard')]:
+        with pytest.raises(ValueError): direct.provider_endpoint(bad_provider,base,privacy)
+
+
 def test_provider_404_classification_is_bounded_and_never_forwards_untrusted_text():
     import io
     import urllib.error
@@ -155,7 +185,7 @@ const tick=()=>new Promise(r=>setImmediate(r));function reply(req,status,body){r
  assert(!get('agent-start').disabled);
  const running=get('agent-start').listeners.click();const post=requests.shift();
  assert.equal(post.path,'/api/agent/start');assert.equal(get('direct-key').value,'');
- assert.deepEqual(JSON.parse(post.opts.body),{agent:'direct',api_key:'fixture-key',model:'vendor/model:free',privacy:'zdr'});
+ assert.deepEqual(JSON.parse(post.opts.body),{agent:'direct',api_key:'fixture-key',model:'vendor/model:free',privacy:'zdr',provider:'openrouter'});
  reply(post,200,{phase:'starting',models:[],response:''});await running;
  reply(requests.shift(),200,{agents:[{id:'direct',name:'direct',installed:true}],sessions:{direct:{phase:'starting',models:[]}}});await tick();
  const loading=get('direct-model-load').listeners.click();const catalog=requests.shift();assert.equal(catalog.path,'/api/direct/models?privacy=zdr');
@@ -181,6 +211,23 @@ const tick=()=>new Promise(r=>setImmediate(r));function reply(req,status,body){r
  get('agent-prompt').value='hello';const sending=get('agent-prompt-form').listeners.submit({preventDefault(){}});
  const prompt=requests.shift();assert.deepEqual(JSON.parse(prompt.opts.body),{agent:'direct',text:'hello',instance_id:'snapshot-id',privacy:'standard',model:'vendor/ordinary:free'});
  reply(prompt,200,{phase:'running',privacy:'standard',instance_id:'snapshot-id',models:[]});await sending;
+ reply(requests.shift(),200,{agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'stopped',models:[]}}});await tick();
+ vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'stopped',models:[]}}})",ctx);
+ get('direct-key').value='old-fixture-key';get('direct-provider').value='deepseek';get('direct-provider').listeners.change();
+ assert.equal(get('direct-key').value,'');assert.equal(get('direct-privacy').value,'standard');
+ assert(get('direct-privacy').disabled);assert(get('direct-model-load').disabled);
+ assert(get('direct-privacy-note').textContent.includes('不提供'));
+ get('direct-model-options').value='deepseek-flash';get('direct-model-options').listeners.change();
+ assert.equal(get('direct-model').value,'deepseek-flash');
+ get('direct-provider').value='custom';get('direct-provider').listeners.change();
+ assert(!get('direct-base-field').hidden);get('direct-base-url').value='https://api.example.test/v1';
+ get('direct-model').value='custom-model';get('direct-key').value='fixture-key';
+ const customStart=get('agent-start').listeners.click(), customPost=requests.shift();
+ assert.deepEqual(JSON.parse(customPost.opts.body),{agent:'direct',api_key:'fixture-key',model:'custom-model',privacy:'standard',provider:'custom',base_url:'https://api.example.test/v1'});
+ assert.equal(get('direct-key').value,'');
+ reply(customPost,200,{phase:'starting',provider:'custom',base_url:'https://api.example.test/v1',privacy:'standard',models:[]});await customStart;
+ reply(requests.shift(),200,{agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',provider:'custom',base_url:'https://api.example.test/v1',privacy:'standard',models:[]}}});await tick();
+ assert.equal(get('direct-provider').value,'custom');assert(get('direct-provider').disabled);
  console.log('direct UI passed');
 })().catch(e=>{console.error(e);process.exitCode=1});
 ''', encoding='utf-8')
@@ -203,7 +250,7 @@ def test_direct_console_roundtrip_auth_model_history_and_owned_stop(console, tmp
 sys.path.insert(0,sys.argv.pop(1))
 from web import direct_model_bridge as bridge
 bridge.ERROR_BODY_WAIT_SECONDS=0.05
-def complete(key,model,messages,privacy='zdr'):
+def complete(key,model,messages,privacy='zdr',provider='openrouter',base_url=''):
     if messages[-1]['content']=='wait': time.sleep(60)
     if messages[-1]['content']=='fail': raise urllib.error.HTTPError('https://example.invalid',429,'private',None,None)
     if messages[-1]['content']=='privacy404':
@@ -225,7 +272,7 @@ def complete(key,model,messages,privacy='zdr'):
     if messages[-1]['content']=='unsafe404':
         body=json.dumps({'error':{'message':'private fixture-key https://secret.invalid'}}).encode()
         raise urllib.error.HTTPError('https://example.invalid',404,'private',None,io.BytesIO(body))
-    return model+':'+str(len(messages))+(':'+privacy if privacy!='zdr' else ''), 'stop'
+    return model+':'+str(len(messages))+(':'+privacy if privacy!='zdr' else '')+(':'+provider if provider!='openrouter' else ''), 'stop'
 bridge.complete=complete
 bridge.main()
 ''', encoding='utf-8')
@@ -244,6 +291,9 @@ bridge.main()
     assert request(console, '/api/agent/start', {**start, 'api_key': 'bad\nkey'}, admin)[0] == 400
     assert request(console, '/api/agent/start', start, admin, headers={'X-CSRF-Token': 'wrong'})[0] == 403
     assert request(console, '/api/agent/start', {**start, 'privacy': 'bad'}, admin)[0] == 400
+    assert request(console, '/api/agent/start', {**start, 'provider': 'deepseek', 'privacy': 'zdr'}, admin)[0] == 400
+    assert request(console, '/api/agent/start', {**start, 'provider': 'custom', 'privacy': 'standard', 'base_url': 'http://example.test'}, admin)[0] == 400
+    assert request(console, '/api/agent/start', {**start, 'provider': 'deepseek', 'privacy': 'standard', 'base_url': 'https://evil.test'}, admin)[0] == 400
     assert request(console, '/api/agent/start', start, admin)[0] == 200
     def wait(phase, response=None):
         deadline = time.monotonic() + 20
@@ -296,6 +346,16 @@ bridge.main()
     wait('ready', 'vendor/a:free:1:standard')
     assert request(console, '/api/agent/stop', {'agent': 'direct'}, admin)[0] == 200
     assert identity_state(pid, created) in ('missing', 'exited')
+    for provider, base in [('deepseek',''), ('agnes',''), ('custom','https://api.example.test/v1')]:
+        payload = {**start, 'provider':provider, 'privacy':'standard'}
+        if base: payload['base_url'] = base
+        assert request(console, '/api/agent/start', payload, admin)[0] == 200
+        current = wait('ready')
+        assert current['provider'] == provider and current['base_url'] == base and current['privacy'] == 'standard'
+        assert 'fixture-key' not in json.dumps(current)
+        assert prompt('hello', current) == 200
+        wait('ready', 'vendor/a:free:1:standard:' + provider)
+        assert request(console, '/api/agent/stop', {'agent':'direct'}, admin)[0] == 200
     monkeypatch.setenv('COORDINATION_OPENROUTER_API_KEY', 'fixture-key')
     monkeypatch.setenv('COORDINATION_DIRECT_MODELS', 'vendor/a:free')
     assert request(console, '/api/agent/start', {'agent': 'direct'}, admin)[0] == 200

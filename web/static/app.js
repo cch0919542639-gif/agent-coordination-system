@@ -19,6 +19,9 @@ let timer = null, pending = null, generation = 0, plan = null, actionBusy = fals
 function node(tag, content, cls) { const n = document.createElement(tag); if (content !== undefined) n.textContent = content; if (cls) n.className = cls; return n; }
 function showError(message) { $('error').textContent = message; }
 function showPrivacyNote() {
+  if (($('direct-provider').value || 'openrouter') !== 'openrouter') {
+    $('direct-privacy-note').textContent = '此供應商的資料保留政策由供應商決定；主控台不提供或驗證零資料保留路由。'; return;
+  }
   $('direct-privacy-note').textContent = $('direct-privacy').value === 'standard'
     ? '一般模式不要求零資料保留或拒絕資料收集；內容可能依供應商政策被保存或用於訓練。'
     : '零資料保留模式只使用符合條件的端點。';
@@ -46,7 +49,7 @@ function signedOut() {
   agentSnapshot = null; agentSignature = ''; permissionSignature = ''; agentActionError = ''; agentActionMessage = ''; agentPromptSent = {};
   for (const id of ['agent-prompt','agent-response','agent-activity','agent-permission-title','agent-permission-details','agent-error','agent-current']) $(id).textContent = '';
   $('agent-prompt').value = ''; $('agent-permission').hidden = true; $('agent-permission-options').replaceChildren(); $('agent-model').replaceChildren();
-  $('direct-key').value = ''; $('direct-model').value = ''; resetDirectModels();
+  $('direct-key').value = ''; $('direct-model').value = ''; $('direct-provider').value = 'openrouter'; $('direct-base-url').value = ''; $('direct-base-field').hidden = true; resetDirectModels();
   $('direct-privacy').value = 'zdr'; $('direct-privacy-note').textContent = '零資料保留模式只使用符合條件的端點。';
   $('close-other-sessions').checked = false;
   $('direct-model-status').textContent = '也可以直接輸入 OpenRouter 模型 ID。';
@@ -184,15 +187,24 @@ function renderAgents(data) {
   $('agent-prompt').maxLength = name === 'direct' ? 50000 : 8000;
   const phase = state ? state.phase : 'offline', admin = session.role === 'administrator';
   if (name === 'direct' && state?.privacy && !['failed','stopped'].includes(phase)) {
+    const provider = state.provider || 'openrouter';
+    if (($('direct-provider').value || 'openrouter') !== provider) {
+      $('direct-provider').value = provider; $('direct-key').value = ''; resetDirectModels();
+    }
+    if (provider === 'custom') $('direct-base-url').value = state.base_url || '';
+    $('direct-base-field').hidden = provider !== 'custom';
     if ($('direct-privacy').value !== state.privacy) {
       resetDirectModels();
       $('direct-model-status').textContent = '隱私模式已變更，請重新取得模型清單或手動輸入 ID。';
     }
     $('direct-privacy').value = state.privacy; showPrivacyNote();
   }
-  $('direct-privacy').disabled = !admin || agentBusy || !['offline','failed','stopped'].includes(phase);
+  const directProvider = $('direct-provider').value || 'openrouter';
+  $('direct-provider').disabled = !admin || agentBusy || !['offline','failed','stopped'].includes(phase);
+  $('direct-base-url').disabled = $('direct-provider').disabled;
+  $('direct-privacy').disabled = directProvider !== 'openrouter' || !admin || agentBusy || !['offline','failed','stopped'].includes(phase);
   if (name === 'direct' && state?.model && !$('direct-model').value) $('direct-model').value = state.model;
-  $('direct-model-load').disabled = !admin;
+  $('direct-model-load').disabled = !admin || directProvider !== 'openrouter';
   $('connection').textContent = '本機 Agent 工作階段'; $('updated').textContent = '更新於 ' + new Date().toLocaleTimeString('zh-TW');
   $('agent-inventory').textContent = (data.agents || []).map(a => `${a.name}：${(data.sessions || {})[a.id]?.phase || (a.id === 'direct' ? (a.installed ? '已設定' : '未設定') : (a.installed ? '已安裝' : '未安裝'))}`).join(' · ');
   $('agent-role-note').hidden = admin;
@@ -206,7 +218,7 @@ function renderAgents(data) {
     for (const item of state?.models || []) { const opt = node('option',item.name); opt.value = item.id; $('agent-model').append(opt); }
     if ((state?.models || []).some(x => x.id === state?.model)) $('agent-model').value = state.model;
   }
-  const directReady = name !== 'direct' || (!!$('direct-key').value && !!$('direct-model').value.trim()) || found?.configured;
+  const directReady = name !== 'direct' || (!!$('direct-key').value && !!$('direct-model').value.trim() && (directProvider !== 'custom' || !!$('direct-base-url').value.trim())) || (directProvider === 'openrouter' && found?.configured);
   $('agent-start').disabled = !admin || agentBusy || !found?.installed || !directReady || !['offline','failed','stopped'].includes(phase);
   $('agent-apply').disabled = !admin || agentBusy || phase !== 'ready' || !(state?.models || []).length;
   $('agent-send').disabled = !admin || agentBusy || phase !== 'ready' || !state?.model;
@@ -283,9 +295,26 @@ $('agent-kind').addEventListener('change', () => { agentSignature = ''; agentAct
 $('agent-start').addEventListener('click', async () => {
   if ($('agent-kind').value !== 'direct' || (!$('direct-key').value && !$('direct-model').value.trim())) { await agentAction('start'); return; }
   const api_key = $('direct-key').value, model = $('direct-model').value.trim(), privacy = $('direct-privacy').value || 'zdr';
+  const provider = $('direct-provider').value || 'openrouter';
+  const extra = {api_key, model, privacy, provider};
+  if (provider === 'custom') extra.base_url = $('direct-base-url').value.trim();
   $('direct-key').value = '';
-  await agentAction('start', {api_key, model, privacy});
+  await agentAction('start', extra);
 });
+$('direct-provider').addEventListener('change', () => {
+  const provider = $('direct-provider').value;
+  $('direct-key').value = ''; $('direct-model').value = ''; $('direct-base-url').value = '';
+  $('direct-base-field').hidden = provider !== 'custom';
+  $('direct-privacy').value = provider === 'openrouter' ? 'zdr' : 'standard';
+  resetDirectModels();
+  const examples = {deepseek:['deepseek-flash', 'deepseek-v4-pro'], agnes:['agnes-2.5-flash']};
+  for (const model of examples[provider] || []) { const opt = node('option', model); opt.value = model; $('direct-model-options').append(opt); }
+  if (examples[provider]) { $('direct-model-options').disabled = false; $('direct-model-options').children[0].textContent = '請選擇範例或輸入模型 ID'; }
+  if (provider === 'custom') $('direct-model-options').children[0].textContent = '自訂供應商請手動輸入模型 ID';
+  $('direct-model-status').textContent = provider === 'openrouter' ? '請取得 OpenRouter 模型清單。' : provider === 'custom' ? '請手動輸入供應商提供的模型 ID。' : '請選擇範例或輸入供應商提供的模型 ID。';
+  showPrivacyNote(); if (agentSnapshot) renderAgents(agentSnapshot);
+});
+$('direct-base-url').addEventListener('input', () => { if (agentSnapshot) renderAgents(agentSnapshot); });
 $('direct-key').addEventListener('input', () => { if (agentSnapshot) renderAgents(agentSnapshot); });
 $('direct-model').addEventListener('input', () => {
   if ($('direct-model-options').value !== $('direct-model').value) $('direct-model-options').value = '';
@@ -307,12 +336,13 @@ $('direct-privacy').addEventListener('change', () => {
   showPrivacyNote();
 });
 $('direct-model-load').addEventListener('click', async () => {
+  if (($('direct-provider').value || 'openrouter') !== 'openrouter') return;
   const button = $('direct-model-load'), current = ++directCatalogGeneration; button.disabled = true;
   $('direct-model-status').textContent = '正在取得模型清單…';
   try {
     const privacy = $('direct-privacy').value || 'zdr';
     const data = await api('/api/direct/models?privacy=' + encodeURIComponent(privacy));
-    if (current !== directCatalogGeneration || ($('direct-privacy').value || 'zdr') !== privacy) return;
+    if (current !== directCatalogGeneration || ($('direct-provider').value || 'openrouter') !== 'openrouter' || ($('direct-privacy').value || 'zdr') !== privacy) return;
     const select = $('direct-model-options'), placeholder = node('option', '請選擇模型');
     placeholder.value = ''; select.replaceChildren(placeholder);
     for (const item of data.models) { const opt = node('option', `${item.id}（${item.free ? '免費模型' : '可能收費'}）`); opt.value = item.id; select.append(opt); }

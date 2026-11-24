@@ -1,3 +1,15 @@
+## Multi-provider direct model (2026-11-24)
+
+Added OpenRouter, DeepSeek, Agnes AI and custom HTTPS OpenAI-compatible endpoints.
+Provider and endpoint are bound to each session; OpenRouter remains the sole
+provider with enforced ZDR routing. Other providers disclose that their retention
+policy is not verified by the console. Key changes are not persisted.
+The direct, web-console and agent-control suites passed 118 tests with one skip;
+isolated browser fixture verified provider selection and custom endpoint display.
+An expanded run had two monitor startup failures; both also failed on the unchanged
+installed baseline, with a Windows sharing error and startup timeout observed.
+No live DeepSeek, Agnes or custom API credential was used. Review remains pending.
+
 ## Safe direct-model 404 explanations (2026-11-24)
 
 Provider 404 bodies are read with a size limit and mapped only from recognized

@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from worker_process_guard import GuardError, JobProcess
 
-AGENTS = {'opencode': 'OpenCode', 'hermes': 'Hermes', 'direct': '直接模型（OpenRouter）'}
+AGENTS = {'opencode': 'OpenCode', 'hermes': 'Hermes', 'direct': '直接模型'}
 
 DIRECT_404_REASONS = {
     'privacy_policy': '供應商表示沒有符合資料隱私政策的端點；請檢查零資料保留與帳號隱私設定，或選擇其他模型。',
@@ -93,6 +93,8 @@ class AgentSession:
         self.agent = agent; self.cwd = str(cwd); self.lock = threading.RLock()
         self.direct_config = direct_config
         self.privacy = (direct_config or {}).get('privacy', 'zdr') if agent == 'direct' else None
+        self.provider = (direct_config or {}).get('provider', 'openrouter') if agent == 'direct' else None
+        self.base_url = (direct_config or {}).get('base_url', '') if agent == 'direct' else None
         self.instance_id = secrets.token_urlsafe(24) if agent == 'direct' else None
         self.phase = 'starting'; self.error = None; self.models = []; self.model = None
         self.method = None; self.session = None; self.response = ''; self.activity = []; self.turn = 0
@@ -107,7 +109,7 @@ class AgentSession:
 
     def snapshot(self):
         with self.lock:
-            return dict(agent=self.agent, phase=self.phase, error=self.error, privacy=self.privacy, instance_id=self.instance_id, models=list(self.models),
+            return dict(agent=self.agent, phase=self.phase, error=self.error, privacy=self.privacy, provider=self.provider, base_url=self.base_url, instance_id=self.instance_id, models=list(self.models),
                         model=self.model, response=self.response, activity=list(self.activity),
                         permission=self.permission and {k: self.permission[k] for k in ('title', 'details', 'options')})
 
@@ -250,7 +252,7 @@ class AgentSession:
                     return
                 if self.session:
                     self.error = 'Agent 請求失敗' + detail + '。'
-                    if self.agent == 'direct' and kind == 'prompt' and status == 404 and isinstance(error, dict):
+                    if self.agent == 'direct' and self.provider == 'openrouter' and kind == 'prompt' and status == 404 and isinstance(error, dict):
                         reason = error.get('reason')
                         self.error += DIRECT_404_REASONS.get(reason, '') if isinstance(reason, str) else ''
                         if not isinstance(reason, str) or reason not in DIRECT_404_REASONS:
