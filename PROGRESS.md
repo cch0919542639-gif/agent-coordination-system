@@ -1,3 +1,11 @@
+## Safe direct-model 404 explanations (2026-11-24)
+
+Provider 404 bodies are read with a size limit and mapped only from recognized
+messages to fixed privacy, model, endpoint, region or price explanations. Unknown
+or unsafe text is never shown; generic guidance is retained. Isolated affected
+suites passed 116 tests with one skip. Review remains pending; the current running
+console has not been interrupted or updated.
+
 ## Explicit OpenRouter model picker (2026-11-24)
 
 The user reported that the input suggestion list did not appear. An explicit
