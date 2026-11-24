@@ -112,11 +112,18 @@ const tick=()=>new Promise(r=>setImmediate(r));function reply(req,status,body){r
  assert.equal(get('direct-model-options').children[1].value,'vendor/model:free');
  assert(!get('direct-model-options').disabled);get('direct-model-options').value='vendor/model:free';get('direct-model-options').listeners.change();
  assert.equal(get('direct-model').value,'vendor/model:free');
+ get('direct-model').value='vendor/manual';get('direct-model').listeners.input();assert.equal(get('direct-model-options').value,'');
  get('direct-privacy').value='standard';get('direct-privacy').listeners.change();
  assert(get('direct-privacy-note').textContent.includes('可能'));assert(get('direct-model-options').disabled);assert.equal(get('direct-model-options').children.length,1);
  const loading2=get('direct-model-load').listeners.click();const catalog2=requests.shift();assert.equal(catalog2.path,'/api/direct/models?privacy=standard');
  reply(catalog2,200,{models:[{id:'vendor/ordinary:free',free:true}]});await loading2;
  assert.equal(get('direct-model-options').children[1].value,'vendor/ordinary:free');
+ const stale=get('direct-model-load').listeners.click(), staleRequest=requests.shift();
+ vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'zdr',model:'vendor/model:free',models:[]}}})",ctx);
+ assert.equal(get('direct-privacy').value,'zdr');assert(get('direct-model-options').disabled);
+ vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',model:'vendor/ordinary:free',models:[]}}})",ctx);
+ reply(staleRequest,200,{models:[{id:'vendor/stale',free:true}]});await stale;
+ assert(get('direct-model-options').disabled);assert.equal(get('direct-model-options').children.length,1);
  vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',instance_id:'snapshot-id',model:'vendor/ordinary:free',models:[]}}})",ctx);
  assert.equal(get('direct-privacy').value,'standard');assert(get('direct-privacy').disabled);
  assert(get('direct-privacy-note').textContent.includes('可能'));
