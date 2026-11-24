@@ -3,14 +3,20 @@ import http.client
 import json
 import os
 import re
+import queue
 import socket
 import sys
+import threading
 import urllib.error
 import urllib.request
 
 ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
 CATALOG = 'https://openrouter.ai/api/v1/endpoints/zdr'
 MODELS = 'https://openrouter.ai/api/v1/models'
+
+# ponytail: at most one abandoned error-body reader per bridge process.
+_error_reader_slot = threading.BoundedSemaphore(1)
+ERROR_BODY_WAIT_SECONDS = 2
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -89,15 +95,35 @@ def provider_404_reason(error, model):
     """Map known bounded OpenRouter messages to fixed non-sensitive codes."""
     if not isinstance(error, urllib.error.HTTPError) or error.code != 404:
         return None
+    if not _error_reader_slot.acquire(blocking=False):
+        return None
+    result = queue.Queue(maxsize=1)
+    def read_body():
+        try:
+            raw = error.read(16385)
+        except Exception:
+            raw = None
+        finally:
+            try:
+                error.close()
+            except Exception:
+                pass
+            _error_reader_slot.release()
+        result.put_nowait(raw)
     try:
-        raw = error.read(16385)
-        if len(raw) > 16384:
+        threading.Thread(target=read_body, daemon=True).start()
+    except Exception:
+        _error_reader_slot.release()
+        return None
+    try:
+        raw = result.get(timeout=ERROR_BODY_WAIT_SECONDS)
+        if not isinstance(raw, bytes) or len(raw) > 16384:
             return None
         data = json.loads(raw)
         message = data['error']['message']
         if not isinstance(message, str):
             return None
-    except (ValueError, TypeError, KeyError, OSError, AttributeError, RecursionError, http.client.HTTPException):
+    except (ValueError, TypeError, KeyError, OSError, AttributeError, RecursionError, http.client.HTTPException, queue.Empty):
         return None
     # Only complete known messages are recognized; never forward provider text.
     if message in (

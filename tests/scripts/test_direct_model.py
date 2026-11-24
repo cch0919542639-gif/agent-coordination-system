@@ -61,6 +61,33 @@ def test_provider_404_classification_is_bounded_and_never_forwards_untrusted_tex
     assert classify(body('other/model is not a valid model ID')) is None
 
 
+def test_slow_404_body_has_deadline_and_limits_concurrent_readers(monkeypatch):
+    import io
+    import threading
+    import urllib.error
+
+    started, release, closed = threading.Event(), threading.Event(), threading.Event()
+    class SlowBody:
+        def read(self, size):
+            started.set()
+            release.wait(5)
+            return b'{}'
+        def close(self): closed.set()
+    monkeypatch.setattr(direct, 'ERROR_BODY_WAIT_SECONDS', 0.05)
+    error = urllib.error.HTTPError('https://invalid.example', 404, '', None, SlowBody())
+    then = time.monotonic()
+    try:
+        assert direct.provider_404_reason(error, 'vendor/model') is None
+        assert started.is_set() and time.monotonic() - then < 1
+        second = urllib.error.HTTPError('https://invalid.example', 404, '', None, io.BytesIO(b'{}'))
+        then = time.monotonic()
+        assert direct.provider_404_reason(second, 'vendor/model') is None
+        assert time.monotonic() - then < 0.5
+    finally:
+        release.set()
+        assert closed.wait(2)
+
+
 def test_direct_inventory_requires_key_and_valid_models(monkeypatch):
     monkeypatch.delenv('COORDINATION_OPENROUTER_API_KEY', raising=False)
     monkeypatch.setenv('COORDINATION_DIRECT_MODELS', 'vendor/a:free, bad model, vendor/a:free')
@@ -175,12 +202,18 @@ def test_direct_console_roundtrip_auth_model_history_and_owned_stop(console, tmp
     bridge.write_text('''import io,json,sys,time,urllib.error
 sys.path.insert(0,sys.argv.pop(1))
 from web import direct_model_bridge as bridge
+bridge.ERROR_BODY_WAIT_SECONDS=0.05
 def complete(key,model,messages,privacy='zdr'):
     if messages[-1]['content']=='wait': time.sleep(60)
     if messages[-1]['content']=='fail': raise urllib.error.HTTPError('https://example.invalid',429,'private',None,None)
     if messages[-1]['content']=='privacy404':
         body=json.dumps({'error':{'message':'No endpoints found matching your data policy (Zero data retention).'}}).encode()
         raise urllib.error.HTTPError('https://example.invalid',404,'private',None,io.BytesIO(body))
+    if messages[-1]['content']=='slow404':
+        class Slow:
+            def read(self, size): time.sleep(1); return b'{}'
+            def close(self): pass
+        raise urllib.error.HTTPError('https://example.invalid',404,'private',None,Slow())
     if messages[-1]['content']=='deep404':
         raise urllib.error.HTTPError('https://example.invalid',404,'private',None,io.BytesIO(b'[' * 8000 + b'0' + b']' * 8000))
     if messages[-1]['content']=='incomplete404':
@@ -244,7 +277,7 @@ bridge.main()
     assert prompt('unsafe404', changed) == 200
     fallback = 'Agent 請求失敗（HTTP 404）。無法安全辨識供應商原因；請檢查模型 ID、隱私政策與端點可用性。'
     assert wait('ready')['error'] == fallback
-    for broken in ('deep404', 'incomplete404'):
+    for broken in ('deep404', 'incomplete404', 'slow404'):
         assert prompt(broken, changed) == 200
         assert wait('ready')['error'] == fallback
     assert prompt('still working', changed) == 200
