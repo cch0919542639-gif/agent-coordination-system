@@ -22,7 +22,7 @@ from coordination_runtime.resource_guard import ResourceController
 from coordination_runtime.state_controller import StateController, StateError, _id, _integer
 from .read_model import ReadModel
 from .agent_control import AgentSession, AGENTS, inventory
-from .direct_model_bridge import catalog, model_ids, valid_key, valid_model
+from .direct_model_bridge import catalog, model_ids, provider_endpoint, valid_key, valid_model
 from . import codex_report
 
 VIEWS = {'overview', 'board', 'monitor', 'workspaces', 'reviews', 'events', 'settings', 'handoff'}
@@ -432,14 +432,27 @@ class Handler(BaseHTTPRequestHandler):
                         '/api/agent/prompt': {'agent', 'text'}, '/api/agent/permission': {'agent', 'choice'},
                         '/api/agent/stop': {'agent'}}[route]
                 if (route == '/api/agent/start' and isinstance(body, dict) and body.get('agent') == 'direct'
-                        and set(body) in ({'agent', 'api_key', 'model'}, {'agent', 'api_key', 'model', 'privacy'})):
+                        and set(body) in ({'agent', 'api_key', 'model'}, {'agent', 'api_key', 'model', 'privacy'},
+                                          {'agent', 'api_key', 'model', 'privacy', 'provider'},
+                                          {'agent', 'api_key', 'model', 'privacy', 'provider', 'base_url'})):
                     if not valid_key(body['api_key']) or not valid_model(body['model']): raise Refused()
-                    privacy = body.get('privacy', 'zdr')
-                    if privacy not in ('zdr', 'standard'): raise Refused()
-                    direct_config = {'key': body['api_key'], 'models': [body['model']], 'privacy': privacy}
+                    privacy, provider = body.get('privacy', 'zdr'), body.get('provider', 'openrouter')
+                    base_url = body.get('base_url', '')
+                    try: provider_endpoint(provider, base_url, privacy)
+                    except ValueError: raise Refused()
+                    direct_config = {'key': body['api_key'], 'models': [body['model']], 'privacy': privacy,
+                                     'provider': provider, 'base_url': base_url}
+                elif (route == '/api/agent/model' and isinstance(body, dict) and body.get('agent') == 'direct'):
+                    if set(body) == {'agent', 'model'}: raise Refused(409)
+                    shape(body, {'agent', 'model', 'instance_id', 'privacy', 'provider', 'base_url', 'current_model'})
+                    direct_config = None
                 elif (route == '/api/agent/prompt' and isinstance(body, dict) and body.get('agent') == 'direct'):
-                    if set(body) == {'agent', 'text'}: raise Refused(409)
-                    shape(body, {'agent', 'text', 'instance_id', 'privacy', 'model'})
+                    if set(body) in ({'agent', 'text'}, {'agent', 'text', 'instance_id', 'privacy', 'model'}): raise Refused(409)
+                    shape(body, {'agent', 'text', 'instance_id', 'privacy', 'model', 'provider', 'base_url'})
+                    direct_config = None
+                elif route == '/api/agent/stop' and isinstance(body, dict) and body.get('agent') == 'direct':
+                    if set(body) == {'agent'}: raise Refused(409)
+                    shape(body, {'agent', 'instance_id', 'provider', 'base_url'})
                     direct_config = None
                 else:
                     shape(body, keys)
@@ -459,13 +472,29 @@ class Handler(BaseHTTPRequestHandler):
                         agent = AgentSession(name, app.p.root)
                     sessions[name] = agent
                 elif not agent: raise Refused(409)
-                elif route == '/api/agent/stop': agent.close()
-                elif route == '/api/agent/model': agent.select(body['model'])
+                elif route == '/api/agent/stop':
+                    if name == 'direct':
+                        with agent.lock:
+                            if (body['instance_id'] != agent.instance_id or body['provider'] != agent.provider
+                                    or body['base_url'] != agent.base_url): raise Refused(409)
+                            agent.close()
+                    else: agent.close()
+                elif route == '/api/agent/model':
+                    if name == 'direct':
+                        with agent.lock:
+                            if (not isinstance(body['instance_id'], str) or body['instance_id'] != agent.instance_id
+                                    or body['privacy'] != agent.privacy or body['provider'] != agent.provider
+                                    or body['base_url'] != agent.base_url or body['current_model'] != agent.model):
+                                raise Refused(409)
+                            agent.select(body['model'])
+                    else:
+                        agent.select(body['model'])
                 elif route == '/api/agent/prompt':
                     if name == 'direct':
                         with agent.lock:
                             if (not isinstance(body['instance_id'], str) or body['instance_id'] != agent.instance_id
-                                    or body['privacy'] != agent.privacy or body['model'] != agent.model):
+                                    or body['privacy'] != agent.privacy or body['model'] != agent.model
+                                    or body['provider'] != agent.provider or body['base_url'] != agent.base_url):
                                 raise Refused(409)
                             agent.prompt(body['text'])
                     else:

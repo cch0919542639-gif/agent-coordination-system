@@ -250,6 +250,21 @@ class JobProcess:
         checked(self.api.QueryInformationJobObject(self.job, 1, C.byref(value), C.sizeof(value), None), "job_query_failed")
         return value.active
 
+    def owns_pid(self, pid):
+        """Only a live member of this retained Job is an owned process."""
+        if not self.job or type(pid) is not int or not 0 < pid <= 0xFFFFFFFF:
+            return False
+        handle = self.api.OpenProcess(0x101000, False, pid)
+        if not handle:
+            return False
+        try:
+            inside = W.BOOL()
+            return (self.api.WaitForSingleObject(handle, 0) == 258
+                    and bool(self.api.IsProcessInJob(handle, self.job, C.byref(inside)))
+                    and bool(inside.value))
+        finally:
+            self.api.CloseHandle(handle)
+
     def retain_members(self):
         # Retain real Job member handles before termination; never kill a reopened PID.
         self.members_exited()

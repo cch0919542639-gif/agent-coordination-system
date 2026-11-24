@@ -19,14 +19,14 @@
   <div class="panel-heading"><h2 id="agent-title">Agent 工作階段</h2><span class="badge">手動啟動</span></div>
   <p>使用 Agent 原生登入與提供者設定。OpenCode 工具命令會直接執行，不逐項詢問；設定於重新連線後生效。Hermes 新連線使用精簡工具：讀寫、修補及搜尋檔案、終端與程序管理；不載入其他工具或 MCP，背景程序不接受互動輸入。Hermes 偵測為危險的命令須逐次授權，其他命令可能直接執行；這不是作業系統沙箱。Hermes 請使用模型選單切換；來源核對僅涵蓋主模型的提供者與端點，未驗證帳號身分。原生自動標題或對話壓縮等輔助功能可能依設定將內容傳送給其他提供者，未經此核對。實際用量與資料政策由提供者決定。</p>
   <p id="agent-inventory" class="note"></p><p id="agent-role-note" class="note" hidden>需要 Administrator 登入才能啟動與操作。</p>
-  <p>直接模型使用 OpenRouter 金鑰，只傳送文字、不執行工具。金鑰只供本次工作階段使用，不會儲存。模型服務可能收費，送出前請確認模型與內容。</p>
-  <div class="form-grid"><div><label for="agent-kind">Agent</label><select id="agent-kind"><option value="opencode">OpenCode</option><option value="hermes">Hermes</option><option value="direct">直接模型（OpenRouter）</option></select></div>
+  <p>直接模型只傳送文字、不執行工具。請使用所選供應商的 API Key；金鑰僅供本次工作階段使用，不會儲存。自訂網址會收到金鑰與訊息，請確認網址可信。模型服務可能收費。</p>
+  <div class="form-grid"><div><label for="agent-kind">Agent</label><select id="agent-kind"><option value="opencode">OpenCode</option><option value="hermes">Hermes</option><option value="direct">直接模型</option></select></div>
   <div id="agent-model-field"><label for="agent-model">提供者／模型</label><select id="agent-model"></select></div></div>
-  <div id="direct-config" hidden><label for="direct-key">OpenRouter API Key</label><input id="direct-key" type="password" maxlength="512" autocomplete="off" spellcheck="false">
+  <div id="direct-config" hidden><label for="direct-provider">模型供應商</label><select id="direct-provider"><option value="openrouter">OpenRouter</option><option value="deepseek">DeepSeek</option><option value="agnes">Agnes AI</option><option value="custom">自訂 OpenAI 相容 API</option></select><div id="direct-base-field" hidden><label for="direct-base-url">自訂 API 基底網址（HTTPS）</label><input id="direct-base-url" type="url" maxlength="512" autocomplete="off" placeholder="https://example.com/v1"></div><label for="direct-key">所選供應商的 API Key</label><input id="direct-key" type="password" maxlength="512" autocomplete="off" spellcheck="false">
   <label for="direct-privacy">資料隱私模式</label><select id="direct-privacy"><option value="zdr" selected>零資料保留（預設）</option><option value="standard">一般模式</option></select><p id="direct-privacy-note" class="note">零資料保留模式只使用符合條件的端點。</p>
-  <label for="direct-model-options">選擇 OpenRouter 模型</label><select id="direct-model-options" disabled><option value="">請先取得模型清單</option></select>
+  <label for="direct-model-options">選擇模型</label><select id="direct-model-options" disabled><option value="">請先取得模型清單</option></select>
   <label for="direct-model">模型 ID（也可手動輸入）</label><input id="direct-model" type="text" maxlength="200" autocomplete="off" placeholder="例如 provider/model:free">
-  <button id="direct-model-load" class="secondary" type="button">取得符合隱私模式的聊天模型清單</button><p id="direct-model-status" class="note" role="status">也可以直接輸入 OpenRouter 模型 ID。</p></div>
+  <button id="direct-model-load" class="secondary" type="button">取得 OpenRouter 模型清單</button><p id="direct-model-status" class="note" role="status">也可以直接輸入所選供應商的模型 ID。</p></div>
   <p id="agent-state" role="status"></p><p id="agent-error" class="error" role="alert"></p>
   <div class="input-row"><button id="agent-start" class="secondary" type="button">連線 Agent</button><button id="agent-apply" class="secondary" type="button">套用模型</button><button id="agent-stop" class="danger" type="button">停止此 Agent</button></div>
   <p id="agent-current" class="note"></p>

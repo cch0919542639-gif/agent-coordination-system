@@ -17,7 +17,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from worker_process_guard import GuardError, JobProcess
 
-AGENTS = {'opencode': 'OpenCode', 'hermes': 'Hermes', 'direct': '直接模型（OpenRouter）'}
+DIRECT_PROMPT_TIMEOUT_SECONDS = 100
+
+AGENTS = {'opencode': 'OpenCode', 'hermes': 'Hermes', 'direct': '直接模型'}
 
 DIRECT_404_REASONS = {
     'privacy_policy': '供應商表示沒有符合資料隱私政策的端點；請檢查零資料保留與帳號隱私設定，或選擇其他模型。',
@@ -93,11 +95,14 @@ class AgentSession:
         self.agent = agent; self.cwd = str(cwd); self.lock = threading.RLock()
         self.direct_config = direct_config
         self.privacy = (direct_config or {}).get('privacy', 'zdr') if agent == 'direct' else None
+        self.provider = (direct_config or {}).get('provider', 'openrouter') if agent == 'direct' else None
+        self.base_url = (direct_config or {}).get('base_url', '') if agent == 'direct' else None
         self.instance_id = secrets.token_urlsafe(24) if agent == 'direct' else None
         self.phase = 'starting'; self.error = None; self.models = []; self.model = None
         self.method = None; self.session = None; self.response = ''; self.activity = []; self.turn = 0
         self.permission = None; self.pending = {}; self.next_id = 1
         self.job = self.sock = self.listener = None; self.closed = False
+        self.prompt_timer = None
         self.started = threading.Event()
         self.expiry = None
         if deadline is not None:
@@ -107,7 +112,7 @@ class AgentSession:
 
     def snapshot(self):
         with self.lock:
-            return dict(agent=self.agent, phase=self.phase, error=self.error, privacy=self.privacy, instance_id=self.instance_id, models=list(self.models),
+            return dict(agent=self.agent, phase=self.phase, error=self.error, privacy=self.privacy, provider=self.provider, base_url=self.base_url, instance_id=self.instance_id, models=list(self.models),
                         model=self.model, response=self.response, activity=list(self.activity),
                         permission=self.permission and {k: self.permission[k] for k in ('title', 'details', 'options')})
 
@@ -239,6 +244,8 @@ class AgentSession:
             pending = self.pending.pop(msg.get('id'), None)
             if not pending: return
             kind, supplied = pending
+            if kind == 'prompt' and getattr(self, 'prompt_timer', None):
+                self.prompt_timer.cancel(); self.prompt_timer = None
             if 'error' in msg:
                 error = msg.get('error') or {}
                 # Do not expose raw provider errors, which may contain credentials or paths.
@@ -250,7 +257,7 @@ class AgentSession:
                     return
                 if self.session:
                     self.error = 'Agent 請求失敗' + detail + '。'
-                    if self.agent == 'direct' and kind == 'prompt' and status == 404 and isinstance(error, dict):
+                    if self.agent == 'direct' and self.provider == 'openrouter' and kind == 'prompt' and status == 404 and isinstance(error, dict):
                         reason = error.get('reason')
                         self.error += DIRECT_404_REASONS.get(reason, '') if isinstance(reason, str) else ''
                         if not isinstance(reason, str) or reason not in DIRECT_404_REASONS:
@@ -327,6 +334,16 @@ class AgentSession:
                 raise StateError('Use the model selector to switch Hermes models.')
             self.response = ''; self.activity = []; self.error = None; self.phase = 'running'; self.turn += 1
             self._request('session/prompt', dict(sessionId=self.session, prompt=[dict(type='text', text=text)]), 'prompt')
+            if self.agent == 'direct':
+                self.prompt_timer = threading.Timer(DIRECT_PROMPT_TIMEOUT_SECONDS, self._prompt_timeout, args=(self.turn,))
+                self.prompt_timer.daemon = True; self.prompt_timer.start()
+
+    def _prompt_timeout(self, turn):
+        with self.lock:
+            if self.closed or self.phase != 'running' or self.turn != turn: return
+            self.closed = True; self.phase = 'failed'; self.prompt_timer = None
+            self.error = '直接模型請求逾時；工作階段已停止，請重新連線。'
+        self._cleanup()
 
     def answer(self, choice):
         with self.lock:
@@ -343,6 +360,8 @@ class AgentSession:
 
     def _cleanup(self):
         with self.lock:
+            if getattr(self, 'prompt_timer', None):
+                self.prompt_timer.cancel(); self.prompt_timer = None
             sock, job, listener = self.sock, self.job, self.listener
             self.sock = self.job = self.listener = None
         if sock:
