@@ -15,6 +15,7 @@ let session = null, view = 'overview', offset = 0, cursor = 0, eventRows = [];
 let handoffSnapshot = null, handoffSignature = '';
 let agentSnapshot = null, agentSignature = '', permissionSignature = '', agentBusy = false, agentActionError = '', agentActionMessage = '';
 let agentPromptSent = {}, directCatalogGeneration = 0, directRenderedInstance = '';
+let teamRows = [], teamBusy = false;
 let timer = null, pending = null, generation = 0, plan = null, actionBusy = false, revision = 0, authGeneration = 0;
 function node(tag, content, cls) { const n = document.createElement(tag); if (content !== undefined) n.textContent = content; if (cls) n.className = cls; return n; }
 function showError(message) { $('error').textContent = message; }
@@ -51,6 +52,9 @@ function signedOut() {
   $('agent-prompt').value = ''; $('agent-permission').hidden = true; $('agent-permission-options').replaceChildren(); $('agent-model').replaceChildren();
   $('direct-key').value = ''; $('direct-model').value = ''; $('direct-provider').value = 'openrouter'; $('direct-base-url').value = ''; $('direct-base-field').hidden = true; resetDirectModels();
   $('direct-privacy').value = 'zdr'; $('direct-privacy-note').textContent = '零資料保留模式只使用符合條件的端點。';
+  for (const row of teamRows) row.key.value = '';
+  teamRows = []; $('team-workers').replaceChildren();
+  $('team-results').replaceChildren(); $('team-summary').textContent = ''; $('team-task').value = '';
   $('close-other-sessions').checked = false;
   $('direct-model-status').textContent = '也可以直接輸入 OpenRouter 模型 ID。';
   clearPlan(); $('console').hidden = true; $('login').hidden = false; $('token').value = '';
@@ -181,6 +185,7 @@ async function refresh() {
 }
 function renderAgents(data) {
   agentSnapshot = data;
+  renderTeam(data.team);
   if (!$('codex-thread').value && data.codex_thread) $('codex-thread').value = data.codex_thread;
   const name = $('agent-kind').value, found = (data.agents || []).find(a => a.id === name), state = (data.sessions || {})[name];
   $('direct-config').hidden = name !== 'direct'; $('agent-model-field').hidden = name === 'direct';
@@ -294,6 +299,59 @@ async function operation(path, body) {
   } catch (error) { if (currentRevision === revision && currentSession === session) { clearPlan(); $('action-message').textContent = error.message; } }
   finally { actionBusy = false; }
 }
+function addTeamWorker() {
+  if (teamRows.length >= 4) return;
+  const index = teamRows.length + 1, box = node('fieldset');
+  box.append(node('legend', index === 1 ? '模型 1 · 規劃與彙整' : `模型 ${index}`));
+  let fieldIndex = 0;
+  function field(label, control) { const title = node('label', label); control.id = `team-worker-${index}-${++fieldIndex}`; title.htmlFor = control.id; box.append(title, control); }
+  const provider = node('select');
+  for (const [value, label] of [['openrouter','OpenRouter'],['deepseek','DeepSeek'],['agnes','Agnes AI'],['custom','自訂 OpenAI 相容 API']]) {
+    const option = node('option',label); option.value = value; provider.append(option);
+  }
+  const base = node('input'); base.type = 'url'; base.placeholder = '自訂 HTTPS API 基底網址';
+  const model = node('input'); model.placeholder = '模型 ID'; model.maxLength = 200;
+  const key = node('input'); key.type = 'password'; key.autocomplete = 'off'; key.maxLength = 512;
+  const privacy = node('select');
+  for (const [value,label] of [['zdr','零資料保留（OpenRouter）'],['standard','一般模式']]) { const option=node('option',label); option.value=value; privacy.append(option); }
+  field('供應商', provider); field('自訂 API 基底網址（僅自訂供應商）', base); field('模型 ID', model); field('API Key', key); field('隱私模式', privacy);
+  provider.addEventListener('change', () => { key.value = ''; privacy.disabled = provider.value !== 'openrouter'; if (privacy.disabled) privacy.value = 'standard'; });
+  teamRows.push({provider,base,model,key,privacy}); $('team-workers').append(box);
+}
+function renderTeam(team) {
+  if (!teamRows.length) { addTeamWorker(); addTeamWorker(); }
+  const active = team && ['starting','planning','running','summarizing'].includes(team.phase);
+  $('team-start').disabled = session.role !== 'administrator' || teamBusy || active;
+  $('team-add').disabled = session.role !== 'administrator' || teamBusy || active || teamRows.length >= 4;
+  $('team-stop').disabled = session.role !== 'administrator' || teamBusy || !active;
+  $('team-status').textContent = team ? ({starting:'正在連線模型',planning:'正在拆分任務',running:'各模型執行中',summarizing:'正在彙整',done:'已完成',failed:'任務未完全成功',stopped:'已停止'})[team.phase] + (team.error ? '：' + team.error : '') : '尚未執行';
+  $('team-results').replaceChildren(); $('team-summary').textContent = team?.summary || '';
+  for (const [i,row] of (team?.assignments || []).entries()) {
+    const box=node('section'); box.append(node('h4', `模型 ${i+1} · ${row.provider} · ${row.model} · ${row.phase}`), node('p',row.task || '等待分工'),node('pre',row.result || row.error || ''));
+    $('team-results').append(box);
+  }
+}
+$('team-add').addEventListener('click', () => { addTeamWorker(); if (agentSnapshot) renderTeam(agentSnapshot.team); });
+$('team-start').addEventListener('click', async () => {
+  if (teamBusy || !session) return;
+  const workers = teamRows.map(row => ({provider:row.provider.value || 'openrouter', base_url:row.provider.value === 'custom' ? row.base.value.trim() : '', model:row.model.value.trim(), api_key:row.key.value, privacy:row.privacy.value || 'zdr'}));
+  if (!workers.every(row => row.model && row.api_key && (row.provider !== 'custom' || row.base_url))) { $('team-status').textContent = '請填寫每個模型的供應商、模型 ID 和 API Key。'; return; }
+  teamBusy = true; const current = session;
+  try {
+    const result = await api('/api/team/start', {task:$('team-task').value, workers});
+    for (const row of teamRows) row.key.value = '';
+    if (current !== session) return;
+    if (agentSnapshot) agentSnapshot.team = result;
+    renderTeam(result); refresh();
+  } catch (error) { if (current === session) $('team-status').textContent = error.message; }
+  finally { teamBusy = false; if (agentSnapshot && current === session) { const message = $('team-status').textContent; renderTeam(agentSnapshot.team); if (message && !agentSnapshot.team) $('team-status').textContent = message; } }
+});
+$('team-stop').addEventListener('click', async () => {
+  if (teamBusy) return; teamBusy = true;
+  try { const result = await api('/api/team/stop', {instance_id:agentSnapshot?.team?.instance_id}); if (agentSnapshot) agentSnapshot.team = result; renderTeam(result); }
+  catch (error) { $('team-status').textContent = error.message; }
+  finally { teamBusy = false; if (agentSnapshot) renderTeam(agentSnapshot.team); }
+});
 $('login-form').addEventListener('submit', async event => { event.preventDefault(); const attempt = ++authGeneration, button = event.submitter; button.disabled = true; try { const data = await api('/api/login',{username:$('username').value,token:$('token').value,close_other_sessions:$('close-other-sessions').checked}); if (attempt === authGeneration) signedIn(data); } catch(error) { if (attempt === authGeneration) $('login-error').textContent = error.message; } finally { button.disabled = false; } });
 $('logout').addEventListener('click', async () => { try { await api('/api/logout',{}); signedOut(); } catch(error) { showError(error.message); } });
 $('agent-kind').addEventListener('change', () => { agentSignature = ''; agentActionError = ''; if (agentSnapshot) renderAgents(agentSnapshot); });

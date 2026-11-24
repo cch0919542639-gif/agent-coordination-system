@@ -18,6 +18,12 @@
  <section id="agent-panel" class="panel" hidden aria-labelledby="agent-title">
   <div class="panel-heading"><h2 id="agent-title">Agent 工作階段</h2><span class="badge">手動啟動</span></div>
   <p>使用 Agent 原生登入與提供者設定。OpenCode 工具命令會直接執行，不逐項詢問；設定於重新連線後生效。Hermes 新連線使用精簡工具：讀寫、修補及搜尋檔案、終端與程序管理；不載入其他工具或 MCP，背景程序不接受互動輸入。Hermes 偵測為危險的命令須逐次授權，其他命令可能直接執行；這不是作業系統沙箱。Hermes 請使用模型選單切換；來源核對僅涵蓋主模型的提供者與端點，未驗證帳號身分。原生自動標題或對話壓縮等輔助功能可能依設定將內容傳送給其他提供者，未經此核對。實際用量與資料政策由提供者決定。</p>
+  <section aria-labelledby="team-title"><h3 id="team-title">多模型自動分工（純文字）</h3>
+  <p>設定 2 至 4 個模型；第一個模型負責拆分和彙整。送出後會向各供應商傳送總任務及分工內容，可能產生費用。模型不能讀取檔案或執行命令，回覆需自行核對。</p>
+  <div id="team-workers"></div><button id="team-add" type="button" class="secondary">增加模型</button>
+  <label for="team-task">總任務</label><textarea id="team-task" rows="4" maxlength="8000"></textarea>
+  <div class="input-row"><button id="team-start" type="button" class="primary">自動拆分並執行</button><button id="team-stop" type="button" class="danger">停止多模型任務</button></div>
+  <p id="team-status" role="status"></p><div id="team-results"></div><h4>彙整結果</h4><pre id="team-summary"></pre></section>
   <p id="agent-inventory" class="note"></p><p id="agent-role-note" class="note" hidden>需要 Administrator 登入才能啟動與操作。</p>
   <p>直接模型只傳送文字、不執行工具。請使用所選供應商的 API Key；金鑰僅供本次工作階段使用，不會儲存。自訂網址會收到金鑰與訊息，請確認網址可信。模型服務可能收費。</p>
   <div class="form-grid"><div><label for="agent-kind">Agent</label><select id="agent-kind"><option value="opencode">OpenCode</option><option value="hermes">Hermes</option><option value="direct">直接模型</option></select></div>
