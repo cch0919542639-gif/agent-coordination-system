@@ -19,6 +19,14 @@ from worker_process_guard import GuardError, JobProcess
 
 AGENTS = {'opencode': 'OpenCode', 'hermes': 'Hermes', 'direct': '直接模型（OpenRouter）'}
 
+DIRECT_404_REASONS = {
+    'privacy_policy': '供應商表示沒有符合資料隱私政策的端點；請檢查零資料保留與帳號隱私設定，或選擇其他模型。',
+    'data_region': '供應商表示沒有符合資料地區限制的端點；請檢查帳號或工作區的地區設定。',
+    'price_limit': '供應商表示沒有符合價格上限的端點；請檢查帳號或請求的價格限制。',
+    'model_not_found': '供應商找不到此模型 ID；請重新取得清單並確認模型是否停用或改名。',
+    'no_endpoints': '供應商表示目前找不到此模型的可用端點；請檢查模型或路由設定後再試。',
+}
+
 
 def response_status(value):
     if isinstance(value, dict):
@@ -242,6 +250,11 @@ class AgentSession:
                     return
                 if self.session:
                     self.error = 'Agent 請求失敗' + detail + '。'
+                    if self.agent == 'direct' and kind == 'prompt' and status == 404 and isinstance(error, dict):
+                        reason = error.get('reason')
+                        self.error += DIRECT_404_REASONS.get(reason, '') if isinstance(reason, str) else ''
+                        if not isinstance(reason, str) or reason not in DIRECT_404_REASONS:
+                            self.error += '無法安全辨識供應商原因；請檢查模型 ID、隱私政策與端點可用性。'
                 else:
                     self.error = self.error or 'Agent 連線失敗' + detail + '；請稍候後重新連線。'
                 self.phase = 'ready' if self.session else 'failed'

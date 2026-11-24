@@ -37,6 +37,57 @@ def test_provider_request_requires_private_routing_and_has_no_tools():
     assert direct.NoRedirect().redirect_request(None, None, 302, '', {}, 'https://elsewhere.invalid') is None
 
 
+def test_provider_404_classification_is_bounded_and_never_forwards_untrusted_text():
+    import io
+    import urllib.error
+
+    def classify(payload, status=404, model='vendor/model'):
+        body = payload if isinstance(payload, bytes) else json.dumps(payload).encode()
+        error = urllib.error.HTTPError('https://invalid.example/secret', status, 'private', None, io.BytesIO(body))
+        return direct.provider_404_reason(error, model)
+
+    def body(message): return {'error': {'message': message}}
+    assert classify(body('No endpoints found matching your data policy (Zero data retention). Configure: https://openrouter.ai/settings/privacy')) == 'privacy_policy'
+    assert classify(body('No endpoints found supporting your data region.')) == 'data_region'
+    assert classify(body('No endpoints found that satisfy the max price for this request')) == 'price_limit'
+    assert classify(body('vendor/model is not a valid model ID')) == 'model_not_found'
+    assert classify(body('No endpoint found for model "vendor/model"')) == 'no_endpoints'
+    for payload in (b'bad json', b'x' * 16385, b'[' * 8000 + b'0' + b']' * 8000, {}, {'error': None},
+                    body('No endpoints found matching your data policy. secret-key'),
+                    body('vendor/model is not a valid model ID secret-key'),
+                    body('No endpoints found for private prompt secret-key')):
+        assert classify(payload) is None
+    assert classify(body('No endpoints found.'), status=429) is None
+    assert classify(body('other/model is not a valid model ID')) is None
+
+
+def test_slow_404_body_has_deadline_and_limits_concurrent_readers(monkeypatch):
+    import io
+    import threading
+    import urllib.error
+
+    started, release, closed = threading.Event(), threading.Event(), threading.Event()
+    class SlowBody:
+        def read(self, size):
+            started.set()
+            release.wait(5)
+            return b'{}'
+        def close(self): closed.set()
+    monkeypatch.setattr(direct, 'ERROR_BODY_WAIT_SECONDS', 0.05)
+    error = urllib.error.HTTPError('https://invalid.example', 404, '', None, SlowBody())
+    then = time.monotonic()
+    try:
+        assert direct.provider_404_reason(error, 'vendor/model') is None
+        assert started.is_set() and time.monotonic() - then < 1
+        second = urllib.error.HTTPError('https://invalid.example', 404, '', None, io.BytesIO(b'{}'))
+        then = time.monotonic()
+        assert direct.provider_404_reason(second, 'vendor/model') is None
+        assert time.monotonic() - then < 0.5
+    finally:
+        release.set()
+        assert closed.wait(2)
+
+
 def test_direct_inventory_requires_key_and_valid_models(monkeypatch):
     monkeypatch.delenv('COORDINATION_OPENROUTER_API_KEY', raising=False)
     monkeypatch.setenv('COORDINATION_DIRECT_MODELS', 'vendor/a:free, bad model, vendor/a:free')
@@ -148,12 +199,32 @@ def test_direct_console_roundtrip_auth_model_history_and_owned_stop(console, tmp
     monkeypatch.delenv('COORDINATION_DIRECT_MODELS', raising=False)
     bridge = tmp_path / 'web' / 'direct_model_bridge.py'
     bridge.parent.mkdir()
-    bridge.write_text('''import sys,time,urllib.error
+    bridge.write_text('''import io,json,sys,time,urllib.error
 sys.path.insert(0,sys.argv.pop(1))
 from web import direct_model_bridge as bridge
+bridge.ERROR_BODY_WAIT_SECONDS=0.05
 def complete(key,model,messages,privacy='zdr'):
     if messages[-1]['content']=='wait': time.sleep(60)
     if messages[-1]['content']=='fail': raise urllib.error.HTTPError('https://example.invalid',429,'private',None,None)
+    if messages[-1]['content']=='privacy404':
+        body=json.dumps({'error':{'message':'No endpoints found matching your data policy (Zero data retention).'}}).encode()
+        raise urllib.error.HTTPError('https://example.invalid',404,'private',None,io.BytesIO(body))
+    if messages[-1]['content']=='slow404':
+        class Slow:
+            def read(self, size): time.sleep(1); return b'{}'
+            def close(self): pass
+        raise urllib.error.HTTPError('https://example.invalid',404,'private',None,Slow())
+    if messages[-1]['content']=='deep404':
+        raise urllib.error.HTTPError('https://example.invalid',404,'private',None,io.BytesIO(b'[' * 8000 + b'0' + b']' * 8000))
+    if messages[-1]['content']=='incomplete404':
+        import http.client
+        class Incomplete:
+            def read(self, size): raise http.client.IncompleteRead(b'partial')
+            def close(self): pass
+        raise urllib.error.HTTPError('https://example.invalid',404,'private',None,Incomplete())
+    if messages[-1]['content']=='unsafe404':
+        body=json.dumps({'error':{'message':'private fixture-key https://secret.invalid'}}).encode()
+        raise urllib.error.HTTPError('https://example.invalid',404,'private',None,io.BytesIO(body))
     return model+':'+str(len(messages))+(':'+privacy if privacy!='zdr' else ''), 'stop'
 bridge.complete=complete
 bridge.main()
@@ -201,6 +272,16 @@ bridge.main()
     wait('ready', 'vendor/b:free:1')
     assert prompt('fail', changed) == 200
     assert wait('ready')['error'] == 'Agent 請求失敗（HTTP 429）。'
+    assert prompt('privacy404', changed) == 200
+    assert wait('ready')['error'] == 'Agent 請求失敗（HTTP 404）。' + agent_control.DIRECT_404_REASONS['privacy_policy']
+    assert prompt('unsafe404', changed) == 200
+    fallback = 'Agent 請求失敗（HTTP 404）。無法安全辨識供應商原因；請檢查模型 ID、隱私政策與端點可用性。'
+    assert wait('ready')['error'] == fallback
+    for broken in ('deep404', 'incomplete404', 'slow404'):
+        assert prompt(broken, changed) == 200
+        assert wait('ready')['error'] == fallback
+    assert prompt('still working', changed) == 200
+    wait('ready', 'vendor/b:free:3')
     agent = console['app'].agent_sessions[admin['sid']]['direct']
     pid, created = agent.job.pid, agent.job.creation_time
     assert prompt('wait', changed) == 200

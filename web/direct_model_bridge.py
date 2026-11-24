@@ -1,15 +1,22 @@
 """Owned text-only OpenRouter session; no tools, retries, or provider fallback policy changes."""
+import http.client
 import json
 import os
 import re
+import queue
 import socket
 import sys
+import threading
 import urllib.error
 import urllib.request
 
 ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
 CATALOG = 'https://openrouter.ai/api/v1/endpoints/zdr'
 MODELS = 'https://openrouter.ai/api/v1/models'
+
+# ponytail: at most one abandoned error-body reader per bridge process.
+_error_reader_slot = threading.BoundedSemaphore(1)
+ERROR_BODY_WAIT_SECONDS = 2
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -84,6 +91,61 @@ def complete(key, model, messages, opener=None, privacy='zdr'):
     return text, choice.get('finish_reason')
 
 
+def provider_404_reason(error, model):
+    """Map known bounded OpenRouter messages to fixed non-sensitive codes."""
+    if not isinstance(error, urllib.error.HTTPError) or error.code != 404:
+        return None
+    if not _error_reader_slot.acquire(blocking=False):
+        return None
+    result = queue.Queue(maxsize=1)
+    def read_body():
+        try:
+            raw = error.read(16385)
+        except Exception:
+            raw = None
+        finally:
+            try:
+                error.close()
+            except Exception:
+                pass
+            _error_reader_slot.release()
+        result.put_nowait(raw)
+    try:
+        threading.Thread(target=read_body, daemon=True).start()
+    except Exception:
+        _error_reader_slot.release()
+        return None
+    try:
+        raw = result.get(timeout=ERROR_BODY_WAIT_SECONDS)
+        if not isinstance(raw, bytes) or len(raw) > 16384:
+            return None
+        data = json.loads(raw)
+        message = data['error']['message']
+        if not isinstance(message, str):
+            return None
+    except (ValueError, TypeError, KeyError, OSError, AttributeError, RecursionError, http.client.HTTPException, queue.Empty):
+        return None
+    # Only complete known messages are recognized; never forward provider text.
+    if message in (
+        'No endpoints found matching your data policy (Zero data retention).',
+        'No endpoints found matching your data policy (Zero data retention). Configure: https://openrouter.ai/settings/privacy',
+        'No endpoints found matching your data policy.',
+        'No endpoints found matching your data policy. Configure: https://openrouter.ai/settings/privacy',
+    ):
+        return 'privacy_policy'
+    if message == 'No endpoints found supporting your data region.':
+        return 'data_region'
+    if message == 'No endpoints found that satisfy the max price for this request':
+        return 'price_limit'
+    if message in (f'{model} is not a valid model ID', f'{model} is not a valid model ID.',
+                   f'No model found for "{model}"', f'No model found for "{model}".'):
+        return 'model_not_found'
+    if message in ('No endpoints found', 'No endpoints found.', 'No endpoints found for this model.',
+                   f'No endpoint found for model "{model}"', f'No endpoint found for model "{model}".'):
+        return 'no_endpoints'
+    return None
+
+
 def main():
     port, token = sys.argv[1:]
     os.environ.pop('COORDINATION_OPENROUTER_API_KEY', None)
@@ -150,7 +212,8 @@ def main():
                     send({'jsonrpc': '2.0', 'id': ident, 'result': result})
                 except Exception as error:
                     status = error.code if isinstance(error, urllib.error.HTTPError) else None
-                    send({'jsonrpc': '2.0', 'id': ident, 'error': {'status': status}})
+                    reason = provider_404_reason(error, model) if method == 'session/prompt' else None
+                    send({'jsonrpc': '2.0', 'id': ident, 'error': {'status': status, 'reason': reason}})
 
 
 if __name__ == '__main__':
