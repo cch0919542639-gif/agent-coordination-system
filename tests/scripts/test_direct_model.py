@@ -52,7 +52,7 @@ def test_provider_404_classification_is_bounded_and_never_forwards_untrusted_tex
     assert classify(body('No endpoints found that satisfy the max price for this request')) == 'price_limit'
     assert classify(body('vendor/model is not a valid model ID')) == 'model_not_found'
     assert classify(body('No endpoint found for model "vendor/model"')) == 'no_endpoints'
-    for payload in (b'bad json', b'x' * 16385, {}, {'error': None},
+    for payload in (b'bad json', b'x' * 16385, b'[' * 8000 + b'0' + b']' * 8000, {}, {'error': None},
                     body('No endpoints found matching your data policy. secret-key'),
                     body('vendor/model is not a valid model ID secret-key'),
                     body('No endpoints found for private prompt secret-key')):
@@ -181,6 +181,14 @@ def complete(key,model,messages,privacy='zdr'):
     if messages[-1]['content']=='privacy404':
         body=json.dumps({'error':{'message':'No endpoints found matching your data policy (Zero data retention).'}}).encode()
         raise urllib.error.HTTPError('https://example.invalid',404,'private',None,io.BytesIO(body))
+    if messages[-1]['content']=='deep404':
+        raise urllib.error.HTTPError('https://example.invalid',404,'private',None,io.BytesIO(b'[' * 8000 + b'0' + b']' * 8000))
+    if messages[-1]['content']=='incomplete404':
+        import http.client
+        class Incomplete:
+            def read(self, size): raise http.client.IncompleteRead(b'partial')
+            def close(self): pass
+        raise urllib.error.HTTPError('https://example.invalid',404,'private',None,Incomplete())
     if messages[-1]['content']=='unsafe404':
         body=json.dumps({'error':{'message':'private fixture-key https://secret.invalid'}}).encode()
         raise urllib.error.HTTPError('https://example.invalid',404,'private',None,io.BytesIO(body))
@@ -234,7 +242,13 @@ bridge.main()
     assert prompt('privacy404', changed) == 200
     assert wait('ready')['error'] == 'Agent 請求失敗（HTTP 404）。' + agent_control.DIRECT_404_REASONS['privacy_policy']
     assert prompt('unsafe404', changed) == 200
-    assert wait('ready')['error'] == 'Agent 請求失敗（HTTP 404）。無法安全辨識供應商原因；請檢查模型 ID、隱私政策與端點可用性。'
+    fallback = 'Agent 請求失敗（HTTP 404）。無法安全辨識供應商原因；請檢查模型 ID、隱私政策與端點可用性。'
+    assert wait('ready')['error'] == fallback
+    for broken in ('deep404', 'incomplete404'):
+        assert prompt(broken, changed) == 200
+        assert wait('ready')['error'] == fallback
+    assert prompt('still working', changed) == 200
+    wait('ready', 'vendor/b:free:3')
     agent = console['app'].agent_sessions[admin['sid']]['direct']
     pid, created = agent.job.pid, agent.job.creation_time
     assert prompt('wait', changed) == 200

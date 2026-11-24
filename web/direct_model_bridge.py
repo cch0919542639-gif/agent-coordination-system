@@ -1,4 +1,5 @@
 """Owned text-only OpenRouter session; no tools, retries, or provider fallback policy changes."""
+import http.client
 import json
 import os
 import re
@@ -96,7 +97,7 @@ def provider_404_reason(error, model):
         message = data['error']['message']
         if not isinstance(message, str):
             return None
-    except (ValueError, TypeError, KeyError, OSError, AttributeError):
+    except (ValueError, TypeError, KeyError, OSError, AttributeError, RecursionError, http.client.HTTPException):
         return None
     # Only complete known messages are recognized; never forward provider text.
     if message in (
