@@ -67,6 +67,66 @@ def test_health_requires_owned_read_only_proof(console):
     assert not monitor.healthy(port, os.getpid(), secret)
 
 
+@pytest.mark.skipif(os.name != 'nt', reason='Windows owned Jobs')
+def test_health_requires_valid_proof_and_live_job_member(console):
+    secret = 'a' * 64
+    console['app'].read_only = True
+    console['app'].monitor_health_secret = secret
+    port = console['server'].server_port
+    child = JobProcess([sys.executable, '-c', 'import time; time.sleep(30)'], cwd=ROOT)
+    try:
+        child.resume()
+        assert child.owns_pid(child.pid)
+        assert not child.owns_pid(os.getpid())
+        assert not child.owns_pid(True)
+        assert monitor.health_pid(port, secret, child.owns_pid) is None
+        assert monitor.health_pid(port, 'b' * 64, lambda pid: True) is None
+        assert monitor.health_pid(port, secret, lambda pid: True) == os.getpid()
+        assert monitor.health_pid(port, secret, lambda pid: (_ for _ in ()).throw(GuardError('failed'))) is None
+    finally:
+        child.stop()
+        child.close()
+    assert not child.owns_pid(child.pid)
+
+
+def test_status_retries_sharing_denial_and_fails_closed(tmp_path, monkeypatch):
+    import contextlib
+    attempts = []
+    def read(path):
+        attempts.append(path)
+        if len(attempts) < 3:
+            raise PermissionError('sharing denial')
+        return {'phase': 'stopped'}
+    monkeypatch.setattr(monitor, 'read_json', read)
+    monkeypatch.setattr(monitor, 'owner_lock', lambda root: contextlib.nullcontext())
+    monkeypatch.setattr(monitor.time, 'sleep', lambda delay: None)
+    assert monitor.status(tmp_path)['phase'] == 'stopped'
+    assert len(attempts) == 3
+    def denied(path):
+        attempts.append(path)
+        raise PermissionError('persistent denial')
+    attempts.clear()
+    monkeypatch.setattr(monitor, 'read_json', denied)
+    with pytest.raises(PermissionError):
+        monitor.status(tmp_path)
+    assert len(attempts) == 20
+
+
+def test_job_membership_api_failures_are_rejected():
+    from types import SimpleNamespace
+    child = JobProcess.__new__(JobProcess)
+    child.job = 1
+    closed = []
+    child.api = SimpleNamespace(OpenProcess=lambda *args: 0)
+    assert not child.owns_pid(123)
+    child.api = SimpleNamespace(OpenProcess=lambda *args: 2,
+                                WaitForSingleObject=lambda *args: 258,
+                                IsProcessInJob=lambda *args: 0,
+                                CloseHandle=closed.append)
+    assert not child.owns_pid(123)
+    assert closed == [2]
+
+
 def test_foreign_http_200_cannot_report_monitor_healthy():
     class Foreign(http.server.BaseHTTPRequestHandler):
         def do_GET(self):
@@ -101,6 +161,7 @@ def test_supervisor_never_marks_foreign_service_running(tmp_path, monkeypatch):
         def log_message(self, *args): pass
     class Child:
         pid = 123
+        def owns_pid(self, pid): return False
         def wait(self, timeout): raise subprocess.TimeoutExpired('fixture', timeout)
         def stop(self): pass
         def close(self): pass

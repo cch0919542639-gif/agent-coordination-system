@@ -1,3 +1,17 @@
+## Multi-provider independent review and monitor repair (2026-11-24)
+
+Independent review identified stale-page provider/session confusion and a
+missing total request deadline; the candidate now binds direct operations to
+the displayed session and provider and bounds individual prompts. Independent
+re-review found no new blocking issue, with 52 isolated tests passing.
+Two monitor startup timeouts came from Windows venv launcher and server PIDs
+differing; health proof now verifies the actual PID against the owned Job.
+Transient session-file sharing errors are retried with a bound. Independent
+monitor review found no new actionable issue; 19 monitor tests passed.
+Combined direct, Agent, console and monitor regression: 138 passed, one skipped.
+No real provider key, live user monitor or installed console was used. The
+candidate awaits merge and publication; cross-machine testing remains deferred.
+
 ## Multi-provider direct model (2026-11-24)
 
 Added OpenRouter, DeepSeek, Agnes AI and custom HTTPS OpenAI-compatible endpoints.

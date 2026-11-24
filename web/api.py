@@ -442,9 +442,17 @@ class Handler(BaseHTTPRequestHandler):
                     except ValueError: raise Refused()
                     direct_config = {'key': body['api_key'], 'models': [body['model']], 'privacy': privacy,
                                      'provider': provider, 'base_url': base_url}
+                elif (route == '/api/agent/model' and isinstance(body, dict) and body.get('agent') == 'direct'):
+                    if set(body) == {'agent', 'model'}: raise Refused(409)
+                    shape(body, {'agent', 'model', 'instance_id', 'privacy', 'provider', 'base_url', 'current_model'})
+                    direct_config = None
                 elif (route == '/api/agent/prompt' and isinstance(body, dict) and body.get('agent') == 'direct'):
-                    if set(body) == {'agent', 'text'}: raise Refused(409)
-                    shape(body, {'agent', 'text', 'instance_id', 'privacy', 'model'})
+                    if set(body) in ({'agent', 'text'}, {'agent', 'text', 'instance_id', 'privacy', 'model'}): raise Refused(409)
+                    shape(body, {'agent', 'text', 'instance_id', 'privacy', 'model', 'provider', 'base_url'})
+                    direct_config = None
+                elif route == '/api/agent/stop' and isinstance(body, dict) and body.get('agent') == 'direct':
+                    if set(body) == {'agent'}: raise Refused(409)
+                    shape(body, {'agent', 'instance_id', 'provider', 'base_url'})
                     direct_config = None
                 else:
                     shape(body, keys)
@@ -464,13 +472,29 @@ class Handler(BaseHTTPRequestHandler):
                         agent = AgentSession(name, app.p.root)
                     sessions[name] = agent
                 elif not agent: raise Refused(409)
-                elif route == '/api/agent/stop': agent.close()
-                elif route == '/api/agent/model': agent.select(body['model'])
+                elif route == '/api/agent/stop':
+                    if name == 'direct':
+                        with agent.lock:
+                            if (body['instance_id'] != agent.instance_id or body['provider'] != agent.provider
+                                    or body['base_url'] != agent.base_url): raise Refused(409)
+                            agent.close()
+                    else: agent.close()
+                elif route == '/api/agent/model':
+                    if name == 'direct':
+                        with agent.lock:
+                            if (not isinstance(body['instance_id'], str) or body['instance_id'] != agent.instance_id
+                                    or body['privacy'] != agent.privacy or body['provider'] != agent.provider
+                                    or body['base_url'] != agent.base_url or body['current_model'] != agent.model):
+                                raise Refused(409)
+                            agent.select(body['model'])
+                    else:
+                        agent.select(body['model'])
                 elif route == '/api/agent/prompt':
                     if name == 'direct':
                         with agent.lock:
                             if (not isinstance(body['instance_id'], str) or body['instance_id'] != agent.instance_id
-                                    or body['privacy'] != agent.privacy or body['model'] != agent.model):
+                                    or body['privacy'] != agent.privacy or body['model'] != agent.model
+                                    or body['provider'] != agent.provider or body['base_url'] != agent.base_url):
                                 raise Refused(409)
                             agent.prompt(body['text'])
                     else:

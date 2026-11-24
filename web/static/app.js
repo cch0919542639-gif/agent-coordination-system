@@ -14,7 +14,7 @@ const pages = {
 let session = null, view = 'overview', offset = 0, cursor = 0, eventRows = [];
 let handoffSnapshot = null, handoffSignature = '';
 let agentSnapshot = null, agentSignature = '', permissionSignature = '', agentBusy = false, agentActionError = '', agentActionMessage = '';
-let agentPromptSent = {}, directCatalogGeneration = 0;
+let agentPromptSent = {}, directCatalogGeneration = 0, directRenderedInstance = '';
 let timer = null, pending = null, generation = 0, plan = null, actionBusy = false, revision = 0, authGeneration = 0;
 function node(tag, content, cls) { const n = document.createElement(tag); if (content !== undefined) n.textContent = content; if (cls) n.className = cls; return n; }
 function showError(message) { $('error').textContent = message; }
@@ -46,7 +46,7 @@ async function api(path, body, signal) {
 function signedOut() {
   authGeneration++; session = null; generation++; clearTimeout(timer); if (pending) pending.abort(); pending = null;
   handoffSnapshot = null; handoffSignature = '';
-  agentSnapshot = null; agentSignature = ''; permissionSignature = ''; agentActionError = ''; agentActionMessage = ''; agentPromptSent = {};
+  agentSnapshot = null; agentSignature = ''; permissionSignature = ''; agentActionError = ''; agentActionMessage = ''; agentPromptSent = {}; directRenderedInstance = '';
   for (const id of ['agent-prompt','agent-response','agent-activity','agent-permission-title','agent-permission-details','agent-error','agent-current']) $(id).textContent = '';
   $('agent-prompt').value = ''; $('agent-permission').hidden = true; $('agent-permission-options').replaceChildren(); $('agent-model').replaceChildren();
   $('direct-key').value = ''; $('direct-model').value = ''; $('direct-provider').value = 'openrouter'; $('direct-base-url').value = ''; $('direct-base-field').hidden = true; resetDirectModels();
@@ -188,6 +188,11 @@ function renderAgents(data) {
   const phase = state ? state.phase : 'offline', admin = session.role === 'administrator';
   if (name === 'direct' && state?.privacy && !['failed','stopped'].includes(phase)) {
     const provider = state.provider || 'openrouter';
+    if (state.instance_id && state.instance_id !== directRenderedInstance) {
+      directRenderedInstance = state.instance_id;
+      $('direct-model').value = state.model || ''; $('direct-key').value = ''; resetDirectModels();
+      $('direct-model-status').textContent = '工作階段已變更，請確認供應商及模型。';
+    }
     if (($('direct-provider').value || 'openrouter') !== provider) {
       $('direct-provider').value = provider; $('direct-key').value = ''; resetDirectModels();
     }
@@ -366,19 +371,39 @@ $('agent-report').addEventListener('click', async () => {
   } catch (error) { $('report-status').textContent = `${error.message} 若連線中斷，請先檢查 Codex 佇列，避免重送。`; }
   finally { agentBusy = false; if (agentSnapshot) renderAgents(agentSnapshot); }
 });
-$('agent-stop').addEventListener('click', () => agentAction('stop'));
-$('agent-apply').addEventListener('click', () => agentAction('model',{model:$('agent-kind').value === 'direct' ? $('direct-model').value.trim() : $('agent-model').value}));
+$('agent-stop').addEventListener('click', () => {
+  if ($('agent-kind').value !== 'direct') { agentAction('stop'); return; }
+  const state = agentSnapshot?.sessions?.direct;
+  if (!state?.instance_id || !state.provider || typeof state.base_url !== 'string') {
+    agentActionError = '請更新畫面並確認目前工作階段與供應商。';
+    if (agentSnapshot) renderAgents(agentSnapshot);
+    return;
+  }
+  agentAction('stop', {instance_id:state.instance_id, provider:state.provider, base_url:state.base_url});
+});
+$('agent-apply').addEventListener('click', () => {
+  if ($('agent-kind').value !== 'direct') { agentAction('model', {model:$('agent-model').value}); return; }
+  const state = agentSnapshot?.sessions?.direct;
+  if (!state?.instance_id || !state.model || !['zdr','standard'].includes(state.privacy) || !state.provider || typeof state.base_url !== 'string') {
+    agentActionError = '請更新畫面並確認目前工作階段、供應商與模型。';
+    if (agentSnapshot) renderAgents(agentSnapshot);
+    return;
+  }
+  agentAction('model', {model:$('direct-model').value.trim(), instance_id:state.instance_id, privacy:state.privacy,
+                        provider:state.provider, base_url:state.base_url, current_model:state.model});
+});
 $('agent-prompt-form').addEventListener('submit', async event => {
   event.preventDefault();
   const extra = {text:$('agent-prompt').value};
   if ($('agent-kind').value === 'direct') {
     const state = agentSnapshot?.sessions?.direct;
-    if (!state?.instance_id || !state.model || !['zdr','standard'].includes(state.privacy)) {
+    if (!state?.instance_id || !state.model || !['zdr','standard'].includes(state.privacy) || !state.provider || typeof state.base_url !== 'string') {
       agentActionError = '請更新畫面並確認目前工作階段、模型與隱私模式。';
       if (agentSnapshot) renderAgents(agentSnapshot);
       return;
     }
     extra.instance_id = state.instance_id; extra.privacy = state.privacy; extra.model = state.model;
+    extra.provider = state.provider; extra.base_url = state.base_url;
   }
   if (await agentAction('prompt', extra)) $('agent-prompt').value = '';
 });

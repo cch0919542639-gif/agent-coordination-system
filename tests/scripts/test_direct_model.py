@@ -205,11 +205,16 @@ const tick=()=>new Promise(r=>setImmediate(r));function reply(req,status,body){r
  vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',model:'vendor/ordinary:free',models:[]}}})",ctx);
  reply(staleRequest,200,{models:[{id:'vendor/stale',free:true}]});await stale;
  assert(get('direct-model-options').disabled);assert.equal(get('direct-model-options').children.length,1);
- vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',instance_id:'snapshot-id',model:'vendor/ordinary:free',models:[]}}})",ctx);
+ vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',instance_id:'snapshot-id',provider:'openrouter',base_url:'',model:'vendor/ordinary:free',models:[]}}})",ctx);
+ assert.equal(get('direct-model').value,'vendor/ordinary:free');
+ get('direct-key').value='stale-key';
+ vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',instance_id:'new-id',provider:'deepseek',base_url:'',model:'deepseek-chat',models:[]}}})",ctx);
+ assert.equal(get('direct-model').value,'deepseek-chat');assert.equal(get('direct-provider').value,'deepseek');assert.equal(get('direct-key').value,'');
+ vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',instance_id:'snapshot-id',provider:'openrouter',base_url:'',model:'vendor/ordinary:free',models:[]}}})",ctx);
  assert.equal(get('direct-privacy').value,'standard');assert(get('direct-privacy').disabled);
  assert(get('direct-privacy-note').textContent.includes('可能'));
  get('agent-prompt').value='hello';const sending=get('agent-prompt-form').listeners.submit({preventDefault(){}});
- const prompt=requests.shift();assert.deepEqual(JSON.parse(prompt.opts.body),{agent:'direct',text:'hello',instance_id:'snapshot-id',privacy:'standard',model:'vendor/ordinary:free'});
+ const prompt=requests.shift();assert.deepEqual(JSON.parse(prompt.opts.body),{agent:'direct',text:'hello',instance_id:'snapshot-id',privacy:'standard',model:'vendor/ordinary:free',provider:'openrouter',base_url:''});
  reply(prompt,200,{phase:'running',privacy:'standard',instance_id:'snapshot-id',models:[]});await sending;
  reply(requests.shift(),200,{agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'stopped',models:[]}}});await tick();
  vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'stopped',models:[]}}})",ctx);
@@ -306,7 +311,14 @@ bridge.main()
     assert initial['privacy'] == 'zdr'
     def prompt(text, state):
         return request(console, '/api/agent/prompt', {'agent': 'direct', 'text': text,
-            'instance_id': state['instance_id'], 'privacy': state['privacy'], 'model': state['model']}, admin)[0]
+            'instance_id': state['instance_id'], 'privacy': state['privacy'], 'model': state['model'],
+            'provider': state['provider'], 'base_url': state['base_url']}, admin)[0]
+    def stop(state):
+        return request(console, '/api/agent/stop', {'agent': 'direct', 'instance_id': state['instance_id'],
+            'provider': state['provider'], 'base_url': state['base_url']}, admin)[0]
+    def select(state, model):
+        return request(console, '/api/agent/model', {'agent': 'direct', 'model': model, 'instance_id': state['instance_id'],
+            'privacy': state['privacy'], 'provider': state['provider'], 'base_url': state['base_url'], 'current_model': state['model']}, admin)[0]
     assert 'fixture-key' not in json.dumps(request(console, '/api/agents', session=admin)[1])
     assert request(console, '/api/agent/prompt', {'agent': 'direct', 'text': 'legacy'}, admin)[0] == 409
     assert prompt('wrong session', {**initial, 'instance_id': 'wrong'}) == 409
@@ -314,7 +326,8 @@ bridge.main()
     wait('ready', 'vendor/a:free:1')
     assert prompt('follow up', initial) == 200
     wait('ready', 'vendor/a:free:3')
-    assert request(console, '/api/agent/model', {'agent': 'direct', 'model': 'vendor/b:free'}, admin)[0] == 200
+    assert request(console, '/api/agent/model', {'agent': 'direct', 'model': 'vendor/b:free'}, admin)[0] == 409
+    assert select(initial, 'vendor/b:free') == 200
     changed = wait('ready')
     assert changed['response'] == '' and changed['model'] == 'vendor/b:free'
     assert prompt('stale model', initial) == 409
@@ -335,7 +348,8 @@ bridge.main()
     agent = console['app'].agent_sessions[admin['sid']]['direct']
     pid, created = agent.job.pid, agent.job.creation_time
     assert prompt('wait', changed) == 200
-    assert request(console, '/api/agent/stop', {'agent': 'direct'}, admin)[0] == 200
+    assert request(console, '/api/agent/stop', {'agent': 'direct'}, admin)[0] == 409
+    assert stop(changed) == 200
     assert request(console, '/api/agent/start', {**start, 'privacy': 'standard'}, admin)[0] == 200
     current = wait('ready')
     assert current['privacy'] == 'standard' and current['instance_id'] != initial['instance_id']
@@ -344,7 +358,7 @@ bridge.main()
     assert prompt('wrong privacy', {**current, 'privacy': 'zdr'}) == 409
     assert current['response'] == '' and prompt('hello', current) == 200
     wait('ready', 'vendor/a:free:1:standard')
-    assert request(console, '/api/agent/stop', {'agent': 'direct'}, admin)[0] == 200
+    assert stop(current) == 200
     assert identity_state(pid, created) in ('missing', 'exited')
     for provider, base in [('deepseek',''), ('agnes',''), ('custom','https://api.example.test/v1')]:
         payload = {**start, 'provider':provider, 'privacy':'standard'}
@@ -353,11 +367,40 @@ bridge.main()
         current = wait('ready')
         assert current['provider'] == provider and current['base_url'] == base and current['privacy'] == 'standard'
         assert 'fixture-key' not in json.dumps(current)
+        legacy = {'agent':'direct', 'text':'legacy', 'instance_id':current['instance_id'], 'privacy':current['privacy'], 'model':current['model']}
+        assert request(console, '/api/agent/prompt', legacy, admin)[0] == 409
+        assert prompt('wrong provider', {**current, 'provider':'openrouter'}) == 409
+        assert select(initial, 'vendor/b:free') == 409
+        assert stop(initial) == 409
         assert prompt('hello', current) == 200
         wait('ready', 'vendor/a:free:1:standard:' + provider)
-        assert request(console, '/api/agent/stop', {'agent':'direct'}, admin)[0] == 200
+        assert stop(current) == 200
+    monkeypatch.setattr(agent_control, 'DIRECT_PROMPT_TIMEOUT_SECONDS', .3)
+    assert request(console, '/api/agent/start', start, admin)[0] == 200
+    current = wait('ready')
+    timed_agent = console['app'].agent_sessions[admin['sid']]['direct']
+    timed_pid, timed_created = timed_agent.job.pid, timed_agent.job.creation_time
+    assert prompt('wait', current) == 200
+    assert '逾時' in wait('failed')['error']
+    deadline = time.monotonic() + 5
+    while identity_state(timed_pid, timed_created) not in ('missing', 'exited') and time.monotonic() < deadline: time.sleep(.05)
+    assert identity_state(timed_pid, timed_created) in ('missing', 'exited')
     monkeypatch.setenv('COORDINATION_OPENROUTER_API_KEY', 'fixture-key')
     monkeypatch.setenv('COORDINATION_DIRECT_MODELS', 'vendor/a:free')
     assert request(console, '/api/agent/start', {'agent': 'direct'}, admin)[0] == 200
-    wait('ready')
-    assert request(console, '/api/agent/stop', {'agent': 'direct'}, admin)[0] == 200
+    current = wait('ready')
+    assert stop(current) == 200
+
+
+@pytest.mark.skipif(os.name != 'nt', reason='Windows owned Job')
+def test_direct_prompt_timeout_stops_only_current_turn(monkeypatch):
+    import threading
+    session = agent_control.AgentSession.__new__(agent_control.AgentSession)
+    session.agent = 'direct'; session.lock = threading.RLock(); session.closed = False
+    session.phase = 'running'; session.turn = 2; session.prompt_timer = None
+    cleaned = []; session._cleanup = lambda: cleaned.append(True)
+    session._prompt_timeout(1)
+    assert session.phase == 'running' and not cleaned
+    session._prompt_timeout(2)
+    assert session.phase == 'failed' and session.closed and cleaned
+    assert '逾時' in session.error

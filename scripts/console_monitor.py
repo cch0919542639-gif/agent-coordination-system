@@ -83,7 +83,14 @@ def write(root, name, data):
 
 
 def status(root):
-    value = read_json(checked_file(root, 'session.json'))
+    for attempt in range(20):
+        try:
+            value = read_json(checked_file(root, 'session.json'))
+            break
+        except PermissionError:
+            if attempt == 19:
+                raise
+            time.sleep(.05)
     try:
         with owner_lock(root):
             value['running'] = False
@@ -127,7 +134,7 @@ def exited(child):
         return None
 
 
-def healthy(port, pid, secret):
+def health_pid(port, secret, owns_pid):
     connection = http.client.HTTPConnection('127.0.0.1', port, timeout=1)
     try:
         nonce = secrets.token_hex(16)
@@ -135,16 +142,23 @@ def healthy(port, pid, secret):
         response = connection.getresponse()
         raw = response.read(1025)
         if response.status != 200 or len(raw) > 1024:
-            return False
+            return None
         result = json.loads(raw)
+        if (not isinstance(result, dict) or type(result.get('pid')) is not int
+                or not 0 < result['pid'] <= 0xFFFFFFFF or result.get('read_only') is not True
+                or not isinstance(result.get('proof'), str)):
+            return None
+        pid = result['pid']
         expected = hmac.new(bytes.fromhex(secret), (nonce + ':' + str(pid)).encode('ascii'), hashlib.sha256).hexdigest()
-        return (isinstance(result, dict) and type(result.get('pid')) is int and result['pid'] == pid
-                and result.get('read_only') is True and isinstance(result.get('proof'), str)
-                and hmac.compare_digest(result['proof'], expected))
-    except (OSError, http.client.HTTPException, ValueError, TypeError, UnicodeError):
-        return False
+        return pid if hmac.compare_digest(result['proof'], expected) and owns_pid(pid) else None
+    except (OSError, http.client.HTTPException, ValueError, TypeError, UnicodeError, GuardError):
+        return None
     finally:
         connection.close()
+
+
+def healthy(port, pid, secret):
+    return health_pid(port, secret, lambda actual: actual == pid) is not None
 
 
 def supervise(root, server_args, sync_args, port, interval=60, sync_timeout=150):
@@ -174,9 +188,10 @@ def supervise(root, server_args, sync_args, port, interval=60, sync_timeout=150)
             if server is not None:
                 code = exited(server)
                 if now >= next_health:
-                    failures = 0 if healthy(port, server.pid, secret) else failures + 1
+                    verified_pid = health_pid(port, secret, server.owns_pid)
+                    failures = 0 if verified_pid is not None else failures + 1
                     if failures == 0:
-                        value['phase'] = 'running'
+                        value.update(phase='running', server_pid=verified_pid)
                         delay = 5
                     next_health = now + 10
                 if code is not None or failures >= 3:
