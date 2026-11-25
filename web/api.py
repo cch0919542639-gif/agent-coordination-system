@@ -21,10 +21,11 @@ from coordination_runtime.recovery_manager import RecoveryManager
 from coordination_runtime.resource_guard import ResourceController
 from coordination_runtime.state_controller import StateController, StateError, _id, _integer
 from .read_model import ReadModel
-from .agent_control import AgentSession, AGENTS, inventory
+from .agent_control import AgentSession, AGENTS, inventory, executable
 from .direct_model_bridge import catalog, model_ids, provider_endpoint, valid_key, valid_model
 from . import codex_report
 from .model_team import ModelTeam
+from .team_workspace import base_revision, repository_root
 
 VIEWS = {'overview', 'board', 'monitor', 'workspaces', 'reviews', 'events', 'settings', 'handoff'}
 ROLES = {'viewer': 0, 'operator': 1, 'administrator': 2}
@@ -386,6 +387,24 @@ class Handler(BaseHTTPRequestHandler):
             pid = os.getpid()
             proof = hmac.new(bytes.fromhex(secret), (nonce[0] + ':' + str(pid)).encode('ascii'), hashlib.sha256).hexdigest()
             return self.reply(200, {'pid': pid, 'read_only': True, 'proof': proof})
+        workspace_current = None
+        native_start = (route == '/api/team/start' and self.command == 'POST' and isinstance(body, dict)
+                        and isinstance(body.get('workers'), list)
+                        and any(isinstance(w, dict) and w.get('kind') in ('opencode', 'hermes') for w in body['workers']))
+        workspace_query = route == '/api/team/workspace' and self.command == 'GET' and not parsed.query
+        if native_start or workspace_query:
+            with app.lock:
+                if app.closed: raise Refused(503)
+                _, user = self.session()
+                if ROLES[user['role']] < 2: raise Refused(403)
+            workspace_current = base_revision(app.p.workspace)
+            if workspace_query:
+                root = str(repository_root(app.p.workspace))
+                with app.lock:
+                    if app.closed: raise Refused(503)
+                    _, user = self.session()
+                    if ROLES[user['role']] < 2: raise Refused(403)
+                    return self.reply(200, {'repository': root, 'base_sha': workspace_current})
         with app.lock:
             if app.closed:
                 raise Refused(503)
@@ -411,20 +430,39 @@ class Handler(BaseHTTPRequestHandler):
                 if ROLES[session['role']] < 2: raise Refused(403)
                 if app.team_cleanup_failed or any(team.snapshot()['phase'] == 'cleanup_failed' for team in app.model_teams.values()):
                     return self.reply(503, {'error': '無法確認先前的模型程序已停止；請檢查並重新啟動主控台。'})
-                shape(body, {'task', 'workers'})
+                if isinstance(body, dict) and ('workspace_ack' in body or 'workspace_base' in body):
+                    shape(body, {'task', 'workers', 'workspace_ack', 'workspace_base'})
+                    if type(body['workspace_ack']) is not bool: raise Refused()
+                else: shape(body, {'task', 'workers'})
                 task, workers = body['task'], body['workers']
                 if not isinstance(task, str) or not 1 <= len(task.strip()) <= 8000 or not isinstance(workers, list) or not 2 <= len(workers) <= 4: raise Refused()
                 existing = app.model_teams.get(sid)
                 if existing and existing.snapshot()['phase'] not in ('done', 'failed', 'stopped'): raise Refused(409)
                 configs = []
-                for worker in workers:
+                for index, worker in enumerate(workers):
+                    if isinstance(worker, dict) and worker.get('kind') in ('opencode', 'hermes'):
+                        shape(worker, {'kind', 'model'})
+                        if index == 0 or body.get('workspace_ack') is not True: raise Refused()
+                        if not isinstance(worker['model'], str) or len(worker['model']) > 200: raise Refused()
+                        binary = executable(worker['kind'])
+                        if not binary: raise Refused(409)
+                        if worker['kind'] == 'hermes':
+                            from .agent_bridge import agent_command
+                            try: agent_command(binary)
+                            except RuntimeError: return self.reply(409, {'error': '此 Hermes 版本的共享後端尚未通過主控台防護驗證。'})
+                        configs.append(dict(kind=worker['kind'], provider=worker['kind'], base_url='', privacy='', models=[worker['model']]))
+                        continue
                     shape(worker, {'provider', 'base_url', 'privacy', 'model', 'api_key'})
                     if not valid_key(worker['api_key']) or not valid_model(worker['model']): raise Refused()
                     try: provider_endpoint(worker['provider'], worker['base_url'], worker['privacy'])
                     except ValueError: raise Refused()
                     configs.append(dict(key=worker['api_key'], models=[worker['model']], provider=worker['provider'], base_url=worker['base_url'], privacy=worker['privacy']))
                 if existing: existing.close()
-                team = ModelTeam(app.p.root, task.strip(), configs)
+                native = any(c.get('kind') in ('opencode', 'hermes') for c in configs)
+                if native and len(task.strip()) > 3000: raise Refused()
+                if native and (not isinstance(body.get('workspace_base'), str) or body['workspace_base'] != workspace_current):
+                    return self.reply(409, {'error': '專案版本已改變；請重新確認來源專案及版本。'})
+                team = ModelTeam(app.p.root, task.strip(), configs, workspace_manager=app.p.workspace, workspace_base=body['workspace_base']) if native else ModelTeam(app.p.root, task.strip(), configs)
                 app.model_teams[sid] = team
                 return self.reply(200, team.snapshot())
             if route == '/api/team/stop' and self.command == 'POST':
@@ -433,6 +471,14 @@ class Handler(BaseHTTPRequestHandler):
                 team = app.model_teams.get(sid)
                 if not team or body['instance_id'] != team.instance_id: raise Refused(409)
                 team.close()
+                return self.reply(200, team.snapshot())
+            if route == '/api/team/permission' and self.command == 'POST':
+                if ROLES[session['role']] < 2: raise Refused(403)
+                shape(body, {'instance_id', 'index', 'token', 'choice'})
+                team = app.model_teams.get(sid)
+                if not team or body['instance_id'] != team.instance_id: raise Refused(409)
+                try: team.answer(body['index'], body['token'], body['choice'])
+                except (ValueError, StateError): raise Refused(409)
                 return self.reply(200, team.snapshot())
             if route == '/api/agent/report' and self.command == 'POST':
                 if ROLES[session['role']] < 2: raise Refused(403)

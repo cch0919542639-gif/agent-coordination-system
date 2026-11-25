@@ -1,3 +1,16 @@
+## Native model teams independent review (2026-11-25)
+
+Two independent reviewers assessed candidate 41523d4 and the repair diff.
+Fixes cover staged changes, nonblocking cancellation during provisioning, stale
+model IDs, task-length feedback, outdated polling and explicit source root/SHA
+confirmation. Both reviewers reported no remaining reproducible blocking
+findings in scope. Hermes v0.23.3 repair is deferred by the operator and its
+unverified gateway remains blocked. The reviewed candidate awaits merge and
+publication; the installed console and live multi-provider team test remain
+untouched. See review-team-workspaces-independent-01 for evidence.
+Final focused team and UI regression: 21 passed, one opt-in probe skipped.
+Final Agent, provider, console and monitor regression: 165 passed, one skipped.
+
 ## Parallel direct-model independent review (2026-11-25)
 
 Independent backend and UI review identified cross-login stale responses,
@@ -247,3 +260,19 @@ The user explicitly authorized this handoff commit/push. Only handoff.md and
 this progress section are included; runtime source and other local work are
 unchanged. Publication baseline is8a531ed; the new documentation commit is
 identified by Git history. No new implementation task or model run is started.
+## Native agents in model teams (2026-11-25)
+
+The candidate adds owned OpenCode and supported Hermes workers alongside direct
+models, each native worker in its own detached worktree at the selected repo's
+committed HEAD. Dirty source changes are not copied and results are not merged.
+The UI discloses that Git worktrees are not OS sandboxes, displays results and
+changes, and routes Hermes approvals to the correct worker. Real OpenCode made
+the requested synthetic change in a disposable worktree without touching the
+source, and its owned process was cleaned up. Focused regression passed 82 tests
+with two skips; console/monitor regression passed 98 tests.
+
+This machine's Hermes v0.23.3 uses a shared gateway outside the existing guard.
+An experimental owned adapter reached the initial handshake but protected
+session creation timed out; it was not enabled. The existing fail-closed check
+remains. See the incident; independent review, a working current-Hermes adapter,
+release and installed-console verification remain pending.
