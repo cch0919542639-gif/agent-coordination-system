@@ -14,6 +14,10 @@ def base_revision(manager):
     return base
 
 
+def repository_root(manager):
+    return Path(os.fsdecode(git(manager.repository, 'rev-parse', '--show-toplevel').strip())).resolve()
+
+
 def provision(manager, base, run_id):
     """Create a new detached worktree; never adopt or delete existing work."""
     manager.pinned(base)
@@ -49,7 +53,8 @@ def changes(manager, path, base):
             or git(path, 'rev-parse', '--abbrev-ref', 'HEAD').strip() != b'HEAD'):
         raise StateError('Workspace Git identity or revision changed.')
     tracked = git(path, 'diff', '--name-only', '--no-renames', '-z', base, '--')
+    staged = git(path, 'diff', '--cached', '--name-only', '--no-renames', '-z', base, '--')
     untracked = git(path, 'ls-files', '--others', '--exclude-standard', '-z')
-    names = sorted(set(os.fsdecode(x) for x in (tracked + untracked).split(b'\0') if x))
+    names = sorted(set(os.fsdecode(x) for x in (tracked + staged + untracked).split(b'\0') if x))
     if len(names) > 2048: raise StateError('Workspace change list exceeds limit.')
     return names

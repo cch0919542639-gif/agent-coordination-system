@@ -1,7 +1,7 @@
 ---
 task_id: team-agent-workspaces-01
 phase: agent-control-center
-status: IN_PROGRESS
+status: REVIEW
 owner: ORCHESTRATOR
 reviewer: ORCHESTRATOR
 priority: high
@@ -12,6 +12,7 @@ allowed_scope:
   - docs/operations/agent-control-center-guide.md
   - coordination/task-board/**
   - coordination/incidents/**
+  - coordination/reviews/**
   - coordination/delivery/team-agent-workspaces-01-delivery-report.md
   - PROGRESS.md
   - DECISIONS.md
@@ -38,6 +39,8 @@ Support real workspace work by OpenCode and Hermes in the automatic multi-agent 
 
 ## Context
 Direct models currently provide text-only work. OpenCode returned a reply in the live console; Hermes installed gateway is currently blocked by existing safety guards.
+The operator deferred current Hermes connectivity on 2026-11-25. Its existing
+fail-closed behavior and incident remain; the reduced candidate awaits merge.
 
 ## Implementation Notes
 Use existing owned native ACP sessions and preserve operator-controlled approval; do not claim OS-level sandboxing.

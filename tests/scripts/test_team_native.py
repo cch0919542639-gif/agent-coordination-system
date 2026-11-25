@@ -45,7 +45,8 @@ def test_native_workers_modify_distinct_worktrees_without_touching_dirty_source(
     direct = dict(provider='deepseek',base_url='',privacy='standard',model='plan',api_key='fixture-key')
     workers = [direct, {'kind':'opencode','model':''}, {'kind':'opencode','model':''}]
     assert request(console, '/api/team/start', {'task':'write independent files','workers':workers}, admin)[0] == 400
-    assert request(console, '/api/team/start', {'task':'write independent files','workers':workers,'workspace_ack':True}, admin)[0] == 200
+    base = request(console, '/api/team/workspace', session=admin)[1]['base_sha']
+    assert request(console, '/api/team/start', {'task':'write independent files','workers':workers,'workspace_ack':True,'workspace_base':base}, admin)[0] == 200
     deadline = time.monotonic() + 20
     while time.monotonic() < deadline:
         state = request(console, '/api/agents', session=admin)[1]['team']
@@ -87,7 +88,8 @@ def test_native_permission_is_bound_to_team_worker_and_operation(console, monkey
     monkeypatch.setattr('web.agent_bridge.agent_command', lambda binary: ['fixture'])
     admin, viewer = login(console, 'administrator'), login(console, 'viewer')
     direct = dict(provider='deepseek',base_url='',privacy='standard',model='plan',api_key='fixture-key')
-    payload = {'task':'test editing','workers':[direct,{'kind':'hermes','model':''}], 'workspace_ack':True}
+    base = request(console, '/api/team/workspace', session=admin)[1]['base_sha']
+    payload = {'task':'test editing','workers':[direct,{'kind':'hermes','model':''}], 'workspace_ack':True, 'workspace_base':base}
     assert request(console, '/api/team/start', payload, admin)[0] == 200
     deadline = time.monotonic() + 15
     while time.monotonic() < deadline:
@@ -113,11 +115,90 @@ def test_unsupported_hermes_gateway_refuses_before_creating_workspace(console, t
     monkeypatch.setattr('web.api.executable', lambda kind: str(tmp_path / 'hermes.exe'))
     admin = login(console, 'administrator')
     direct = dict(provider='deepseek',base_url='',privacy='standard',model='plan',api_key='fixture-key')
-    payload = {'task':'test','workers':[direct,{'kind':'hermes','model':''}], 'workspace_ack':True}
+    base = request(console, '/api/team/workspace', session=admin)[1]['base_sha']
+    payload = {'task':'test','workers':[direct,{'kind':'hermes','model':''}], 'workspace_ack':True, 'workspace_base':base}
     code, data, _ = request(console, '/api/team/start', payload, admin)
     assert code == 409 and 'Hermes' in data['error']
     assert request(console, '/api/agents', session=admin)[1]['team'] is None
     assert not console['p'].workspace.root.exists()
+
+
+def test_native_start_requires_confirmed_current_source(console, monkeypatch):
+    monkeypatch.setattr('web.api.executable', lambda kind: 'fixture.exe')
+    admin, viewer = login(console, 'administrator'), login(console, 'viewer')
+    assert request(console, '/api/team/workspace', session=viewer)[0] == 403
+    code, source, _ = request(console, '/api/team/workspace', session=admin)
+    assert code == 200 and source['repository'] == str(console['p'].workspace.repository)
+    manager = console['p'].workspace
+    original_repo = manager.repository
+    try:
+        manager.repository = original_repo / 'src'
+        assert request(console, '/api/team/workspace', session=admin)[1]['repository'] == str(original_repo)
+    finally:
+        manager.repository = original_repo
+    direct = dict(provider='deepseek',base_url='',privacy='standard',model='plan',api_key='fixture-key')
+    payload = {'task':'test','workers':[direct,{'kind':'opencode','model':''}],
+               'workspace_ack':True, 'workspace_base':source['base_sha']}
+    subprocess.run(['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test',
+                    'commit', '--allow-empty', '-m', 'new fixture head'], cwd=console['p'].root,
+                   check=True, stdout=subprocess.DEVNULL)
+    assert request(console, '/api/team/start', payload, admin)[0] == 409
+    assert request(console, '/api/agents', session=admin)[1]['team'] is None
+
+
+def test_workspace_check_does_not_block_other_console_requests(console, monkeypatch):
+    from web import api
+    admin = login(console, 'administrator')
+    entered, release = threading.Event(), threading.Event()
+    original = api.base_revision
+    def slow(manager):
+        entered.set()
+        assert release.wait(10)
+        return original(manager)
+    monkeypatch.setattr(api, 'base_revision', slow)
+    result = []
+    worker = threading.Thread(target=lambda: result.append(request(console, '/api/team/workspace', session=admin)), daemon=True)
+    worker.start()
+    try:
+        assert entered.wait(5)
+        assert request(console, '/api/session', session=admin)[0] == 200
+    finally:
+        release.set(); worker.join(10)
+    assert result and result[0][0] == 200
+
+
+def test_workspace_check_revalidates_session_after_git(console, monkeypatch):
+    from web import api
+    admin = login(console, 'administrator')
+    entered, release = threading.Event(), threading.Event()
+    original = api.base_revision
+    def slow(manager):
+        entered.set()
+        assert release.wait(10)
+        return original(manager)
+    monkeypatch.setattr(api, 'base_revision', slow)
+    result = []
+    worker = threading.Thread(target=lambda: result.append(request(console, '/api/team/workspace', session=admin)), daemon=True)
+    worker.start()
+    try:
+        assert entered.wait(5)
+        assert request(console, '/api/logout', {}, admin)[0] == 200
+    finally:
+        release.set(); worker.join(10)
+    assert result and result[0][0] == 401
+
+
+def test_team_rechecks_confirmed_base_before_launch(system, monkeypatch):
+    p, _, _ = system
+    launched = []
+    monkeypatch.setattr(model_team, 'AgentSession', lambda *args, **kwargs: launched.append(args))
+    configs = [dict(provider='fixture',base_url='',privacy='standard',models=['plan']),
+               dict(kind='opencode',provider='opencode',base_url='',privacy='',models=[''])]
+    team = model_team.ModelTeam(p.root, 'fixture', configs, workspace_manager=p.workspace, workspace_base='0' * 40)
+    deadline = time.monotonic() + 5
+    while team.snapshot()['phase'] not in ('failed', 'cleanup_failed') and time.monotonic() < deadline: time.sleep(.05)
+    assert team.snapshot()['phase'] == 'failed'
+    assert not launched
 
 
 def test_failed_native_work_preserves_and_reports_changes(console, monkeypatch):
@@ -137,7 +218,8 @@ def test_failed_native_work_preserves_and_reports_changes(console, monkeypatch):
     monkeypatch.setattr('web.api.executable', lambda kind: 'fixture.exe')
     admin = login(console, 'administrator')
     direct = dict(provider='deepseek',base_url='',privacy='standard',model='plan',api_key='fixture-key')
-    payload = {'task':'edit','workers':[direct,{'kind':'opencode','model':''}], 'workspace_ack':True}
+    base = request(console, '/api/team/workspace', session=admin)[1]['base_sha']
+    payload = {'task':'edit','workers':[direct,{'kind':'opencode','model':''}], 'workspace_ack':True, 'workspace_base':base}
     assert request(console, '/api/team/start', payload, admin)[0] == 200
     deadline = time.monotonic() + 15
     while time.monotonic() < deadline:
@@ -159,6 +241,50 @@ def test_workspace_retains_existing_work_and_refuses_revision_changes(system):
     with pytest.raises(StateError): team_workspace.provision(manager, base, 'team-fixture-1')
     assert marker.read_text(encoding='utf8') == 'retained'
     with pytest.raises(StateError): team_workspace.changes(manager, path, '0' * 40)
+
+
+def test_workspace_reports_staged_change_even_if_worktree_matches_base(system):
+    manager = system[0].workspace
+    base = team_workspace.base_revision(manager)
+    path = team_workspace.provision(manager, base, 'team-staged-fixture')
+    file = path / 'src' / 'task-a.txt'
+    original = file.read_bytes()
+    file.write_bytes(b'staged change')
+    subprocess.run(['git', 'add', '--', 'src/task-a.txt'], cwd=path, check=True)
+    file.write_bytes(original)
+    assert team_workspace.changes(manager, path, base) == ['src/task-a.txt']
+
+
+def test_stop_does_not_wait_for_workspace_creation_or_start_native_agent(system, monkeypatch):
+    p, _, _ = system
+    entered, release = threading.Event(), threading.Event()
+    started = []
+    class FakeAgent:
+        def __init__(self, kind, cwd, direct_config=None): started.append(kind)
+        def close(self): pass
+    def slow_provision(manager, base, identifier):
+        entered.set()
+        assert release.wait(10)
+        return manager.path(identifier)
+    monkeypatch.setattr(model_team, 'AgentSession', FakeAgent)
+    monkeypatch.setattr(model_team, 'provision', slow_provision)
+    configs = [dict(provider='fixture',base_url='',privacy='standard',models=['plan']),
+               dict(kind='opencode',provider='opencode',base_url='',privacy='',models=[''])]
+    team = model_team.ModelTeam(p.root, 'fixture', configs, workspace_manager=p.workspace)
+    try:
+        assert entered.wait(5)
+        done = threading.Event()
+        threading.Thread(target=lambda: (team.close(), done.set()), daemon=True).start()
+        assert done.wait(2)
+        assert team.snapshot()['phase'] == 'stopping'
+        assert started == ['direct']
+        release.set()
+        deadline = time.monotonic() + 5
+        while team.snapshot()['phase'] == 'stopping' and time.monotonic() < deadline: time.sleep(.05)
+        assert team.snapshot()['phase'] == 'stopped'
+        assert started == ['direct']
+    finally:
+        release.set()
 
 
 @pytest.mark.skipif(os.environ.get('CODEX_REAL_OPENCODE_TEST') != '1', reason='explicit real OpenCode probe only')

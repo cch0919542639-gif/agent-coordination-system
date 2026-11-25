@@ -10,11 +10,12 @@ from .team_workspace import base_revision, changes, provision, run_id
 
 
 class ModelTeam:
-    def __init__(self, root, task, configs, workspace_manager=None):
+    def __init__(self, root, task, configs, workspace_manager=None, workspace_base=None):
         self.lock = threading.RLock()
         self.cancelled = threading.Event()
         self.cleanup_lock = threading.Lock()
         self.cleanup_finished = False
+        self.provisioning = False
         self.outcome = None
         self.instance_id = secrets.token_urlsafe(24)
         self.phase = 'starting'
@@ -24,6 +25,7 @@ class ModelTeam:
         self.agents = []
         self.root = root
         self.workspace_manager = workspace_manager
+        self.workspace_base = workspace_base
         self.base_sha = None
         self.task = task
         self.configs = configs
@@ -63,6 +65,9 @@ class ModelTeam:
                 except Exception:
                     failed = True
             with self.lock:
+                if getattr(self, 'provisioning', False) and not failed:
+                    self.phase = 'stopping'
+                    return
                 self.cleanup_finished = True
                 if failed:
                     self.phase = 'cleanup_failed'; self.error = '無法確認模型程序已停止，請檢查主控台程序。'
@@ -126,21 +131,29 @@ class ModelTeam:
         try:
             if any(c.get('kind', 'direct') != 'direct' for c in self.configs):
                 if self.workspace_manager is None: raise ValueError('工作區未設定。')
-                self.base_sha = base_revision(self.workspace_manager)
+                self.base_sha = self.workspace_base or base_revision(self.workspace_manager)
+                self.workspace_manager.pinned(self.base_sha)
             requested_models = [c['models'][0] for c in self.configs]
             for i, config in enumerate(self.configs):
+                kind = config.get('kind', 'direct')
+                if kind != 'direct':
+                    identifier = run_id(i)
+                    with self.lock:
+                        if self.cancelled.is_set(): return
+                        self.assignments[i]['workspace'] = str(self.workspace_manager.path(identifier))
+                        self.provisioning = True
+                    try: path = provision(self.workspace_manager, self.base_sha, identifier)
+                    except Exception:
+                        with self.lock:
+                            self.assignments[i].update(phase='failed', error='無法建立或確認工作目錄；已建立的資料會保留。')
+                        raise
+                    finally:
+                        with self.lock: self.provisioning = False
                 with self.lock:
                     if self.cancelled.is_set(): return
-                    kind = config.get('kind', 'direct')
                     if kind == 'direct':
                         agent = AgentSession('direct', self.root, direct_config=config)
                     else:
-                        identifier = run_id(i)
-                        self.assignments[i]['workspace'] = str(self.workspace_manager.path(identifier))
-                        try: path = provision(self.workspace_manager, self.base_sha, identifier)
-                        except Exception:
-                            self.assignments[i].update(phase='failed', error='無法建立或確認工作目錄；已建立的資料會保留。')
-                            raise
                         agent = AgentSession(kind, path)
                     self.agents.append(agent)
             self.configs = []

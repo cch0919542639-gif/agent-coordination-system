@@ -1,3 +1,16 @@
+## Native model teams independent review (2026-11-25)
+
+Two independent reviewers assessed candidate 41523d4 and the repair diff.
+Fixes cover staged changes, nonblocking cancellation during provisioning, stale
+model IDs, task-length feedback, outdated polling and explicit source root/SHA
+confirmation. Both reviewers reported no remaining reproducible blocking
+findings in scope. Hermes v0.23.3 repair is deferred by the operator and its
+unverified gateway remains blocked. The reviewed candidate awaits merge and
+publication; the installed console and live multi-provider team test remain
+untouched. See review-team-workspaces-independent-01 for evidence.
+Final focused team and UI regression: 21 passed, one opt-in probe skipped.
+Final Agent, provider, console and monitor regression: 165 passed, one skipped.
+
 ## Parallel direct-model independent review (2026-11-25)
 
 Independent backend and UI review identified cross-login stale responses,

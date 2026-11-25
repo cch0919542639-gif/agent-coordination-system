@@ -25,6 +25,7 @@ from .agent_control import AgentSession, AGENTS, inventory, executable
 from .direct_model_bridge import catalog, model_ids, provider_endpoint, valid_key, valid_model
 from . import codex_report
 from .model_team import ModelTeam
+from .team_workspace import base_revision, repository_root
 
 VIEWS = {'overview', 'board', 'monitor', 'workspaces', 'reviews', 'events', 'settings', 'handoff'}
 ROLES = {'viewer': 0, 'operator': 1, 'administrator': 2}
@@ -386,6 +387,24 @@ class Handler(BaseHTTPRequestHandler):
             pid = os.getpid()
             proof = hmac.new(bytes.fromhex(secret), (nonce[0] + ':' + str(pid)).encode('ascii'), hashlib.sha256).hexdigest()
             return self.reply(200, {'pid': pid, 'read_only': True, 'proof': proof})
+        workspace_current = None
+        native_start = (route == '/api/team/start' and self.command == 'POST' and isinstance(body, dict)
+                        and isinstance(body.get('workers'), list)
+                        and any(isinstance(w, dict) and w.get('kind') in ('opencode', 'hermes') for w in body['workers']))
+        workspace_query = route == '/api/team/workspace' and self.command == 'GET' and not parsed.query
+        if native_start or workspace_query:
+            with app.lock:
+                if app.closed: raise Refused(503)
+                _, user = self.session()
+                if ROLES[user['role']] < 2: raise Refused(403)
+            workspace_current = base_revision(app.p.workspace)
+            if workspace_query:
+                root = str(repository_root(app.p.workspace))
+                with app.lock:
+                    if app.closed: raise Refused(503)
+                    _, user = self.session()
+                    if ROLES[user['role']] < 2: raise Refused(403)
+                    return self.reply(200, {'repository': root, 'base_sha': workspace_current})
         with app.lock:
             if app.closed:
                 raise Refused(503)
@@ -411,8 +430,8 @@ class Handler(BaseHTTPRequestHandler):
                 if ROLES[session['role']] < 2: raise Refused(403)
                 if app.team_cleanup_failed or any(team.snapshot()['phase'] == 'cleanup_failed' for team in app.model_teams.values()):
                     return self.reply(503, {'error': '無法確認先前的模型程序已停止；請檢查並重新啟動主控台。'})
-                if isinstance(body, dict) and 'workspace_ack' in body:
-                    shape(body, {'task', 'workers', 'workspace_ack'})
+                if isinstance(body, dict) and ('workspace_ack' in body or 'workspace_base' in body):
+                    shape(body, {'task', 'workers', 'workspace_ack', 'workspace_base'})
                     if type(body['workspace_ack']) is not bool: raise Refused()
                 else: shape(body, {'task', 'workers'})
                 task, workers = body['task'], body['workers']
@@ -441,7 +460,9 @@ class Handler(BaseHTTPRequestHandler):
                 if existing: existing.close()
                 native = any(c.get('kind') in ('opencode', 'hermes') for c in configs)
                 if native and len(task.strip()) > 3000: raise Refused()
-                team = ModelTeam(app.p.root, task.strip(), configs, workspace_manager=app.p.workspace) if native else ModelTeam(app.p.root, task.strip(), configs)
+                if native and (not isinstance(body.get('workspace_base'), str) or body['workspace_base'] != workspace_current):
+                    return self.reply(409, {'error': '專案版本已改變；請重新確認來源專案及版本。'})
+                team = ModelTeam(app.p.root, task.strip(), configs, workspace_manager=app.p.workspace, workspace_base=body['workspace_base']) if native else ModelTeam(app.p.root, task.strip(), configs)
                 app.model_teams[sid] = team
                 return self.reply(200, team.snapshot())
             if route == '/api/team/stop' and self.command == 'POST':

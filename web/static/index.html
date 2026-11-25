@@ -21,10 +21,11 @@
   <section aria-labelledby="team-title"><h3 id="team-title">多模型與 Agent 自動分工</h3>
   <p>設定 2 至 4 個工作者；第一個直接模型負責拆分和彙整。總任務及分工內容會傳給各供應商，其他模型結果的前 4000 字也會傳給第一個供應商彙整，可能產生費用。非 OpenRouter 供應商的零資料保留不由主控台驗證。</p>
   <p>OpenCode 與支援的 Hermes 可執行工具與修改檔案；各自使用目前專案最新 Git 提交建立的工作目錄，不包含原工作目錄未提交的變更。工作目錄不是安全沙盒，Agent 可能存取帳號有權存取的其他檔案及憑證，Git 資料庫也由工作目錄共用。OpenCode 工具操作沿用直接執行設定；Hermes 危險操作須審批。主控台不會主動合併成果，但無法限制 Agent 的命令。</p>
-  <label><input id="team-workspace-ack" type="checkbox"> 我了解上述工作目錄、工具權限及資料傳送方式</label>
+  <button id="team-workspace-check" type="button" class="secondary">確認來源專案</button><p id="team-workspace-source">使用原生 Agent 前請確認來源專案與版本。</p>
+  <label><input id="team-workspace-ack" type="checkbox"> 我確認上述來源專案、版本、工具權限及資料傳送方式</label>
   <p>請手動輸入各供應商提供的模型 ID；OpenRouter 模型 ID 可先在下方直接模型的清單中查詢。</p>
   <div id="team-workers"></div><button id="team-add" type="button" class="secondary">增加模型</button><button id="team-remove" type="button" class="secondary">移除最後一個模型</button>
-  <label for="team-task">總任務</label><textarea id="team-task" rows="4" maxlength="8000"></textarea>
+  <label for="team-task">總任務（含原生 Agent 時最多 3000 字）</label><textarea id="team-task" rows="4" maxlength="8000"></textarea>
   <div class="input-row"><button id="team-start" type="button" class="primary">自動拆分並執行</button><button id="team-stop" type="button" class="danger">停止多模型任務</button></div>
   <p id="team-status" role="status"></p><div id="team-results"></div><h4>彙整結果</h4><pre id="team-summary"></pre></section>
   <p id="agent-inventory" class="note"></p><p id="agent-role-note" class="note" hidden>需要 Administrator 登入才能啟動與操作。</p>
