@@ -102,6 +102,8 @@ class AgentSession:
         self.method = None; self.session = None; self.response = ''; self.activity = []; self.turn = 0
         self.permission = None; self.pending = {}; self.next_id = 1
         self.job = self.sock = self.listener = None; self.closed = False
+        self.cleanup_done = threading.Event(); self.cleanup_done.set()
+        self.cleanup_failed = False
         self.prompt_timer = None
         self.started = threading.Event()
         self.expiry = None
@@ -364,6 +366,7 @@ class AgentSession:
                 self.prompt_timer.cancel(); self.prompt_timer = None
             sock, job, listener = self.sock, self.job, self.listener
             self.sock = self.job = self.listener = None
+            if job and hasattr(self, 'cleanup_done'): self.cleanup_done.clear()
         if sock:
             try: sock.shutdown(socket.SHUT_RDWR)
             except OSError: pass
@@ -371,6 +374,16 @@ class AgentSession:
         if listener: listener.close()
         if job:
             try: job.stop()
-            except GuardError:
-                with self.lock: self.phase = 'failed'; self.error = '無法確認 Agent 程序已停止。'
-            finally: job.close()
+            except Exception:
+                with self.lock:
+                    self.cleanup_failed = True
+                    self.phase = 'failed'; self.error = '無法確認 Agent 程序已停止。'
+            finally:
+                try:
+                    job.close()
+                except Exception:
+                    with self.lock:
+                        self.cleanup_failed = True
+                        self.phase = 'failed'; self.error = '無法確認 Agent 程序已停止。'
+                finally:
+                    if hasattr(self, 'cleanup_done'): self.cleanup_done.set()

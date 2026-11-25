@@ -24,6 +24,7 @@ from .read_model import ReadModel
 from .agent_control import AgentSession, AGENTS, inventory
 from .direct_model_bridge import catalog, model_ids, provider_endpoint, valid_key, valid_model
 from . import codex_report
+from .model_team import ModelTeam
 
 VIEWS = {'overview', 'board', 'monitor', 'workspaces', 'reviews', 'events', 'settings', 'handoff'}
 ROLES = {'viewer': 0, 'operator': 1, 'administrator': 2}
@@ -86,6 +87,8 @@ class Console:
         self.model = ReadModel(parallel)
         self.sessions = {}
         self.agent_sessions = {}
+        self.model_teams = {}
+        self.team_cleanup_failed = False
         self.closed = False
         self.failures = deque(maxlen=5)
         # ponytail: four HTTP handlers share one bounded local-controller lock;
@@ -125,6 +128,10 @@ class Console:
     def close_session(self, sid):
         with self.lock:
             self.sessions.pop(sid, None)
+            team = self.model_teams.pop(sid, None)
+            if team:
+                team.close()
+                if team.snapshot()['phase'] == 'cleanup_failed': self.team_cleanup_failed = True
             for agent in self.agent_sessions.pop(sid, {}).values():
                 agent.close()
 
@@ -346,7 +353,7 @@ class Handler(BaseHTTPRequestHandler):
             if self.headers.get('Content-Type') != 'application/json':
                 raise Refused(415)
             length = self.headers.get('Content-Length', '')
-            limit = 262144 if route == '/api/agent/prompt' else 16384
+            limit = 262144 if route in ('/api/agent/prompt', '/api/team/start') else 16384
             if not re.fullmatch(r'[0-9]{1,6}', length) or not 0 < int(length) <= limit:
                 raise Refused(413)
             raw = self.rfile.read(int(length))
@@ -398,7 +405,35 @@ class Handler(BaseHTTPRequestHandler):
                     if str(uuid.UUID(thread)) != thread: thread = ''
                 except ValueError:
                     thread = ''
-                return self.reply(200, dict(agents=inventory(), sessions={k: v.snapshot() for k, v in sessions.items()}, codex_thread=thread))
+                return self.reply(200, dict(agents=inventory(), sessions={k: v.snapshot() for k, v in sessions.items()}, codex_thread=thread,
+                                            team=app.model_teams[sid].snapshot() if sid in app.model_teams else None))
+            if route == '/api/team/start' and self.command == 'POST':
+                if ROLES[session['role']] < 2: raise Refused(403)
+                if app.team_cleanup_failed or any(team.snapshot()['phase'] == 'cleanup_failed' for team in app.model_teams.values()):
+                    return self.reply(503, {'error': '無法確認先前的模型程序已停止；請檢查並重新啟動主控台。'})
+                shape(body, {'task', 'workers'})
+                task, workers = body['task'], body['workers']
+                if not isinstance(task, str) or not 1 <= len(task.strip()) <= 8000 or not isinstance(workers, list) or not 2 <= len(workers) <= 4: raise Refused()
+                existing = app.model_teams.get(sid)
+                if existing and existing.snapshot()['phase'] not in ('done', 'failed', 'stopped'): raise Refused(409)
+                configs = []
+                for worker in workers:
+                    shape(worker, {'provider', 'base_url', 'privacy', 'model', 'api_key'})
+                    if not valid_key(worker['api_key']) or not valid_model(worker['model']): raise Refused()
+                    try: provider_endpoint(worker['provider'], worker['base_url'], worker['privacy'])
+                    except ValueError: raise Refused()
+                    configs.append(dict(key=worker['api_key'], models=[worker['model']], provider=worker['provider'], base_url=worker['base_url'], privacy=worker['privacy']))
+                if existing: existing.close()
+                team = ModelTeam(app.p.root, task.strip(), configs)
+                app.model_teams[sid] = team
+                return self.reply(200, team.snapshot())
+            if route == '/api/team/stop' and self.command == 'POST':
+                if ROLES[session['role']] < 2: raise Refused(403)
+                shape(body, {'instance_id'})
+                team = app.model_teams.get(sid)
+                if not team or body['instance_id'] != team.instance_id: raise Refused(409)
+                team.close()
+                return self.reply(200, team.snapshot())
             if route == '/api/agent/report' and self.command == 'POST':
                 if ROLES[session['role']] < 2: raise Refused(403)
                 shape(body, {'agent', 'thread', 'response_sha256'})
