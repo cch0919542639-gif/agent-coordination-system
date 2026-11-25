@@ -238,7 +238,7 @@ class AgentSession:
                         if len(details) > 6000 or len(str(title)) > 1000:
                             details = details[:6000] + '\n…內容過長，請拒絕並在原生介面處理。'
                             choices = [x for x in choices if x['kind'] == 'reject_once']
-                        self.permission = dict(request_id=msg['id'], title=str(title)[:1000], details=details, options=choices)
+                        self.permission = dict(request_id=msg['id'], token=secrets.token_urlsafe(24), title=str(title)[:1000], details=details, options=choices)
                         return
                 if 'id' in msg:
                     self._send(dict(jsonrpc='2.0', id=msg['id'], error=dict(code=-32601, message='Unsupported request')))

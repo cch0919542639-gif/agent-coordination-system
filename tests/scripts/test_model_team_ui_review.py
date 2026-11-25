@@ -86,6 +86,26 @@ const newSession = () => run("session={role:'administrator',csrf:'fresh'};agentS
   reply(oldStopReq,200,fixtureTeam('stopped','private old')); await oldStop;
   assert.equal(run('agentSnapshot.team'),null); assert.equal(get('team-summary').textContent,'');
   assert.equal(run('teamRows[0].key.value'),'fixture-one');
+  // Native agents require explicit workspace acknowledgement; their row does not send an API key.
+  run("teamRows[1].kind.value='opencode';teamRows[1].kind.listeners.change();renderTeam(null)");
+  assert(run('teamRows[1].key.disabled && teamRows[1].provider.disabled'));
+  get('team-task').value='fixture task'; get('team-workspace-ack').checked=false;
+  await get('team-start').listeners.click(); assert.equal(requests.length,0);
+  get('team-workspace-ack').checked=true;
+  run('pending={abort(){}}');
+  const nativeStart=get('team-start').listeners.click(), nativeReq=requests.shift();
+  const nativeBody=JSON.parse(nativeReq.opts.body);
+  assert.deepEqual(nativeBody.workers[1],{kind:'opencode',model:'two'});
+  assert.equal(nativeBody.workspace_ack,true);
+  reply(nativeReq,200,{instance_id:'team-native',phase:'running',summary:'',assignments:[]});
+  await nativeStart;
+  // Each visible approval is bound to its team, worker, and request token.
+  run("agentSnapshot.team={instance_id:'team-native',phase:'running',summary:'',assignments:[{provider:'hermes',model:'fixture',phase:'running',task:'edit',workspace:'C:/fixture',changes:[],permission:{token:'permission-token',title:'Approve edit',details:'fixture',options:[{id:'deny',kind:'reject_once'}]}}]};renderTeam(agentSnapshot.team)");
+  const row=get('team-results').children[0], approval=row.children.find(item=>item.listeners.click);
+  assert(approval); const answer=approval.listeners.click(), answerReq=requests.shift();
+  assert.equal(answerReq.path,'/api/team/permission');
+  assert.deepEqual(JSON.parse(answerReq.opts.body),{instance_id:'team-native',index:0,token:'permission-token',choice:'deny'});
+  reply(answerReq,200,{instance_id:'team-native',phase:'running',summary:'',assignments:[]});await answer;
   console.log('independent team UI checks passed');
 })().catch(error=>{console.error(error);process.exitCode=1});
 ''', encoding='utf-8')

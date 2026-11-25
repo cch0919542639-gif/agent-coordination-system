@@ -18,8 +18,10 @@
  <section id="agent-panel" class="panel" hidden aria-labelledby="agent-title">
   <div class="panel-heading"><h2 id="agent-title">Agent 工作階段</h2><span class="badge">手動啟動</span></div>
   <p>使用 Agent 原生登入與提供者設定。OpenCode 工具命令會直接執行，不逐項詢問；設定於重新連線後生效。Hermes 新連線使用精簡工具：讀寫、修補及搜尋檔案、終端與程序管理；不載入其他工具或 MCP，背景程序不接受互動輸入。Hermes 偵測為危險的命令須逐次授權，其他命令可能直接執行；這不是作業系統沙箱。Hermes 請使用模型選單切換；來源核對僅涵蓋主模型的提供者與端點，未驗證帳號身分。原生自動標題或對話壓縮等輔助功能可能依設定將內容傳送給其他提供者，未經此核對。實際用量與資料政策由提供者決定。</p>
-  <section aria-labelledby="team-title"><h3 id="team-title">多模型自動分工（純文字）</h3>
-  <p>設定 2 至 4 個模型；第一個模型負責拆分和彙整。總任務及分工內容會傳給各供應商，其他模型結果的前 4000 字也會傳給第一個供應商彙整，可能產生費用。非 OpenRouter 供應商的零資料保留不由主控台驗證。模型不能讀取檔案或執行命令，回覆需自行核對。</p>
+  <section aria-labelledby="team-title"><h3 id="team-title">多模型與 Agent 自動分工</h3>
+  <p>設定 2 至 4 個工作者；第一個直接模型負責拆分和彙整。總任務及分工內容會傳給各供應商，其他模型結果的前 4000 字也會傳給第一個供應商彙整，可能產生費用。非 OpenRouter 供應商的零資料保留不由主控台驗證。</p>
+  <p>OpenCode 與支援的 Hermes 可執行工具與修改檔案；各自使用目前專案最新 Git 提交建立的工作目錄，不包含原工作目錄未提交的變更。工作目錄不是安全沙盒，Agent 可能存取帳號有權存取的其他檔案及憑證，Git 資料庫也由工作目錄共用。OpenCode 工具操作沿用直接執行設定；Hermes 危險操作須審批。主控台不會主動合併成果，但無法限制 Agent 的命令。</p>
+  <label><input id="team-workspace-ack" type="checkbox"> 我了解上述工作目錄、工具權限及資料傳送方式</label>
   <p>請手動輸入各供應商提供的模型 ID；OpenRouter 模型 ID 可先在下方直接模型的清單中查詢。</p>
   <div id="team-workers"></div><button id="team-add" type="button" class="secondary">增加模型</button><button id="team-remove" type="button" class="secondary">移除最後一個模型</button>
   <label for="team-task">總任務</label><textarea id="team-task" rows="4" maxlength="8000"></textarea>
