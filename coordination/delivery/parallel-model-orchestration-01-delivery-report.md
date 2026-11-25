@@ -21,16 +21,18 @@ isolated tests. No installed console, user credential or live session changed.
 
 ## Validation Steps Performed
 
-Four isolated tests cover parallel work, structured planning failure, stale
-stop, owned-session cancellation, role/privacy validation and UI key clearing.
-A four-suite regression passed 123 tests with one skip; after the final
-team-only changes, direct-model and team suites passed 14 tests. Node syntax
-and coordination validation were checked.
+Independent backend and UI reviews found cross-login response races, misleading
+failure and cleanup states, lost partial results, missing controls and privacy
+disclosure. Repairs were independently re-reviewed without new reproducible
+blocking findings. Tests cover stale sessions, partial dispatch failures,
+cleanup errors, UI races, privacy disclosure and real owned subprocesses using
+synthetic providers. Six relevant suites passed 148 tests with one skip.
+Node syntax, coordination validation and Git diff checks passed.
 
 ## Known Residual Risks
 
-No independent review, real model-team call or visual browser verification has
-been completed. Model plans and answers may be incorrect or incomplete. The
+No real model-team call or visual browser verification has been completed.
+Model plans and answers may be incorrect or incomplete. The
 first model receives other model outputs and the summary uses at most the first
 4000 characters per result, marking truncation. These are text-only models;
 they cannot access files or execute code. Merge, publication and installation

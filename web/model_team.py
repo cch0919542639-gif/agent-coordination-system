@@ -12,11 +12,14 @@ class ModelTeam:
     def __init__(self, root, task, configs):
         self.lock = threading.RLock()
         self.cancelled = threading.Event()
+        self.cleanup_lock = threading.Lock()
+        self.cleanup_finished = False
+        self.outcome = None
         self.instance_id = secrets.token_urlsafe(24)
         self.phase = 'starting'
         self.error = None
         self.summary = ''
-        self.assignments = [dict(provider=c['provider'], model=c['models'][0], task='', phase='starting', result='', error=None) for c in configs]
+        self.assignments = [dict(provider=c['provider'], base_url=c['base_url'], privacy=c['privacy'], model=c['models'][0], task='', phase='starting', result='', error=None) for c in configs]
         self.agents = []
         self.root = root
         self.task = task
@@ -31,10 +34,28 @@ class ModelTeam:
     def close(self):
         with self.lock:
             self.cancelled.set()
-            agents = list(self.agents)
-            if self.phase not in ('done', 'failed'): self.phase = 'stopped'
-        for agent in agents:
-            agent.close()
+            if not self.cleanup_finished:
+                self.outcome = 'stopped'; self.phase = 'stopping'
+        self.finish_cleanup()
+
+    def finish_cleanup(self):
+        with self.cleanup_lock:
+            if self.cleanup_finished: return
+            failed = False
+            for agent in self.agents:
+                try:
+                    agent.close()
+                    done = getattr(agent, 'cleanup_done', None)
+                    if (done is not None and not done.wait(10)) or getattr(agent, 'cleanup_failed', False):
+                        failed = True
+                except Exception:
+                    failed = True
+            with self.lock:
+                self.cleanup_finished = True
+                if failed:
+                    self.phase = 'cleanup_failed'; self.error = '無法確認模型程序已停止，請檢查主控台程序。'
+                else:
+                    self.phase = self.outcome or 'failed'
 
     def send(self, agent, text):
         with self.lock:
@@ -73,9 +94,17 @@ class ModelTeam:
             with self.lock:
                 if self.cancelled.is_set(): return
                 self.phase = 'running'
-                for row, part in zip(self.assignments, parts): row.update(task=part, phase='running')
-            for agent, part in zip(self.agents, parts):
-                self.send(agent, '這是分工中的獨立文字任務。請明確說明限制，不要聲稱執行了未執行的工具或操作。\n總任務：' + self.task + '\n你的子任務：' + part)
+                for row, part in zip(self.assignments, parts): row.update(task=part, phase='pending')
+            submitted = []
+            for i, (agent, part) in enumerate(zip(self.agents, parts)):
+                try:
+                    self.send(agent, '這是分工中的獨立文字任務。請明確說明限制，不要聲稱執行了未執行的工具或操作。\n總任務：' + self.task + '\n你的子任務：' + part)
+                except Exception:
+                    if self.cancelled.is_set(): return
+                    with self.lock: self.assignments[i].update(phase='failed', error='無法送出子任務。')
+                else:
+                    with self.lock: self.assignments[i]['phase'] = 'running'
+                    submitted.append((i, agent))
             def collect(i, agent):
                 try:
                     state = self.wait_ready(agent)
@@ -83,7 +112,7 @@ class ModelTeam:
                     with self.lock: self.assignments[i].update(phase='done', result=state['response'])
                 except Exception as exc:
                     with self.lock: self.assignments[i].update(phase='failed', error=str(exc)[:300])
-            threads = [threading.Thread(target=collect, args=(i, agent), daemon=True) for i, agent in enumerate(self.agents)]
+            threads = [threading.Thread(target=collect, args=(i, agent), daemon=True) for i, agent in submitted]
             for thread in threads: thread.start()
             for thread in threads: thread.join()
             if self.cancelled.is_set(): return
@@ -102,10 +131,12 @@ class ModelTeam:
                     with self.lock: self.summary = '彙整失敗，請查看各模型的個別結果。'
             with self.lock:
                 if not self.summary: self.summary = '彙整失敗，請查看各模型的個別結果。'
-                if not self.cancelled.is_set(): self.phase = 'done' if all(x['phase'] == 'done' for x in self.assignments) and self.summary != '彙整失敗，請查看各模型的個別結果。' else 'failed'
+                if not self.cancelled.is_set():
+                    self.outcome = 'done' if all(x['phase'] == 'done' for x in self.assignments) and self.summary != '彙整失敗，請查看各模型的個別結果。' else 'failed'
+                    self.phase = 'cleaning'
         except Exception as exc:
             with self.lock:
-                if not self.cancelled.is_set(): self.phase = 'failed'; self.error = '任務規劃或模型連線失敗；請檢查供應商、模型與設定。'
+                if not self.cancelled.is_set(): self.outcome = 'failed'; self.phase = 'cleaning'; self.error = '任務規劃或模型連線失敗；請檢查供應商、模型與設定。'
         finally:
             self.configs = []
-            for agent in self.agents: agent.close()
+            self.finish_cleanup()

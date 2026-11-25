@@ -94,6 +94,91 @@ def test_invalid_plan_never_dispatches_workers(console, monkeypatch):
     assert not any(row['result'] for row in state['assignments'])
 
 
+def test_one_dispatch_failure_preserves_other_result(console, monkeypatch):
+    class FakeAgent:
+        def __init__(self, agent, root, direct_config):
+            self.provider = direct_config['provider']; self.phase = 'ready'; self.response = ''
+        def snapshot(self): return dict(phase=self.phase, error=None, response=self.response)
+        def prompt(self, text):
+            if text.startswith('將以下總任務'): self.response = '["alpha", "beta"]'
+            elif text.startswith('請根據以下'): self.response = 'partial summary'
+            elif self.provider == 'deepseek': raise OSError('private transport details')
+            else: self.response = 'first result'
+        def close(self): self.phase = 'stopped'
+    monkeypatch.setattr(model_team, 'AgentSession', FakeAgent)
+    admin = login(console, 'administrator')
+    workers = [dict(provider='openrouter',base_url='',privacy='zdr',model='one',api_key='fixture-key'),
+               dict(provider='deepseek',base_url='',privacy='standard',model='two',api_key='fixture-key')]
+    assert request(console, '/api/team/start', {'task':'test', 'workers':workers}, admin)[0] == 200
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        state = request(console, '/api/agents', session=admin)[1]['team']
+        if state['phase'] == 'failed': break
+        time.sleep(.05)
+    assert state['phase'] == 'failed'
+    assert state['assignments'][0]['phase'] == 'done' and state['assignments'][0]['result'] == 'first result'
+    assert state['assignments'][1]['phase'] == 'failed' and state['assignments'][1]['error']
+    assert 'private transport' not in json.dumps(state)
+    assert state['summary'] == 'partial summary'
+
+
+def test_unconfirmed_cleanup_blocks_new_team(console, monkeypatch):
+    active = threading.Event()
+    class FakeAgent:
+        def __init__(self, agent, root, direct_config):
+            self.phase = 'ready'; self.cleanup_failed = False
+        def snapshot(self): return dict(phase=self.phase, error=None, response='')
+        def prompt(self, text): self.phase = 'running'; active.set()
+        def close(self): self.phase = 'failed'; self.cleanup_failed = True
+    monkeypatch.setattr(model_team, 'AgentSession', FakeAgent)
+    admin = login(console, 'administrator')
+    config = dict(provider='deepseek',base_url='',privacy='standard',model='test',api_key='fixture-key')
+    payload = {'task':'test', 'workers':[config,config]}
+    _, started, _ = request(console, '/api/team/start', payload, admin)
+    assert active.wait(3)
+    code, stopped, _ = request(console, '/api/team/stop', {'instance_id':started['instance_id']}, admin)
+    assert code == 200 and stopped['phase'] == 'cleanup_failed' and stopped['error']
+    assert request(console, '/api/team/start', payload, admin)[0] == 503
+    assert request(console, '/api/logout', {}, admin)[0] == 200
+    fresh_admin = login(console, 'administrator')
+    assert request(console, '/api/team/start', payload, fresh_admin)[0] == 503
+
+
+def test_team_waits_for_inflight_agent_cleanup():
+    class FakeAgent:
+        def __init__(self):
+            self.cleanup_done = threading.Event(); self.cleanup_failed = False
+        def close(self): pass
+    agent = FakeAgent()
+    team = model_team.ModelTeam.__new__(model_team.ModelTeam)
+    team.lock = threading.RLock(); team.cleanup_lock = threading.Lock()
+    team.cleanup_finished = False; team.agents = [agent]
+    team.phase = 'cleaning'; team.outcome = 'done'; team.error = None
+    worker = threading.Thread(target=team.finish_cleanup)
+    worker.start()
+    time.sleep(.05)
+    assert worker.is_alive() and team.phase == 'cleaning'
+    agent.cleanup_failed = True; agent.cleanup_done.set()
+    worker.join(2)
+    assert not worker.is_alive() and team.phase == 'cleanup_failed'
+
+
+def test_background_cleanup_non_guard_error_is_sticky():
+    from web.agent_control import AgentSession
+    class FakeJob:
+        def stop(self): raise OSError('fixture')
+        def close(self): pass
+    agent = AgentSession.__new__(AgentSession)
+    agent.lock = threading.RLock(); agent.cleanup_done = threading.Event(); agent.cleanup_done.set()
+    agent.cleanup_failed = False; agent.prompt_timer = None
+    agent.sock = agent.listener = None; agent.job = FakeJob()
+    agent.phase = 'ready'; agent.error = None; agent.expiry = None; agent.closed = False
+    agent._cleanup()
+    assert agent.cleanup_done.is_set() and agent.cleanup_failed
+    agent.close()
+    assert agent.cleanup_failed
+
+
 def test_team_frontend_submits_distinct_workers_and_hides_keys(tmp_path):
     import os
     import shutil
@@ -124,3 +209,39 @@ assert.equal(vm.runInContext('teamRows[0].key.value',ctx),'');assert.equal(vm.ru
         assert b'team UI passed' in job.stdout.read()
     finally:
         job.close()
+
+
+def test_team_with_real_owned_bridges_and_synthetic_provider(console, tmp_path, monkeypatch):
+    import os
+    import pytest
+    from web import agent_control
+    from worker_process_guard import identity_state
+    if os.name != 'nt': pytest.skip('Windows owned Job')
+    root = Path(__file__).resolve().parents[2]
+    bridge = tmp_path / 'fake_team_bridge.py'
+    bridge.write_text('''import json,sys\nsys.path.insert(0,sys.argv.pop(1))\nfrom web import direct_model_bridge as bridge\ndef complete(key,model,messages,privacy="zdr",provider="openrouter",base_url=""):\n    if provider == "openrouter" and len(messages) == 1: return json.dumps(["alpha","beta"]), "stop"\n    if provider == "openrouter" and len(messages) == 5: return "merged", "stop"\n    return "result-" + provider, "stop"\nbridge.complete=complete\nbridge.main()\n''', encoding='utf-8')
+    original = agent_control.JobProcess
+    identities = []
+    def launch(args, **kwargs):
+        assert 'fixture-key' not in ' '.join(args) and kwargs.get('pipe_stdin') is True
+        args = [args[0], args[1], str(bridge), str(root), *args[3:]]
+        job = original(args, **kwargs)
+        identities.append((job.pid, job.creation_time))
+        return job
+    monkeypatch.setattr(agent_control, 'JobProcess', launch)
+    admin = login(console, 'administrator')
+    workers = [dict(provider='openrouter',base_url='',privacy='zdr',model='sample-one',api_key='fixture-key-one'),
+               dict(provider='deepseek',base_url='',privacy='standard',model='sample-two',api_key='fixture-key-two')]
+    assert request(console, '/api/team/start', {'task':'fixture task', 'workers':workers}, admin)[0] == 200
+    deadline = time.monotonic() + 25
+    while time.monotonic() < deadline:
+        state = request(console, '/api/agents', session=admin)[1]['team']
+        if state['phase'] in ('done', 'failed'): break
+        time.sleep(.05)
+    assert state['phase'] == 'done', state
+    assert state['summary'] == 'merged'
+    assert [x['result'] for x in state['assignments']] == ['result-openrouter', 'result-deepseek']
+    deadline = time.monotonic() + 5
+    while any(identity_state(pid, created) not in ('missing', 'exited') for pid, created in identities) and time.monotonic() < deadline:
+        time.sleep(.05)
+    assert len(identities) == 2 and all(identity_state(pid, created) in ('missing', 'exited') for pid, created in identities)

@@ -1,3 +1,13 @@
+## Parallel direct-model independent review (2026-11-25)
+
+Independent backend and UI review identified cross-login stale responses,
+lost partial results, unconfirmed cleanup, misleading UI errors, missing model
+removal and incomplete cross-provider disclosure. Repairs were independently
+re-reviewed without new reproducible blocking findings. Six affected suites
+passed 148 tests with one skip, including synthetic provider subprocesses.
+The candidate awaits merge and release; live team calls and visual browser
+verification remain pending. No user keys or live sessions were used.
+
 ## Parallel direct-model task candidate (2026-11-25)
 
 The user chose automatic task decomposition. A local text-only candidate supports

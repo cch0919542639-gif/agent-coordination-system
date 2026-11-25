@@ -88,6 +88,7 @@ class Console:
         self.sessions = {}
         self.agent_sessions = {}
         self.model_teams = {}
+        self.team_cleanup_failed = False
         self.closed = False
         self.failures = deque(maxlen=5)
         # ponytail: four HTTP handlers share one bounded local-controller lock;
@@ -128,7 +129,9 @@ class Console:
         with self.lock:
             self.sessions.pop(sid, None)
             team = self.model_teams.pop(sid, None)
-            if team: team.close()
+            if team:
+                team.close()
+                if team.snapshot()['phase'] == 'cleanup_failed': self.team_cleanup_failed = True
             for agent in self.agent_sessions.pop(sid, {}).values():
                 agent.close()
 
@@ -406,6 +409,8 @@ class Handler(BaseHTTPRequestHandler):
                                             team=app.model_teams[sid].snapshot() if sid in app.model_teams else None))
             if route == '/api/team/start' and self.command == 'POST':
                 if ROLES[session['role']] < 2: raise Refused(403)
+                if app.team_cleanup_failed or any(team.snapshot()['phase'] == 'cleanup_failed' for team in app.model_teams.values()):
+                    return self.reply(503, {'error': '無法確認先前的模型程序已停止；請檢查並重新啟動主控台。'})
                 shape(body, {'task', 'workers'})
                 task, workers = body['task'], body['workers']
                 if not isinstance(task, str) or not 1 <= len(task.strip()) <= 8000 or not isinstance(workers, list) or not 2 <= len(workers) <= 4: raise Refused()
