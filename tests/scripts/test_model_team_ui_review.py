@@ -145,6 +145,17 @@ const newSession = () => run("session={role:'administrator',csrf:'fresh'};agentS
   assert(requests.some(r=>r.path==='/api/agents'));
   reply(staleStopReq,200,{sessions:{},agents:[],team:{instance_id:'team-native',phase:'running'}}); await staleStopPoll;
   assert.equal(run('agentSnapshot.team.phase'),'stopped');
+  // Saving never returns the key; later team calls refer to the saved credential.
+  run("if (pending) pending.abort();pending=null;teamRows[1].kind.value='direct';teamRows[1].kind.listeners.change();teamRows[1].provider.value='deepseek';teamRows[1].key.value='synthetic-key';teamRows[1].model.value='model-two';teamRows[0].key.value='synthetic-first';teamRows[0].model.value='model-one';renderTeam(agentSnapshot.team)");
+  requests.length=0;
+  const save=run('teamRows[1].credentials.save.listeners.click()'), saveReq=take('/api/keys/save');
+  assert.equal(JSON.parse(saveReq.opts.body).api_key,'synthetic-key');
+  reply(saveReq,200,{saved:true}); await save;
+  assert.equal(run('teamRows[1].key.value'),''); assert(run('teamRows[1].credentials.use.checked'));
+  const storedStart=get('team-start').listeners.click(), storedReq=take('/api/team/start');
+  const stored=JSON.parse(storedReq.opts.body).workers[1];
+  assert.equal(stored.use_saved,true); assert.equal(stored.api_key,'');
+  reply(storedReq,400,{}); await storedStart;
   console.log('independent team UI checks passed');
 })().catch(error=>{console.error(error);process.exitCode=1});
 ''', encoding='utf-8')
