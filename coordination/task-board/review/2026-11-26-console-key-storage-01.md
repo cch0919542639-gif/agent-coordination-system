@@ -11,6 +11,7 @@ allowed_scope:
   - tests/scripts/**
   - docs/operations/agent-control-center-guide.md
   - coordination/task-board/**
+  - coordination/reviews/**
   - coordination/delivery/console-key-storage-01-delivery-report.md
   - PROGRESS.md
 forbidden_scope:

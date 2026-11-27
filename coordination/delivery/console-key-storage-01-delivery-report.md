@@ -3,7 +3,7 @@
 - Task ID: console-key-storage-01
 - Phase: agent-control-center
 - Agent: ORCHESTRATOR
-- Status: validated; review pending
+- Status: independently reviewed; awaiting integration
 
 ## Changed Files
 
@@ -19,12 +19,13 @@ The browser may save, delete and request use but cannot retrieve key plaintext.
 
 Synthetic Windows cross-process credential write/read/delete passed; direct/team
 API and UI fixtures exercised saved credentials without exposing secrets. The
-final focused run passed 15 tests. A broader regression passed 143 tests with two
-skips before final small storage-error and zeroing improvements. No real user
-credentials were read.
+final focused run passed 15 tests. Final broader Agent/team/console regression
+passed 144 tests with two skips. Independent backend and UI reviewers separately
+validated the affected paths and re-reviewed the repairs. No real user credentials
+were read.
 
 ## Known Residual Risks
 
 The current console runs native agents as the same Windows user; they may access
 that user's credentials. This is not strict identity isolation. The candidate
-requires independent review before publication and is not installed.
+has not been published or installed.

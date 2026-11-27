@@ -15,7 +15,7 @@ let session = null, view = 'overview', offset = 0, cursor = 0, eventRows = [];
 let handoffSnapshot = null, handoffSignature = '';
 let agentSnapshot = null, agentSignature = '', permissionSignature = '', agentBusy = false, agentActionError = '', agentActionMessage = '';
 let agentPromptSent = {}, directCatalogGeneration = 0, directRenderedInstance = '';
-let teamRows = [], teamBusy = false, teamActionError = '', teamResultsSignature = '', teamActionGeneration = 0, teamWorkspace = null;
+let teamRows = [], teamBusy = false, credentialBusy = false, teamActionError = '', teamResultsSignature = '', teamActionGeneration = 0, teamWorkspace = null;
 let timer = null, pending = null, generation = 0, plan = null, actionBusy = false, revision = 0, authGeneration = 0;
 const staleWorkspaceMessage = '專案版本已改變；請重新確認來源專案及版本。';
 function node(tag, content, cls) { const n = document.createElement(tag); if (content !== undefined) n.textContent = content; if (cls) n.className = cls; return n; }
@@ -210,9 +210,12 @@ function renderAgents(data) {
       $('direct-model-status').textContent = '工作階段已變更，請確認供應商及模型。';
     }
     if (($('direct-provider').value || 'openrouter') !== provider) {
+      directCredentials.reset();
       $('direct-provider').value = provider; $('direct-key').value = ''; resetDirectModels();
     }
-    if (provider === 'custom') $('direct-base-url').value = state.base_url || '';
+    if (provider === 'custom' && $('direct-base-url').value !== (state.base_url || '')) {
+      directCredentials.reset(); $('direct-base-url').value = state.base_url || '';
+    }
     $('direct-base-field').hidden = provider !== 'custom';
     if ($('direct-privacy').value !== state.privacy) {
       resetDirectModels();
@@ -240,8 +243,8 @@ function renderAgents(data) {
     if ((state?.models || []).some(x => x.id === state?.model)) $('agent-model').value = state.model;
   }
   const directReady = name !== 'direct' || ((!!$('direct-key').value || directCredentials.use.checked) && !!$('direct-model').value.trim() && (directProvider !== 'custom' || !!$('direct-base-url').value.trim())) || (directProvider === 'openrouter' && found?.configured);
-  for (const control of [directCredentials.use,directCredentials.save,directCredentials.remove]) control.disabled = !admin || agentBusy;
-  $('agent-start').disabled = !admin || agentBusy || !found?.installed || !directReady || !['offline','failed','stopped'].includes(phase);
+  for (const control of [directCredentials.use,directCredentials.save,directCredentials.remove,directCredentials.check]) control.disabled = !admin || agentBusy || credentialBusy;
+  $('agent-start').disabled = !admin || agentBusy || credentialBusy || !found?.installed || !directReady || !['offline','failed','stopped'].includes(phase);
   $('agent-apply').disabled = !admin || agentBusy || phase !== 'ready' || !(state?.models || []).length;
   $('agent-send').disabled = !admin || agentBusy || phase !== 'ready' || !state?.model;
   $('agent-report').disabled = !admin || agentBusy || phase !== 'ready' || !state?.response || !!state?.error;
@@ -337,37 +340,40 @@ function addTeamWorker() {
   teamRows.push({box,kind,provider,base,model,key,privacy,credentials}); $('team-workers').append(box);
 }
 function credentialControls(container, provider, base, key) {
-  const save=node('button','保存金鑰'), remove=node('button','刪除已保存金鑰');
-  save.type='button'; remove.type='button';
+  const save=node('button','保存金鑰'), remove=node('button','刪除已保存金鑰'), check=node('button','查詢保存狀態');
+  save.type='button'; remove.type='button'; check.type='button';
   const use=node('input'); use.type='checkbox'; const label=node('label'); label.append(use,node('span','使用已保存的金鑰'));
-  const status=node('span',''); container.append(save,remove,label,status);
+  const status=node('span',''); container.append(save,remove,check,label,status);
   let generation=0;
   const reset=()=>{ generation++; use.checked=false; status.textContent=''; };
   provider.addEventListener('change', reset); base.addEventListener('input', reset);
-  key.addEventListener('input',()=>{ if (key.value) use.checked=false; });
-  use.addEventListener('change',()=>{ if (agentSnapshot) renderAgents(agentSnapshot); });
+  key.addEventListener('input',()=>{ generation++; status.textContent=''; if (key.value) use.checked=false; });
+  use.addEventListener('change',()=>{ generation++; if (agentSnapshot) renderAgents(agentSnapshot); });
   async function operate(action) {
-    if (!session) return;
+    if (!session || credentialBusy) return;
     const current=session, version=++generation, value=key.value;
     const body={provider:provider.value || 'openrouter',base_url:provider.value==='custom' ? base.value.trim() : ''};
     if (action==='save') { if (!value) { status.textContent='請先輸入 API Key。'; return; } body.api_key=value; }
-    save.disabled=true; remove.disabled=true;
+    const controller=new AbortController(), timeout=setTimeout(()=>controller.abort(),15000);
+    credentialBusy=true; if (agentSnapshot) renderAgents(agentSnapshot);
     try {
-      await api('/api/keys/'+action,body);
+      const result=await api('/api/keys/'+action,body,controller.signal);
       if (current!==session || generation!==version) return;
       if (action==='save') { if (key.value===value) key.value=''; use.checked=true; status.textContent='已保存在此 Windows 帳號。'; }
-      else { use.checked=false; status.textContent='已刪除保存的金鑰。'; }
-    } catch (error) { if (current===session && generation===version) status.textContent=error.message; }
-    finally { if (current===session) { save.disabled=false; remove.disabled=false; if (agentSnapshot) renderAgents(agentSnapshot); } }
+      else if (action==='delete') { use.checked=false; status.textContent='已刪除保存的金鑰。'; }
+      else status.textContent=result.saved ? '此供應商與網址有已保存金鑰；無法檢查其內容。' : '此供應商與網址沒有已保存金鑰。';
+    } catch (error) { if (current===session && generation===version) status.textContent=error.name==='AbortError' ? '操作逾時，結果未確認；請查詢保存狀態後再操作。' : error.message; }
+    finally { clearTimeout(timeout); credentialBusy=false; if (session && agentSnapshot) renderAgents(agentSnapshot); }
   }
   save.addEventListener('click',()=>operate('save')); remove.addEventListener('click',()=>operate('delete'));
-  return {use,save,remove,reset};
+  check.addEventListener('click',()=>operate('status'));
+  return {use,save,remove,check,status,reset};
 }
 const directCredentials=credentialControls($('direct-key-controls'), $('direct-provider'), $('direct-base-url'), $('direct-key'));
 function renderTeam(team) {
   if (!teamRows.length) { addTeamWorker(); addTeamWorker(); }
   const active = team && ['starting','planning','running','summarizing','cleaning','stopping','cleanup_failed'].includes(team.phase);
-  $('team-start').disabled = session.role !== 'administrator' || teamBusy || active;
+  $('team-start').disabled = session.role !== 'administrator' || teamBusy || credentialBusy || active;
   $('team-add').disabled = session.role !== 'administrator' || teamBusy || active || teamRows.length >= 4;
   $('team-remove').disabled = session.role !== 'administrator' || teamBusy || active || teamRows.length <= 2;
   $('team-stop').disabled = session.role !== 'administrator' || teamBusy || !active || ['cleaning','stopping','cleanup_failed'].includes(team?.phase);
@@ -378,7 +384,7 @@ function renderTeam(team) {
     const direct = !row.kind.value || row.kind.value === 'direct';
     for (const control of [row.kind,row.model]) control.disabled = locked;
     for (const control of [row.provider,row.base,row.key]) control.disabled = locked || !direct;
-    for (const control of [row.credentials.use,row.credentials.save,row.credentials.remove]) control.disabled = locked || !direct;
+    for (const control of [row.credentials.use,row.credentials.save,row.credentials.remove,row.credentials.check]) control.disabled = locked || credentialBusy || !direct;
     row.privacy.disabled = locked || !direct || row.provider.value !== 'openrouter';
   }
   $('team-status').textContent = teamActionError || (team ? ({starting:'正在連線模型',planning:'正在拆分任務',running:'各模型執行中',summarizing:'正在彙整',cleaning:'正在清理模型程序',stopping:'正在停止模型程序',cleanup_failed:'程序停止狀態未確認',done:'已完成',failed:'任務未完全成功',stopped:'已停止'})[team.phase] + (team.error ? '：' + team.error : '') : '尚未執行');

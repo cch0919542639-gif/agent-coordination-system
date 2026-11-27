@@ -208,7 +208,9 @@ const tick=()=>new Promise(r=>setImmediate(r));function reply(req,status,body){r
  vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',instance_id:'snapshot-id',provider:'openrouter',base_url:'',model:'vendor/ordinary:free',models:[]}}})",ctx);
  assert.equal(get('direct-model').value,'vendor/ordinary:free');
  get('direct-key').value='stale-key';
+ vm.runInContext('directCredentials.use.checked=true',ctx);
  vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',instance_id:'new-id',provider:'deepseek',base_url:'',model:'deepseek-chat',models:[]}}})",ctx);
+ assert(!vm.runInContext('directCredentials.use.checked',ctx));
  assert.equal(get('direct-model').value,'deepseek-chat');assert.equal(get('direct-provider').value,'deepseek');assert.equal(get('direct-key').value,'');
  vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',instance_id:'snapshot-id',provider:'openrouter',base_url:'',model:'vendor/ordinary:free',models:[]}}})",ctx);
  assert.equal(get('direct-privacy').value,'standard');assert(get('direct-privacy').disabled);
@@ -233,6 +235,10 @@ const tick=()=>new Promise(r=>setImmediate(r));function reply(req,status,body){r
  reply(customPost,200,{phase:'starting',provider:'custom',base_url:'https://api.example.test/v1',privacy:'standard',models:[]});await customStart;
  reply(requests.shift(),200,{agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',provider:'custom',base_url:'https://api.example.test/v1',privacy:'standard',models:[]}}});await tick();
  assert.equal(get('direct-provider').value,'custom');assert(get('direct-provider').disabled);
+ vm.runInContext('directCredentials.use.checked=true',ctx);
+ vm.runInContext("renderAgents({agents:[{id:'direct',installed:true}],sessions:{direct:{phase:'ready',privacy:'standard',provider:'custom',base_url:'https://other.example.test/v1',model:'custom-model',models:[]}}})",ctx);
+ assert(!vm.runInContext('directCredentials.use.checked',ctx));
+ assert.equal(get('direct-base-url').value,'https://other.example.test/v1');
  console.log('direct UI passed');
 })().catch(e=>{console.error(e);process.exitCode=1});
 ''', encoding='utf-8')
