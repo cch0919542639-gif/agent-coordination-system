@@ -26,6 +26,7 @@ from .direct_model_bridge import catalog, model_ids, provider_endpoint, valid_ke
 from . import codex_report
 from .model_team import ModelTeam
 from .team_workspace import base_revision, repository_root
+from . import credential_store
 
 VIEWS = {'overview', 'board', 'monitor', 'workspaces', 'reviews', 'events', 'settings', 'handoff'}
 ROLES = {'viewer': 0, 'operator': 1, 'administrator': 2}
@@ -37,6 +38,10 @@ STATIC = {'/': ('index.html', 'text/html'), '/app.css': ('app.css', 'text/css'),
 class Refused(Exception):
     def __init__(self, status=400):
         self.status = status
+
+
+class SavedKeyMissing(Exception):
+    pass
 
 
 def shape(value, keys):
@@ -51,6 +56,23 @@ def unique(pairs):
             raise Refused()
         result[key] = value
     return result
+
+
+def credential_name(app, session, provider, base_url):
+    try:
+        endpoint = provider_endpoint(provider, base_url, 'zdr' if provider == 'openrouter' else 'standard')
+    except ValueError:
+        raise Refused() from None
+    return credential_store.target(app.p.root, session['username'], provider, endpoint)
+
+
+def saved_key(app, session, provider, base_url):
+    try:
+        key = credential_store.load(credential_name(app, session, provider, base_url))
+    except credential_store.CredentialError:
+        raise Refused(503) from None
+    if not valid_key(key): raise SavedKeyMissing()
+    return key
 
 
 class Console:
@@ -426,6 +448,21 @@ class Handler(BaseHTTPRequestHandler):
                     thread = ''
                 return self.reply(200, dict(agents=inventory(), sessions={k: v.snapshot() for k, v in sessions.items()}, codex_thread=thread,
                                             team=app.model_teams[sid].snapshot() if sid in app.model_teams else None))
+            if route in ('/api/keys/status', '/api/keys/save', '/api/keys/delete') and self.command == 'POST':
+                if ROLES[session['role']] < 2: raise Refused(403)
+                shape(body, {'provider', 'base_url', 'api_key'} if route.endswith('/save') else {'provider', 'base_url'})
+                name = credential_name(app, session, body['provider'], body['base_url'])
+                try:
+                    if route.endswith('/save'):
+                        if not valid_key(body['api_key']): raise Refused()
+                        credential_store.save(name, body['api_key'])
+                        return self.reply(200, {'saved': True})
+                    if route.endswith('/delete'):
+                        credential_store.delete(name)
+                        return self.reply(200, {'saved': False})
+                    return self.reply(200, {'saved': credential_store.load(name) is not None})
+                except credential_store.CredentialError:
+                    raise Refused(503) from None
             if route == '/api/team/start' and self.command == 'POST':
                 if ROLES[session['role']] < 2: raise Refused(403)
                 if app.team_cleanup_failed or any(team.snapshot()['phase'] == 'cleanup_failed' for team in app.model_teams.values()):
@@ -452,11 +489,16 @@ class Handler(BaseHTTPRequestHandler):
                             except RuntimeError: return self.reply(409, {'error': '此 Hermes 版本的共享後端尚未通過主控台防護驗證。'})
                         configs.append(dict(kind=worker['kind'], provider=worker['kind'], base_url='', privacy='', models=[worker['model']]))
                         continue
-                    shape(worker, {'provider', 'base_url', 'privacy', 'model', 'api_key'})
-                    if not valid_key(worker['api_key']) or not valid_model(worker['model']): raise Refused()
+                    if isinstance(worker, dict) and 'use_saved' in worker:
+                        shape(worker, {'provider', 'base_url', 'privacy', 'model', 'api_key', 'use_saved'})
+                        if type(worker['use_saved']) is not bool or (worker['use_saved'] and worker['api_key']): raise Refused()
+                    else: shape(worker, {'provider', 'base_url', 'privacy', 'model', 'api_key'})
+                    if not valid_model(worker['model']): raise Refused()
                     try: provider_endpoint(worker['provider'], worker['base_url'], worker['privacy'])
                     except ValueError: raise Refused()
-                    configs.append(dict(key=worker['api_key'], models=[worker['model']], provider=worker['provider'], base_url=worker['base_url'], privacy=worker['privacy']))
+                    key = saved_key(app, session, worker['provider'], worker['base_url']) if worker.get('use_saved') else worker['api_key']
+                    if not valid_key(key): raise Refused()
+                    configs.append(dict(key=key, models=[worker['model']], provider=worker['provider'], base_url=worker['base_url'], privacy=worker['privacy']))
                 if existing: existing.close()
                 native = any(c.get('kind') in ('opencode', 'hermes') for c in configs)
                 if native and len(task.strip()) > 3000: raise Refused()
@@ -515,13 +557,17 @@ class Handler(BaseHTTPRequestHandler):
                 if (route == '/api/agent/start' and isinstance(body, dict) and body.get('agent') == 'direct'
                         and set(body) in ({'agent', 'api_key', 'model'}, {'agent', 'api_key', 'model', 'privacy'},
                                           {'agent', 'api_key', 'model', 'privacy', 'provider'},
-                                          {'agent', 'api_key', 'model', 'privacy', 'provider', 'base_url'})):
-                    if not valid_key(body['api_key']) or not valid_model(body['model']): raise Refused()
+                                          {'agent', 'api_key', 'model', 'privacy', 'provider', 'base_url'},
+                                          {'agent', 'api_key', 'model', 'privacy', 'provider', 'base_url', 'use_saved'})):
+                    if not valid_model(body['model']): raise Refused()
                     privacy, provider = body.get('privacy', 'zdr'), body.get('provider', 'openrouter')
                     base_url = body.get('base_url', '')
                     try: provider_endpoint(provider, base_url, privacy)
                     except ValueError: raise Refused()
-                    direct_config = {'key': body['api_key'], 'models': [body['model']], 'privacy': privacy,
+                    if 'use_saved' in body and (type(body['use_saved']) is not bool or (body['use_saved'] and body['api_key'])): raise Refused()
+                    key = saved_key(app, session, provider, base_url) if body.get('use_saved') else body['api_key']
+                    if not valid_key(key): raise Refused()
+                    direct_config = {'key': key, 'models': [body['model']], 'privacy': privacy,
                                      'provider': provider, 'base_url': base_url}
                 elif (route == '/api/agent/model' and isinstance(body, dict) and body.get('agent') == 'direct'):
                     if set(body) == {'agent', 'model'}: raise Refused(409)
@@ -638,6 +684,8 @@ class Handler(BaseHTTPRequestHandler):
     def handle_request(self):
         try:
             self.dispatch()
+        except SavedKeyMissing:
+            self.reply(409, {'error': '找不到此供應商及網址的已保存金鑰。'})
         except Refused as error:
             self.reply(error.status, dict(error='Request refused.'))
         except StateError:

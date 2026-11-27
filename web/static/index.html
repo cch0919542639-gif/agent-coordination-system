@@ -29,10 +29,11 @@
   <div class="input-row"><button id="team-start" type="button" class="primary">自動拆分並執行</button><button id="team-stop" type="button" class="danger">停止多模型任務</button></div>
   <p id="team-status" role="status"></p><div id="team-results"></div><h4>彙整結果</h4><pre id="team-summary"></pre></section>
   <p id="agent-inventory" class="note"></p><p id="agent-role-note" class="note" hidden>需要 Administrator 登入才能啟動與操作。</p>
-  <p>直接模型只傳送文字、不執行工具。請使用所選供應商的 API Key；金鑰僅供本次工作階段使用，不會儲存。自訂網址會收到金鑰與訊息，請確認網址可信。模型服務可能收費。</p>
+  <p>API Key 可選擇加密保存在本機 Windows 使用者憑證管理員，不會顯示或傳入模型訊息。使用已保存金鑰時會讀取當時的保存值；另一分頁可替換該值。同一 Windows 帳號的原生 Agent 仍可能存取憑證；這不是身分隔離。自訂網址會收到金鑰與訊息，請確認網址可信。</p>
   <div class="form-grid"><div><label for="agent-kind">Agent</label><select id="agent-kind"><option value="opencode">OpenCode</option><option value="hermes">Hermes</option><option value="direct">直接模型</option></select></div>
   <div id="agent-model-field"><label for="agent-model">提供者／模型</label><select id="agent-model"></select></div></div>
   <div id="direct-config" hidden><label for="direct-provider">模型供應商</label><select id="direct-provider"><option value="openrouter">OpenRouter</option><option value="deepseek">DeepSeek</option><option value="agnes">Agnes AI</option><option value="custom">自訂 OpenAI 相容 API</option></select><div id="direct-base-field" hidden><label for="direct-base-url">自訂 API 基底網址（HTTPS）</label><input id="direct-base-url" type="url" maxlength="512" autocomplete="off" placeholder="https://example.com/v1"></div><label for="direct-key">所選供應商的 API Key</label><input id="direct-key" type="password" maxlength="512" autocomplete="off" spellcheck="false">
+  <div id="direct-key-controls"></div>
   <label for="direct-privacy">資料隱私模式</label><select id="direct-privacy"><option value="zdr" selected>零資料保留（預設）</option><option value="standard">一般模式</option></select><p id="direct-privacy-note" class="note">零資料保留模式只使用符合條件的端點。</p>
   <label for="direct-model-options">選擇模型</label><select id="direct-model-options" disabled><option value="">請先取得模型清單</option></select>
   <label for="direct-model">模型 ID（也可手動輸入）</label><input id="direct-model" type="text" maxlength="200" autocomplete="off" placeholder="例如 provider/model:free">

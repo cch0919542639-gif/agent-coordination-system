@@ -145,6 +145,43 @@ const newSession = () => run("session={role:'administrator',csrf:'fresh'};agentS
   assert(requests.some(r=>r.path==='/api/agents'));
   reply(staleStopReq,200,{sessions:{},agents:[],team:{instance_id:'team-native',phase:'running'}}); await staleStopPoll;
   assert.equal(run('agentSnapshot.team.phase'),'stopped');
+  // Saving never returns the key; later team calls refer to the saved credential.
+  run("if (pending) pending.abort();pending=null;teamRows[1].kind.value='direct';teamRows[1].kind.listeners.change();teamRows[1].provider.value='deepseek';teamRows[1].key.value='synthetic-key';teamRows[1].model.value='model-two';teamRows[0].key.value='synthetic-first';teamRows[0].model.value='model-one';renderTeam(agentSnapshot.team)");
+  requests.length=0;
+  const save=run('teamRows[1].credentials.save.listeners.click()'), saveReq=take('/api/keys/save');
+  assert.equal(JSON.parse(saveReq.opts.body).api_key,'synthetic-key');
+  run("teamRows[1].key.value='synthetic-new';teamRows[1].key.listeners.input();renderAgents(agentSnapshot)");
+  assert(run('teamRows[1].credentials.save.disabled && teamRows[0].credentials.remove.disabled'));
+  assert(get('team-start').disabled);
+  await run('teamRows[0].credentials.remove.listeners.click()');
+  assert(!requests.some(r=>r.path==='/api/keys/delete'));
+  reply(saveReq,200,{saved:true}); await save;
+  assert.equal(run('teamRows[1].key.value'),'synthetic-new'); assert(!run('teamRows[1].credentials.use.checked'));
+  const saveNew=run('teamRows[1].credentials.save.listeners.click()'), saveNewReq=take('/api/keys/save');
+  assert.equal(JSON.parse(saveNewReq.opts.body).api_key,'synthetic-new');
+  reply(saveNewReq,200,{saved:true}); await saveNew;
+  assert.equal(run('teamRows[1].key.value'),''); assert(run('teamRows[1].credentials.use.checked'));
+  const storedStart=get('team-start').listeners.click(), storedReq=take('/api/team/start');
+  const stored=JSON.parse(storedReq.opts.body).workers[1];
+  assert.equal(stored.use_saved,true); assert.equal(stored.api_key,'');
+  reply(storedReq,400,{}); await storedStart;
+  // A hung credential request releases controls and never reports success.
+  ctx.setTimeout=fn=>{ctx.credentialTimeout=fn;return 1};
+  ctx.fetch=(path,opts)=>new Promise((resolve,reject)=>{
+    requests.push({path,opts,resolve});
+    if(opts.signal) opts.signal.addEventListener('abort',()=>reject(Object.assign(new Error('abort'),{name:'AbortError'})));
+  });
+  run("teamRows[1].key.value='synthetic-timeout';teamRows[1].credentials.use.checked=false");
+  const hungSave=run('teamRows[1].credentials.save.listeners.click()'); take('/api/keys/save');
+  assert(run('credentialBusy')); ctx.credentialTimeout(); await hungSave;
+  assert(!run('credentialBusy')); assert(run("teamRows[1].credentials.status.textContent.includes('結果未確認')"));
+  const check=run('teamRows[1].credentials.check.listeners.click()'), checkReq=take('/api/keys/status');
+  reply(checkReq,200,{saved:true}); await check;
+  assert(run("teamRows[1].credentials.status.textContent.includes('無法檢查其內容')"));
+  // Logout and a fresh login cannot inherit a permanently blocked operation.
+  const hungAgain=run('teamRows[1].credentials.save.listeners.click()'); take('/api/keys/save');
+  run('signedOut()'); newSession(); ctx.credentialTimeout(); await hungAgain;
+  assert(!run('credentialBusy'));
   console.log('independent team UI checks passed');
 })().catch(error=>{console.error(error);process.exitCode=1});
 ''', encoding='utf-8')

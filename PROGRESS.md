@@ -1,3 +1,24 @@
+## Local provider credential independent review (2026-11-28)
+
+Independent backend and UI review identified UI races during key saving,
+polling, provider synchronization and stalled requests. Repairs add single-page
+single-flight controls, stale-result invalidation, a 15-second wait bound and a
+status check that does not disclose key contents. Re-review found no remaining
+reproducible blocking issue. Focused final tests passed 15; the broader
+Agent/team/console regression passed 144 with two skips. The candidate is not
+merged or installed; same-Windows-account native agents may access credentials.
+
+## Local provider credential candidate (2026-11-26)
+
+Added optional Windows Credential Manager storage for direct and team API keys,
+scoped to console user, project and exact provider endpoint. The console API
+returns status only; it never returns the key. Synthetic tests cover Windows
+cross-process persistence and deletion, authorization, endpoint scoping, direct
+and team usage and UI submission. Focused final regression passed 15 tests;
+broader Agent/team/console regression passed 143 tests with two skips. Native agents run as the same Windows user and
+are not isolated from that user's credentials. The candidate has not been
+independently reviewed or installed; no real user key was accessed in testing.
+
 ## Native model teams independent review (2026-11-25)
 
 Two independent reviewers assessed candidate 41523d4 and the repair diff.
