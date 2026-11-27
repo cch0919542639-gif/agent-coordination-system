@@ -176,6 +176,16 @@ def provider_404_reason(error, model):
     return None
 
 
+def transport_error_reason(error):
+    """Classify network failures without passing exception text to the UI."""
+    if isinstance(error, urllib.error.HTTPError): return None
+    if isinstance(error, TimeoutError): return 'transport_timeout'
+    if isinstance(error, urllib.error.URLError):
+        return 'transport_timeout' if isinstance(error.reason, TimeoutError) else 'transport_error'
+    if isinstance(error, ConnectionError): return 'transport_error'
+    return None
+
+
 def main():
     port, token = sys.argv[1:]
     os.environ.pop('COORDINATION_OPENROUTER_API_KEY', None)
@@ -251,6 +261,8 @@ def main():
                 except Exception as error:
                     status = error.code if isinstance(error, urllib.error.HTTPError) else None
                     reason = provider_404_reason(error, model) if method == 'session/prompt' and provider == 'openrouter' else None
+                    if method == 'session/prompt' and reason is None:
+                        reason = transport_error_reason(error)
                     send({'jsonrpc': '2.0', 'id': ident, 'error': {'status': status, 'reason': reason}})
 
 

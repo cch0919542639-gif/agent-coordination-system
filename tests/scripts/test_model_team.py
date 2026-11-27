@@ -4,11 +4,47 @@ from pathlib import Path
 import sys
 import threading
 import time
+import pytest
 
 sys.path[:0] = [str(Path(__file__).resolve().parents[2]), str(Path(__file__).resolve().parent)]
 from test_parallel_runtime import system
 from test_web_console import console, login, request
 from web import model_team
+
+
+@pytest.mark.parametrize(('error','expected'), [
+    ('Agent 請求失敗（HTTP 429）。private-secret', 'HTTP 429'),
+    ('Agent 請求失敗（HTTP 404）。private-secret', 'HTTP 404'),
+    ('直接模型請求逾時；工作階段已停止，請重新連線。', '逾時'),
+    ('模型供應商連線逾時。', '供應商連線逾時'),
+    ('模型供應商連線失敗。', '供應商連線失敗'),
+    ('Agent 達到回覆長度上限，回覆可能不完整。', '長度上限'),
+    ('private-secret from untrusted provider', '無法確認原因'),
+])
+def test_summary_failure_reports_safe_category_and_preserves_results(console, monkeypatch, error, expected):
+    class FakeAgent:
+        def __init__(self, agent, root, direct_config):
+            self.provider = direct_config['provider']; self.phase = 'ready'; self.error = None; self.response = ''
+        def snapshot(self): return dict(phase=self.phase, error=self.error, response=self.response)
+        def prompt(self, text):
+            if text.startswith('將以下總任務'): self.response = '["first", "second"]'
+            elif text.startswith('請根據以下'): self.response = ''; self.error = error
+            else: self.response = 'result-' + self.provider
+        def close(self): self.phase = 'stopped'
+    monkeypatch.setattr(model_team, 'AgentSession', FakeAgent)
+    admin = login(console, 'administrator')
+    workers = [dict(provider='deepseek',base_url='',privacy='standard',model='one',api_key='fixture-key'),
+               dict(provider='agnes',base_url='',privacy='standard',model='two',api_key='fixture-key')]
+    assert request(console, '/api/team/start', {'task':'fixture', 'workers':workers}, admin)[0] == 200
+    deadline = time.monotonic() + 8
+    while time.monotonic() < deadline:
+        team = request(console, '/api/agents', session=admin)[1]['team']
+        if team['phase'] in ('done', 'failed'): break
+        time.sleep(.05)
+    assert team['phase'] == 'failed' and expected in team['error']
+    assert [r['result'] for r in team['assignments']] == ['result-deepseek', 'result-agnes']
+    assert team['summary'] == '彙整失敗，請查看各模型的個別結果。'
+    assert 'private-secret' not in json.dumps(team)
 
 
 def test_team_plans_and_runs_workers_in_parallel_without_exposing_keys(console, monkeypatch):
@@ -245,3 +281,37 @@ def test_team_with_real_owned_bridges_and_synthetic_provider(console, tmp_path, 
     while any(identity_state(pid, created) not in ('missing', 'exited') for pid, created in identities) and time.monotonic() < deadline:
         time.sleep(.05)
     assert len(identities) == 2 and all(identity_state(pid, created) in ('missing', 'exited') for pid, created in identities)
+
+
+def test_summary_rate_limit_through_owned_bridge_keeps_results(console, tmp_path, monkeypatch):
+    import os
+    from web import agent_control
+    if os.name != 'nt': pytest.skip('Windows owned Job')
+    root = Path(__file__).resolve().parents[2]
+    bridge = tmp_path / 'fake_summary_bridge.py'
+    bridge.write_text('''import json,sys,urllib.error
+sys.path.insert(0,sys.argv.pop(1))
+from web import direct_model_bridge as bridge
+def complete(key,model,messages,privacy="zdr",provider="openrouter",base_url=""):
+    if provider == "openrouter" and len(messages) == 1: return json.dumps(["alpha","beta"]), "stop"
+    if provider == "openrouter" and len(messages) == 5: raise urllib.error.HTTPError("https://fixture.invalid/private",429,"private fixture-key",None,None)
+    return "result-" + provider, "stop"
+bridge.complete=complete
+bridge.main()
+''', encoding='utf-8')
+    original = agent_control.JobProcess
+    def launch(args, **kwargs):
+        return original([args[0], args[1], str(bridge), str(root), *args[3:]], **kwargs)
+    monkeypatch.setattr(agent_control, 'JobProcess', launch)
+    admin = login(console, 'administrator')
+    workers = [dict(provider='openrouter',base_url='',privacy='zdr',model='one',api_key='fixture-key-one'),
+               dict(provider='deepseek',base_url='',privacy='standard',model='two',api_key='fixture-key-two')]
+    assert request(console, '/api/team/start', {'task':'fixture','workers':workers}, admin)[0] == 200
+    deadline = time.monotonic() + 25
+    while time.monotonic() < deadline:
+        team = request(console, '/api/agents', session=admin)[1]['team']
+        if team['phase'] in ('done','failed','cleanup_failed'): break
+        time.sleep(.05)
+    assert team['phase'] == 'failed' and 'HTTP 429' in team['error']
+    assert [row['result'] for row in team['assignments']] == ['result-openrouter','result-deepseek']
+    assert 'fixture-key' not in json.dumps(team) and 'fixture.invalid' not in json.dumps(team)

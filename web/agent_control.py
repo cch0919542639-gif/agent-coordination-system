@@ -259,6 +259,9 @@ class AgentSession:
                     return
                 if self.session:
                     self.error = 'Agent 請求失敗' + detail + '。'
+                    if self.agent == 'direct' and kind == 'prompt' and isinstance(error, dict):
+                        if error.get('reason') == 'transport_timeout': self.error = '模型供應商連線逾時。'
+                        elif error.get('reason') == 'transport_error': self.error = '模型供應商連線失敗。'
                     if self.agent == 'direct' and self.provider == 'openrouter' and kind == 'prompt' and status == 404 and isinstance(error, dict):
                         reason = error.get('reason')
                         self.error += DIRECT_404_REASONS.get(reason, '') if isinstance(reason, str) else ''
