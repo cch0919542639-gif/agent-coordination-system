@@ -5,7 +5,7 @@ import re
 import threading
 import time
 
-from .agent_control import AgentSession
+from .agent_control import AgentSession, DIRECT_404_REASONS
 from .team_workspace import base_revision, changes, provision, run_id
 
 
@@ -29,9 +29,14 @@ def summary_failure(agent):
         match = re.match(r'^Agent 請求失敗（HTTP (400|401|403|404|408|413|429|500|502|503|504)）。', error)
         if match:
             status = int(match.group(1))
+            if status == 404:
+                prefix = 'Agent 請求失敗（HTTP 404）。'
+                for known in DIRECT_404_REASONS.values():
+                    if error == prefix + known:
+                        return '彙整模型請求失敗（HTTP 404）。' + known
             hint = ('請檢查額度或稍後再試。' if status == 429 else
                     '請檢查授權與金鑰。' if status in (401, 403) else
-                    '請檢查模型與端點設定。' if status == 404 else
+                    '請檢查模型、隱私設定與端點。' if status == 404 else
                     '請檢查請求或供應商服務狀態。')
             return '彙整模型請求失敗（HTTP ' + str(status) + '）；' + hint
     return '彙整失敗，無法確認原因；工作者結果已保留。'
@@ -263,21 +268,24 @@ class ModelTeam:
                     instruction = ('請區分工作者回報與你無法自行查證的事項，不要虛構已執行的工具或操作。' if any(row['kind'] != 'direct' for row in rows) else '不要宣稱工具或動作已執行。')
                     self.send(planner, '請根據以下子任務結果彙整總任務，明確指出缺漏及不確定性。' + instruction + '\n總任務：' + self.task + '\n結果：\n' + material)
                     summary = self.wait_ready(planner)['response']
-                    if not summary: raise ValueError('empty summary')
-                    with self.lock: self.summary = summary
+                    if not summary or summary == '彙整失敗，請查看各模型的個別結果。': raise ValueError('invalid summary')
+                    with self.lock:
+                        if self.cancelled.is_set(): return
+                        self.summary = summary
                     summary_ok = True
                 except Exception:
                     reason = summary_failure(planner)
                     with self.lock:
+                        if self.cancelled.is_set(): return
                         self.summary = '彙整失敗，請查看各模型的個別結果。'
                         self.error = reason
             with self.lock:
+                if self.cancelled.is_set(): return
                 if not self.summary:
                     self.summary = '彙整失敗，請查看各模型的個別結果。'
-                    self.error = summary_failure(planner)
-                if not self.cancelled.is_set():
-                    self.outcome = 'done' if all(x['phase'] == 'done' for x in self.assignments) and summary_ok else 'failed'
-                    self.phase = 'cleaning'
+                    self.error = '彙整模型已停止或尚未就緒，未執行彙整；工作者結果已保留。'
+                self.outcome = 'done' if all(x['phase'] == 'done' for x in self.assignments) and summary_ok else 'failed'
+                self.phase = 'cleaning'
         except Exception as exc:
             with self.lock:
                 if not self.cancelled.is_set(): self.outcome = 'failed'; self.phase = 'cleaning'; self.error = '任務規劃或模型連線失敗；請檢查供應商、模型與設定。'

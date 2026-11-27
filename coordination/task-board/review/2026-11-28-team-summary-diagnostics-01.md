@@ -13,6 +13,7 @@ allowed_scope:
   - coordination/task-board/**
   - coordination/delivery/**
   - coordination/incidents/**
+  - coordination/reviews/**
   - PROGRESS.md
 forbidden_scope:
   - real credentials or private transcripts

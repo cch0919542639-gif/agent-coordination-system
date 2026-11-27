@@ -10,11 +10,15 @@ sys.path[:0] = [str(Path(__file__).resolve().parents[2]), str(Path(__file__).res
 from test_parallel_runtime import system
 from test_web_console import console, login, request
 from web import model_team
+from web.agent_control import DIRECT_404_REASONS
 
 
 @pytest.mark.parametrize(('error','expected'), [
     ('Agent 請求失敗（HTTP 429）。private-secret', 'HTTP 429'),
-    ('Agent 請求失敗（HTTP 404）。private-secret', 'HTTP 404'),
+    ('Agent 請求失敗（HTTP 404）。private-secret', '隱私設定'),
+    ('Agent 請求失敗（HTTP 404）。' + DIRECT_404_REASONS['privacy_policy'], '零資料保留'),
+    ('Agent 請求失敗（HTTP 404）。' + DIRECT_404_REASONS['data_region'], '地區'),
+    ('Agent 請求失敗（HTTP 404）。' + DIRECT_404_REASONS['privacy_policy'] + ' private-secret', '隱私設定'),
     ('直接模型請求逾時；工作階段已停止，請重新連線。', '逾時'),
     ('模型供應商連線逾時。', '供應商連線逾時'),
     ('模型供應商連線失敗。', '供應商連線失敗'),
@@ -45,6 +49,72 @@ def test_summary_failure_reports_safe_category_and_preserves_results(console, mo
     assert [r['result'] for r in team['assignments']] == ['result-deepseek', 'result-agnes']
     assert team['summary'] == '彙整失敗，請查看各模型的個別結果。'
     assert 'private-secret' not in json.dumps(team)
+
+
+def test_stopping_during_summary_is_not_reported_as_summary_failure(console, monkeypatch):
+    entered = threading.Event()
+    class FakeAgent:
+        def __init__(self, agent, root, direct_config):
+            self.provider = direct_config['provider']; self.phase = 'ready'; self.error = None; self.response = ''
+        def snapshot(self): return dict(phase=self.phase, error=self.error, response=self.response)
+        def prompt(self, text):
+            if text.startswith('將以下總任務'): self.response = '["first", "second"]'
+            elif text.startswith('請根據以下'): self.phase = 'running'; entered.set()
+            else: self.response = 'result-' + self.provider
+        def close(self): self.phase = 'stopped'
+    monkeypatch.setattr(model_team, 'AgentSession', FakeAgent)
+    admin = login(console, 'administrator')
+    worker = dict(provider='deepseek',base_url='',privacy='standard',model='one',api_key='fixture-key')
+    status, initial, _ = request(console, '/api/team/start', {'task':'fixture','workers':[worker,worker]}, admin)
+    assert status == 200 and entered.wait(8)
+    _, team, _ = request(console, '/api/team/stop', {'instance_id':initial['instance_id']}, admin)
+    assert team['phase'] == 'stopped' and team['error'] is None and team['summary'] == ''
+    assert [r['result'] for r in team['assignments']] == ['result-deepseek', 'result-deepseek']
+
+
+def test_reserved_failure_text_cannot_mark_summary_success(console, monkeypatch):
+    class FakeAgent:
+        def __init__(self, agent, root, direct_config): self.phase = 'ready'; self.error = None; self.response = ''
+        def snapshot(self): return dict(phase=self.phase, error=self.error, response=self.response)
+        def prompt(self, text):
+            if text.startswith('將以下總任務'): self.response = '["first", "second"]'
+            elif text.startswith('請根據以下'): self.response = '彙整失敗，請查看各模型的個別結果。'
+            else: self.response = 'result'
+        def close(self): self.phase = 'stopped'
+    monkeypatch.setattr(model_team, 'AgentSession', FakeAgent)
+    admin = login(console, 'administrator')
+    worker = dict(provider='deepseek',base_url='',privacy='standard',model='one',api_key='fixture-key')
+    assert request(console, '/api/team/start', {'task':'fixture','workers':[worker,worker]}, admin)[0] == 200
+    deadline = time.monotonic() + 8
+    while time.monotonic() < deadline:
+        team = request(console, '/api/agents', session=admin)[1]['team']
+        if team['phase'] in ('done','failed'): break
+        time.sleep(.05)
+    assert team['phase'] == 'failed' and team['error']
+
+
+def test_unavailable_planner_does_not_attribute_worker_error_to_summary(console, monkeypatch):
+    class FakeAgent:
+        def __init__(self, agent, root, direct_config):
+            self.provider = direct_config['provider']; self.phase = 'ready'; self.error = None; self.response = ''
+        def snapshot(self): return dict(phase=self.phase, error=self.error, response=self.response)
+        def prompt(self, text):
+            if text.startswith('將以下總任務'): self.response = '["first", "second"]'
+            elif self.provider == 'deepseek': self.phase = 'failed'; self.error = 'Agent 請求失敗（HTTP 429）。'
+            else: self.response = 'other result'
+        def close(self): self.phase = 'stopped'
+    monkeypatch.setattr(model_team, 'AgentSession', FakeAgent)
+    admin = login(console, 'administrator')
+    first = dict(provider='deepseek',base_url='',privacy='standard',model='one',api_key='fixture-key')
+    second = {**first,'provider':'agnes'}
+    assert request(console, '/api/team/start', {'task':'fixture','workers':[first,second]}, admin)[0] == 200
+    deadline = time.monotonic() + 8
+    while time.monotonic() < deadline:
+        team = request(console, '/api/agents', session=admin)[1]['team']
+        if team['phase'] in ('done','failed'): break
+        time.sleep(.05)
+    assert team['phase'] == 'failed' and '未執行彙整' in team['error']
+    assert 'HTTP 429' not in team['error'] and team['assignments'][1]['result'] == 'other result'
 
 
 def test_team_plans_and_runs_workers_in_parallel_without_exposing_keys(console, monkeypatch):
