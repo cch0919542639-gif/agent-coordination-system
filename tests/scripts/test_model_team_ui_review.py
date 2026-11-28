@@ -53,6 +53,11 @@ const newSession = () => run("session={role:'administrator',csrf:'fresh'};agentS
   const existingResult = get('team-results').children[0];
   assert(existingResult); run('renderTeam(agentSnapshot.team)');
   assert.strictEqual(get('team-results').children[0],existingResult);
+  // Summary failures retain worker results and surface the safe reason.
+  run("agentSnapshot.team={instance_id:'old-team',phase:'failed',error:'彙整模型請求失敗（HTTP 429）；請檢查額度或稍後再試。',summary:'彙整失敗，請查看各模型的個別結果。',assignments:[{provider:'deepseek',model:'one',privacy:'standard',phase:'done',task:'task',result:'retained'}]};renderTeam(agentSnapshot.team)");
+  assert(get('team-status').textContent.includes('HTTP 429'));
+  assert(get('team-summary').textContent.includes('彙整失敗'));
+  assert(get('team-results').children[0]);
   // Existing completed result does not mask a rejected new request.
   run("agentSnapshot.team={instance_id:'old-team',phase:'done',assignments:[],summary:''};renderTeam(agentSnapshot.team)");
   get('team-task').value='fixture task';

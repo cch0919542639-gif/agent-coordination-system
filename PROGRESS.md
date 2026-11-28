@@ -1,3 +1,23 @@
+## Team summary diagnostics independent review (2026-11-28)
+
+Independent backend and transport reviews found and re-reviewed fixes for
+cancelled summaries, reserved failure text, unavailable-planner attribution and
+preservation of safe OpenRouter 404 reasons. Final focused regression passed 34;
+broader Agent/team/credential/console regression passed 157 with two skips.
+No real credentials or transcripts were used. The reduced candidate awaits
+integration; the original failure's underlying provider cause remains unknown.
+
+## Team summary diagnostics (2026-11-28)
+
+The original live three-worker summary failure's exact provider cause cannot be
+recovered: the prior handler discarded it and the later run replaced the in-memory
+team. The shorter later run succeeded. A candidate fixes the diagnostic loss:
+safe HTTP, timeout, transport, refusal and output-limit categories are displayed
+without raw provider text, while worker results remain available. No automatic
+retry or privacy downgrade was added. Focused regression passed 28 tests; broader
+Agent/team/direct regression passed 106 with two skips. Independent review and
+installation are pending; see team-summary-original-failure-01.
+
 ## Local provider credential independent review (2026-11-28)
 
 Independent backend and UI review identified UI races during key saving,

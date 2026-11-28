@@ -264,6 +264,8 @@ bridge.ERROR_BODY_WAIT_SECONDS=0.05
 def complete(key,model,messages,privacy='zdr',provider='openrouter',base_url=''):
     if messages[-1]['content']=='wait': time.sleep(60)
     if messages[-1]['content']=='fail': raise urllib.error.HTTPError('https://example.invalid',429,'private',None,None)
+    if messages[-1]['content']=='network-timeout': raise TimeoutError('private fixture-key')
+    if messages[-1]['content']=='network-failure': raise urllib.error.URLError('private fixture-key')
     if messages[-1]['content']=='privacy404':
         body=json.dumps({'error':{'message':'No endpoints found matching your data policy (Zero data retention).'}}).encode()
         raise urllib.error.HTTPError('https://example.invalid',404,'private',None,io.BytesIO(body))
@@ -341,6 +343,10 @@ bridge.main()
     wait('ready', 'vendor/b:free:1')
     assert prompt('fail', changed) == 200
     assert wait('ready')['error'] == 'Agent 請求失敗（HTTP 429）。'
+    assert prompt('network-timeout', changed) == 200
+    assert wait('ready')['error'] == '模型供應商連線逾時。'
+    assert prompt('network-failure', changed) == 200
+    assert wait('ready')['error'] == '模型供應商連線失敗。'
     assert prompt('privacy404', changed) == 200
     assert wait('ready')['error'] == 'Agent 請求失敗（HTTP 404）。' + agent_control.DIRECT_404_REASONS['privacy_policy']
     assert prompt('unsafe404', changed) == 200
